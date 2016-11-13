@@ -102,3 +102,11 @@ class Var[T] private() extends Channel[T] with MonitoringStateChannel[T] {
     super.:=(v)
   }
 }
+
+object Var {
+  def apply[T](value: => T): Var[T] = {
+    val v = new Var[T]()
+    v := value
+    v
+  }
+}
