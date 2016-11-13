@@ -1,5 +1,9 @@
 package com.outr.props
 
-trait Channel[T] extends Observable[T] {
+class Channel[T] extends Observable[T] {
   def :=(value: => T): Unit = fire(value)
+}
+
+object Channel {
+  def apply[T](): Channel[T] = new Channel[T]
 }

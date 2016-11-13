@@ -3,6 +3,12 @@ package com.outr.props
 trait StateChannel[T] extends Observable[T] {
   protected def state: T
 
+  def attachAndFire(f: T => Unit): T => Unit = {
+    attach(f)
+    fire(get)
+    f
+  }
+
   def get: T = {
     StateChannel.contextFired(this)
     state
