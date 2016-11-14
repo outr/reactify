@@ -1,6 +1,6 @@
 package com.outr.props
 
-trait StateChannel[T] extends Observable[T] {
+trait State[T] extends Observable[T] {
   protected def state: T
 
   def attachAndFire(f: T => Unit): T => Unit = {
@@ -10,14 +10,16 @@ trait StateChannel[T] extends Observable[T] {
   }
 
   def get: T = {
-    StateChannel.contextFired(this)
+    State.contextFired(this)
     state
   }
 
-  def value: T = get
+  def apply(): T = get
+
+  def asState: State[T] = this
 }
 
-object StateChannel {
+object State {
   private val context = new ThreadLocal[Option[StateChannelContext]] {
     override def initialValue(): Option[StateChannelContext] = None
   }
@@ -32,7 +34,7 @@ object StateChannel {
     }
   }
 
-  private[props] def contextFired[T](channel: StateChannel[T]): Unit = context.get().foreach { c =>
+  private[props] def contextFired[T](channel: State[T]): Unit = context.get().foreach { c =>
     channel match {
       case o: Observable[_] => c.observables += o
       case _ => // Not an observable

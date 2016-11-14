@@ -8,30 +8,30 @@ class PropsSpec extends WordSpec with Matchers {
     "using a Val" should {
       "contain the proper value" in {
         val v = Val(5)
-        v.get should be(5)
+        v() should be(5)
       }
       "contain the proper value when added" in {
         val v1 = Val(5)
         val v2 = Val(v1 + 5)
-        v2.get should be(10)
+        v2() should be(10)
       }
     }
     "using a Var" should {
       "container the proper value" in {
         val v = Var(5)
-        v.get should be(5)
+        v() should be(5)
       }
       "contain the proper value when added" in {
         val v1 = Var(5)
         val v2 = Var(v1 + 5)
-        v2.get should be(10)
+        v2() should be(10)
       }
       "contain the proper value when modified" in {
         val v1 = Var(5)
         val v2 = Var(v1 + 5)
         v2.get should be(10)
         v1 := 10
-        v2.get should be(15)
+        v2() should be(15)
       }
       "observe a simple change" in {
         val v = Var(5)
