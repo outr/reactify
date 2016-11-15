@@ -35,10 +35,7 @@ object State {
   }
 
   private[props] def contextFired[T](channel: State[T]): Unit = context.get().foreach { c =>
-    channel match {
-      case o: Observable[_] => c.observables += o
-      case _ => // Not an observable
-    }
+    c.observables += channel
   }
 
   private[props] def contextObservables(): Set[Observable[_]] = context.get().getOrElse(throw new RuntimeException("Not within a context!")).observables
