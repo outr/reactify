@@ -1,6 +1,6 @@
 name := "props"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "1.0.0-SNAPSHOT"
+version in ThisBuild := "1.0.0"
 scalaVersion in ThisBuild := "2.12.0"
 crossScalaVersions in ThisBuild := List("2.12.0", "2.11.8")
 sbtVersion in ThisBuild := "0.13.13"
