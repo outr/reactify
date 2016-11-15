@@ -24,6 +24,13 @@ class Var[T] private() extends Channel[T] with MonitoringState[T] {
   }
 
   /**
+    * Convenience method to pre-evaluate the value instead of as an anonymous function.
+    *
+    * @param value the value to be set
+    */
+  def setStatic(value: T): Unit = set(value)
+
+  /**
     * Convenience method to get the current value.
     */
   def value: T = get
@@ -44,6 +51,16 @@ object Var {
     * Creates a new instance of `Var`.
     */
   def apply[T](value: => T): Var[T] = {
+    val v = new Var[T]()
+    v := value
+    v
+  }
+
+  /**
+    * Convenience method to pre-evaluate the contents as opposed to apply that applies the contents as an anonymous
+    * function.
+    */
+  def static[T](value: T): Var[T] = {
     val v = new Var[T]()
     v := value
     v

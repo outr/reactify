@@ -29,4 +29,10 @@ object Val {
     * Creates a new instance of a `Val[T]`
     */
   def apply[T](value: => T): Val[T] = new Val[T](() => value)
+
+  /**
+    * Convenience method to pre-evaluate the contents as opposed to apply that applies the contents as an anonymous
+    * function.
+    */
+  def static[T](value: T): Val[T] = new Val[T](() => value)
 }
