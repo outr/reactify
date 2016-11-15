@@ -1,4 +1,12 @@
 # props
+============
+
+[![Build Status](https://travis-ci.org/outr/props.svg?branch=master)](https://travis-ci.org/outr/props)
+[![Stories in Ready](https://badge.waffle.io/outr/props.png?label=ready&title=Ready)](https://waffle.io/outr/props)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/props)
+[![Maven Central](https://img.shields.io/maven-central/v/com.outr/props_2.12.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/props_2.12)
+[![Latest version](https://index.scala-lang.org/com.outr/props/props/latest.svg)](https://index.scala-lang.org/com.outr/props/props)
+
 Functional Reactive Properties for observing changes and retaining values
 
 ## Concepts
