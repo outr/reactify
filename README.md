@@ -1,6 +1,8 @@
 # props
 ============
 
+[![Join the chat at https://gitter.im/outr-props/Lobby](https://badges.gitter.im/outr-props/Lobby.svg)](https://gitter.im/outr-props/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/outr/props.svg?branch=master)](https://travis-ci.org/outr/props)
 [![Stories in Ready](https://badge.waffle.io/outr/props.png?label=ready&title=Ready)](https://waffle.io/outr/props)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/props)
