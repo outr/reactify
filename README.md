@@ -9,6 +9,22 @@
 
 Functional Reactive Properties for observing changes and retaining values
 
+## Setup
+
+props is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js on 2.11 and 2.12.
+
+Configuring the dependency in SBT simply requires:
+
+```
+libraryDependencies += "com.outr" %% "props" % "1.0.0"
+```
+
+or for Scala.js:
+
+```
+libraryDependencies += "com.outr" %%% "props" % "1.0.0"
+```
+
 ## Concepts
 
 This framework is intentionally meant to be a simplistic take on properties and functional reactive concepts. There are
@@ -24,3 +40,69 @@ and holds state.
 
 `Val` and `Var` may hold formulas with `Observables`. These `Observables` are listened to when assigned so the wrapping
 `Val` or `Var` will also fire an appropriate event. This allows complex values to be built off of other variables.
+
+## Using
+
+### Imports
+
+Props is a very simple framework and though you'll likely want access to some of the implicit conversions made available
+in the package, everything can be had with a single import:
+
+```
+import com.outr.props._
+```
+
+### Creating Props
+
+As discussed in the concepts there are only four major classes in Props (`Observable`, `Channel`, `Val`, and `Var`). Of
+those classes, unless you are creating a custom `Observable` you will probably only deal with the latter three.
+
+Creating instances is incredibly simple:
+
+```
+val myChannel = Channel[String]()         // Creates a Channel that receives Strings
+val myVar = Var[Int](5)                   // Creates a Var containing the explicit value `5`
+val myVal = Val[Int](myVar + 5)           // Create a Val containing the sum of `myVar` + `5`
+```
+
+### Listening for Changes
+
+This would all be pretty pointless if we didn't have the capacity to listen to changes on the values. Here we're going
+to listen to `myVal` and `println` the new value when it changes:
+
+```
+myVal.attach { newValue =>
+  println(s"myVal = $newValue")
+}
+```
+
+### Modifying the Value
+
+Since `myVal` is a `Val` it is immutable itself, but its value is derived from the formula `myVar + 5`. This means that
+a change to `myVar` will cause the value of `myVal` to change as a result:
+
+```
+myVar := 10
+```
+
+The above code modifies `myVar` to have the new value of `10`. This will also cause `myVal` to re-evaluate and have the
+new value of `15` (`myVar + 5`). As a result, the listener we attached above will output:
+
+```
+myVal = 15
+```
+
+### Channels
+
+As we saw above, `Var` and `Val` retain the state of the value assigned to them. A `Channel` on the other hand is like a
+`Var` (in that you can set values to it), but no state is retained. This is useful for representing firing of events or
+some other action that is meant to be observed but not stored.
+
+## Versions
+
+### Features for 1.0.0 (Released 2016.11.15)
+
+* [X] Channel, Val, and Var functionality
+* [X] Observable functionality
+* [X] Convenience implicits to convert from `Val` and `Var` to the value
+* [X] Support for value-defined Observable dependencies (Observable State classes used in the makeup of variables are monitored for changes)
