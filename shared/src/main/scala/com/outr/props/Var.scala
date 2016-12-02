@@ -43,7 +43,7 @@ class Var[T] private() extends Channel[T] with MonitoringState[T] {
   /**
     * Convenience method to wrap this `Var` into a `Val`.
     */
-  def toVal(): Val[T] = Val(value)
+  def toVal: Val[T] = Val(value)
 }
 
 object Var {

@@ -8,7 +8,7 @@ package com.outr.props
   *
   * @tparam T the type of value retained by this `State`
   */
-class Val[T] private(_value: () => T) extends MonitoringState[T] {
+class Val[T](_value: () => T) extends MonitoringState[T] {
   monitor(_value())
 
   override protected def state: T = _value()
@@ -21,7 +21,7 @@ class Val[T] private(_value: () => T) extends MonitoringState[T] {
   /**
     * Convenience method to wrap this `Val` into a `Var`.
     */
-  def toVar(): Var[T] = Var(value)
+  def toVar: Var[T] = Var(value)
 }
 
 object Val {

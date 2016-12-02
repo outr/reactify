@@ -6,7 +6,7 @@ package com.outr.props
   *
   * @tparam T the type of value this channel receives
   */
-class Channel[T] extends Observable[T] {
+trait Channel[T] extends Observable[T] {
   /**
     * Convenience method to send a value to `set` similarly to an assignment operator.
     *
@@ -33,5 +33,5 @@ object Channel {
   /**
     * Creates a new Channel.
     */
-  def apply[T](): Channel[T] = new Channel[T]
+  def apply[T](): Channel[T] = new Channel[T] {}
 }
