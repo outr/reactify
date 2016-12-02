@@ -100,6 +100,13 @@ some other action that is meant to be observed but not stored.
 
 ## Versions
 
+### Features for 1.1.0 (In-Progress)
+
+* [X] Dep for dependency representation
+* [ ] Transitioning support to adjust values over time
+* [ ] Transitioning DSL
+* [ ] Transitioning Easing support
+
 ### Features for 1.0.0 (Released 2016.11.15)
 
 * [X] Channel, Val, and Var functionality
