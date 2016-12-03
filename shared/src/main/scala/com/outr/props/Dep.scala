@@ -9,14 +9,30 @@ package com.outr.props
   * <code>
   *   val left: Var[Double] = Var(0.0)
   *   val width: Var[Double] = Var(0.0)
-  *   val right: Dep[Double, Double] = Dep(left + width, left, _ - width)
+  *   val right: Dep = Dep(left, width)
   * </code>
+  *
+  * If an instance is `submissive` it removes `adjustment` from being part of the mutation dependency. For example: in
+  * the above scenario if you set `width` to 100.0 and `right` to 125.0 then `left` will be 25.0. Now, what should happen
+  * if you change `width` to 50.0? Should `left` change to 75.0 (`submissive = false`) or should `right` change to 75.0
+  * (`submissive = true`)?
   */
-class Dep[T, O](_value: () => T, channel: Channel[O], setter: T => O) extends Val[T](_value) with Channel[T] {
-  override def set(value: => T): Unit = {
+class Dep(variable: Channel[Double] with State[Double],
+          adjustment: => Double,
+          submissive: Boolean) extends Val[Double](() => variable + adjustment) with Channel[Double] {
+  override def set(value: => Double): Unit = {
     super.set(value)
 
-    channel := setter(value)
+    set(value, submissive)
+  }
+
+  def set(value: => Double, submissive: Boolean): Unit = {
+    if (submissive) {
+      val adj: Double = adjustment
+      variable := value - adj
+    } else {
+      variable := value - adjustment
+    }
   }
 }
 
@@ -24,14 +40,17 @@ object Dep {
   /**
     * Creates a new `Dep` instance for the referenced channel.
     *
-    * @param value the derived value for this `Dep`
-    * @param channel the channel this instance depends on
-    * @param setter conversion from incoming values to this `Dep` to send to the `channel`
-    * @tparam T the type of this `Dep`
-    * @tparam O the type of the `channel`
+    * @param variable the variable depended on
+    * @param adjustment the adjustment to derive the value of the dependency from the variable
+    * @param submissive determination of whether setting a new value on the `Dep` will impact continued changes to the
+    *                   variable based on this `Dep`'s dependencies or if it should be submissive to the variable. Defaults
+    *                   to false.
+    *
     * @return dependency instance
     */
-  def apply[T, O](value: => T, channel: Channel[O], setter: T => O): Dep[T, O] = {
-    new Dep(() => value, channel, setter)
+  def apply(variable: Channel[Double] with State[Double],
+            adjustment: => Double,
+            submissive: Boolean = false): Dep = {
+    new Dep(variable, adjustment, submissive)
   }
 }

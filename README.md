@@ -98,6 +98,31 @@ As we saw above, `Var` and `Val` retain the state of the value assigned to them.
 `Var` (in that you can set values to it), but no state is retained. This is useful for representing firing of events or
 some other action that is meant to be observed but not stored.
 
+## Nifty Features
+
+### Dependency Variables
+
+The core functionality is complete and useful, but we can build upon it for numeric values that are dependent on other
+numeric values or numeric values that may have multiple representations. For example, consider a graphical element on
+screen. It may have a `left` position for the X value originating on the left side of the element, but if we want to
+right-align something we have to make sure we account for the width in doing so and vice-versa for determining the right
+edge. We can simplify things by leveraging a `Dep` instance to represent it. Currently `Dep` only supports `Double`
+values, but we can easily represent our values as so:
+
+```
+val width: Var[Double] = Var(0.0)
+
+val left: Var[Double] = Var(0.0)
+val center: Dep = Dep(left, width / 2.0)
+val right: Dep = Dep(left, width)
+```
+
+Notice we've even added a `center` representation. These are dependent on `left` but their value is derived from a
+formula based on `left` and `width`. Of course, if representing the value alone were all we care about then a simple
+`Val(left + width)` could be used as our `right` value, but we also want to be able to modify `center` or `right` and
+have it properly reflect in `left`. Any changes made to `Dep` will properly update the variable it depends on `left` in
+this case. See `DepsSpec` for more detailed examples.
+
 ## Versions
 
 ### Features for 1.1.0 (In-Progress)
