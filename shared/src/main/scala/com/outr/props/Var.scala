@@ -7,7 +7,7 @@ package com.outr.props
   *
   * @tparam T the type of value this channel receives
   */
-class Var[T] private() extends Channel[T] with MonitoringState[T] {
+class Var[T] private() extends StateChannel[T] with MonitoringState[T] {
   private var _value: () => T = _
 
   override protected def state: T = _value()

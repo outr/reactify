@@ -9,11 +9,11 @@ scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 
 lazy val root = crossProject.in(file("."))
   .settings(
-      name := "props",
-      resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases",
-      libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      libraryDependencies += "org.scalactic" %%% "scalactic" % "3.0.0",
-      libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.0" % "test"
+    name := "props",
+    resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases",
+    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.0.0",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.0" % "test"
   )
 
 lazy val js = root.js

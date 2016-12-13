@@ -17,9 +17,9 @@ package com.outr.props
   * if you change `width` to 50.0? Should `left` change to 75.0 (`submissive = false`) or should `right` change to 75.0
   * (`submissive = true`)?
   */
-class Dep(variable: Channel[Double] with State[Double],
+class Dep(variable: StateChannel[Double],
           adjustment: => Double,
-          submissive: Boolean) extends Val[Double](() => variable + adjustment) with Channel[Double] {
+          submissive: Boolean) extends Val[Double](() => variable + adjustment) with StateChannel[Double] {
   override def set(value: => Double): Unit = {
     super.set(value)
 
@@ -48,7 +48,7 @@ object Dep {
     *
     * @return dependency instance
     */
-  def apply(variable: Channel[Double] with State[Double],
+  def apply(variable: StateChannel[Double],
             adjustment: => Double,
             submissive: Boolean = false): Dep = {
     new Dep(variable, adjustment, submissive)
