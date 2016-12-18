@@ -7,8 +7,8 @@ class DepsSpec extends WordSpec with Matchers {
   val width: Var[Double] = Var(0.0)
 
   val left: Var[Double] = Var(0.0)
-  val center: Dep = Dep(left, width / 2.0)
-  val right: Dep = Dep(left, width, submissive = true)
+  val center: Dep[Double, Double] = Dep(left, width / 2.0)
+  val right: Dep[Double, Double] = Dep(left, width, submissive = true)
 
   "Deps" should {
     "have the basic values" in {

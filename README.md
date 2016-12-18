@@ -16,13 +16,13 @@ props is published to Sonatype OSS and Maven Central currently supporting Scala 
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "props" % "1.0.0"
+libraryDependencies += "com.outr" %% "props" % "1.1.0"
 ```
 
-or for Scala.js:
+or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "props" % "1.0.0"
+libraryDependencies += "com.outr" %%% "props" % "1.1.0"
 ```
 
 ## Concepts
@@ -106,15 +106,14 @@ The core functionality is complete and useful, but we can build upon it for nume
 numeric values or numeric values that may have multiple representations. For example, consider a graphical element on
 screen. It may have a `left` position for the X value originating on the left side of the element, but if we want to
 right-align something we have to make sure we account for the width in doing so and vice-versa for determining the right
-edge. We can simplify things by leveraging a `Dep` instance to represent it. Currently `Dep` only supports `Double`
-values, but we can easily represent our values as so:
+edge. We can simplify things by leveraging a `Dep` instance to represent it:
 
 ```
 val width: Var[Double] = Var(0.0)
 
 val left: Var[Double] = Var(0.0)
-val center: Dep = Dep(left, width / 2.0)
-val right: Dep = Dep(left, width)
+val center: Dep[Double, Double] = Dep(left, width / 2.0)
+val right: Dep[Double, Double] = Dep(left, width)
 ```
 
 Notice we've even added a `center` representation. These are dependent on `left` but their value is derived from a
@@ -122,6 +121,9 @@ formula based on `left` and `width`. Of course, if representing the value alone 
 `Val(left + width)` could be used as our `right` value, but we also want to be able to modify `center` or `right` and
 have it properly reflect in `left`. Any changes made to `Dep` will properly update the variable it depends on `left` in
 this case. See `DepsSpec` for more detailed examples.
+
+`Dep` also supports conversions between different types as well, but must have an implicit `DepConnector` available to
+handle the conversions.
 
 ## Versions
 

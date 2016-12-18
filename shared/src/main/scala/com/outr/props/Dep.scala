@@ -9,7 +9,7 @@ package com.outr.props
   * <code>
   *   val left: Var[Double] = Var(0.0)
   *   val width: Var[Double] = Var(0.0)
-  *   val right: Dep = Dep(left, width)
+  *   val right: Dep[Double, Double] = Dep(left, width)
   * </code>
   *
   * If an instance is `submissive` it removes `adjustment` from being part of the mutation dependency. For example: in
@@ -17,21 +17,22 @@ package com.outr.props
   * if you change `width` to 50.0? Should `left` change to 75.0 (`submissive = false`) or should `right` change to 75.0
   * (`submissive = true`)?
   */
-class Dep(variable: StateChannel[Double],
-          adjustment: => Double,
-          submissive: Boolean) extends Val[Double](() => variable + adjustment) with StateChannel[Double] {
-  override def set(value: => Double): Unit = {
+class Dep[T, V](variable: StateChannel[V],
+                adjustment: => T,
+                submissive: Boolean)
+               (implicit connector: DepConnector[T, V]) extends Val[T](() => connector.combine(variable, adjustment)) with StateChannel[T] {
+  override def set(value: => T): Unit = {
     super.set(value)
 
     set(value, submissive)
   }
 
-  def set(value: => Double, submissive: Boolean): Unit = {
+  def set(value: => T, submissive: Boolean): Unit = {
     if (submissive) {
-      val adj: Double = adjustment
-      variable := value - adj
+      val adj: T = adjustment
+      variable := connector.extract(value, adj)
     } else {
-      variable := value - adjustment
+      variable := connector.extract(value, adjustment)
     }
   }
 }
@@ -48,9 +49,10 @@ object Dep {
     *
     * @return dependency instance
     */
-  def apply(variable: StateChannel[Double],
-            adjustment: => Double,
-            submissive: Boolean = false): Dep = {
-    new Dep(variable, adjustment, submissive)
+  def apply[T, V](variable: StateChannel[V],
+                  adjustment: => T,
+                  submissive: Boolean = false)
+                 (implicit connector: DepConnector[T, V]): Dep[T, V] = {
+    new Dep[T, V](variable, adjustment, submissive)
   }
 }
