@@ -127,7 +127,12 @@ handle the conversions.
 
 ## Versions
 
-### Features for 1.1.0 (In-Progress)
+### Features for 1.2.0 (In-Progress)
+
+* [X] Syntactic sugar for dealing with collections in a `StateChannel`
+* [X] `Observable.changes` to conveniently see old and new values on change.
+
+### Features for 1.1.0 (Released 2016.12.18)
 
 * [X] Dep for dependency representation
 

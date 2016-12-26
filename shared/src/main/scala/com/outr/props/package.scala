@@ -19,4 +19,26 @@ package object props {
 
     override def extract(value: => Double, adjustment: => Double): Double = value - adjustment
   }
+
+  /**
+    * Syntactic sugar for mutating collections in a `StateChannel`
+    */
+  implicit class SeqStateChannel[T](v: StateChannel[Seq[T]]) {
+    def +=(t: T): Unit = {
+      val updated = v() :+ t
+      v := updated
+    }
+
+    def -=(t: T): Unit = {
+      val updated = v().filterNot(_ == t)
+      v := updated
+    }
+
+    def ++=(seq: Seq[T]): Unit = {
+      val updated = v() ++ seq
+      v := updated
+    }
+
+    def clear(): Unit = v := Vector.empty
+  }
 }

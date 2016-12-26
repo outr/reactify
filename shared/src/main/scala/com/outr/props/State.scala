@@ -9,6 +9,10 @@ trait State[T] extends Observable[T] {
     f
   }
 
+  override def changes(listener: ChangeListener[T]): (T) => Unit = {
+    attach(ChangeListener.createFunction(listener, Some(state)))
+  }
+
   def get: T = {
     State.contextFired(this)
     state
