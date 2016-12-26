@@ -60,6 +60,12 @@ class PropsSpec extends WordSpec with Matchers {
         currentValue should be(10)
         v3.get should be(10)
       }
+      "use syntactic sugar to add to a list" in {
+        val v = Var[List[Int]](Nil)
+        v += 5
+        v.length should be(1)
+        v.head should be(5)
+      }
     }
   }
 }

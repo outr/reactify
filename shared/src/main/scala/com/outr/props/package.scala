@@ -23,22 +23,19 @@ package object props {
   /**
     * Syntactic sugar for mutating collections in a `StateChannel`
     */
-  implicit class SeqStateChannel[T](v: StateChannel[Seq[T]]) {
-    def +=(t: T): Unit = {
-      val updated = v() :+ t
-      v := updated
-    }
+  implicit class ListStateChannel[T](v: StateChannel[List[T]]) {
+    def +=(t: T): Unit = v.mod(_ :+ t)
 
-    def -=(t: T): Unit = {
-      val updated = v().filterNot(_ == t)
-      v := updated
-    }
+    def -=(t: T): Unit = v.mod(_.filterNot(_ == t))
 
-    def ++=(seq: Seq[T]): Unit = {
-      val updated = v() ++ seq
-      v := updated
-    }
+    def ++=(seq: Seq[T]): Unit = v.mod(_ ++ seq)
+  }
 
-    def clear(): Unit = v := Vector.empty
+  implicit class VectorStateChannel[T](v: StateChannel[Vector[T]]) {
+    def +=(t: T): Unit = v.mod(_ :+ t)
+
+    def -=(t: T): Unit = v.mod(_.filterNot(_ == t))
+
+    def ++=(seq: Seq[T]): Unit = v.mod(_ ++ seq)
   }
 }

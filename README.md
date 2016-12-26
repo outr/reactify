@@ -129,8 +129,9 @@ handle the conversions.
 
 ### Features for 1.2.0 (In-Progress)
 
-* [X] Syntactic sugar for dealing with collections in a `StateChannel`
+* [X] Syntactic sugar for dealing with collections in a `StateChannel`.
 * [X] `Observable.changes` to conveniently see old and new values on change.
+* [X] Convenience mutation `mod` method in `StateChannel`.
 
 ### Features for 1.1.0 (Released 2016.12.18)
 
