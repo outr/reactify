@@ -1,4 +1,8 @@
-package com.outr.props
+package com.outr.reactify
+
+import scala.annotation.compileTimeOnly
+import scala.reflect.macros.blackbox
+import scala.language.experimental.macros
 
 /**
   * Channel is the most simplistic representation of an `Observable` providing simple methods to set a value to be fired
@@ -12,14 +16,14 @@ trait Channel[T] extends Observable[T] {
     *
     * @param value the value to apply
     */
-  def :=(value: => T): Unit = set(value)
+  def :=(value: => T): Unit = macro Macros.set
 
   /**
     * Fires the value to all attached listeners.
     *
     * @param value the value to apply
     */
-  def set(value: => T): Unit = fire(value)
+  def set(value: => T): Unit = macro Macros.set
 
   /**
     * Casts this instance as a Channel[T]. This is useful for representing sub-classes explicitly as a Channel.
@@ -27,11 +31,15 @@ trait Channel[T] extends Observable[T] {
     * @return Channel[T]
     */
   def asChannel: Channel[T] = this
+
+  def update(observables: List[Observable[T]], value: => T): Unit = {
+    fire(value)
+  }
 }
 
 object Channel {
   /**
     * Creates a new Channel.
     */
-  def apply[T](): Channel[T] = new Channel[T] {}
+  def apply[T]: Channel[T] = new Channel[T] {}
 }

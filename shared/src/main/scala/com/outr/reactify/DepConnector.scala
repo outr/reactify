@@ -1,4 +1,4 @@
-package com.outr.props
+package com.outr.reactify
 
 trait DepConnector[T, V] {
   def combine(variable: => V, adjustment: => T): T

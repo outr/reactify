@@ -1,6 +1,6 @@
 package specs
 
-import com.outr.props._
+import com.outr.reactify._
 import org.scalatest.{Matchers, WordSpec}
 
 class PropsSpec extends WordSpec with Matchers {
@@ -42,8 +42,8 @@ class PropsSpec extends WordSpec with Matchers {
           currentValue = updated
         }
         v := 10
-        changed should be(1)
         currentValue should be(10)
+        changed should be(1)
       }
       "observe a complex change" in {
         val v1 = Var(5)
@@ -60,12 +60,17 @@ class PropsSpec extends WordSpec with Matchers {
         currentValue should be(10)
         v3.get should be(10)
       }
-      "use syntactic sugar to add to a list" in {
-        val v = Var[List[Int]](Nil)
-        v += 5
-        v.length should be(1)
-        v.head should be(5)
-      }
+//      "use syntactic sugar to add to a list" in {
+//        val v = Var[List[Int]](Nil)
+//        v += 5
+//        v.length should be(1)
+//        v.head should be(5)
+//      }
+//      "derive a value from itself and not explode" in {
+//        val v = Var(5)
+//        v := v() + 5
+//        v() should be(10)
+//      }
     }
   }
 }

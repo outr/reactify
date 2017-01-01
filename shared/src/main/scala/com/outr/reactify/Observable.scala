@@ -1,4 +1,4 @@
-package com.outr.props
+package com.outr.reactify
 
 trait Observable[T] {
   private var observers = Set.empty[T => Unit]
@@ -17,4 +17,8 @@ trait Observable[T] {
   protected def fire(value: T): Unit = observers.foreach { obs =>
     obs(value)
   }
+}
+
+object Observable {
+  def fire[T](observable: Observable[T], value: T): Unit = observable.fire(value)
 }

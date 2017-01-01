@@ -1,4 +1,6 @@
-package com.outr.props
+package com.outr.reactify
+
+import scala.language.experimental.macros
 
 /**
   * Var, as the name suggests, is very similar to a Scala `var`. The value is defined during instantiation, but may be
@@ -7,28 +9,22 @@ package com.outr.props
   *
   * @tparam T the type of value this channel receives
   */
-class Var[T] private() extends StateChannel[T] with MonitoringState[T] {
+class Var[T] private() extends StateChannel[T] {
   private var _value: () => T = _
 
-  override protected def state: T = _value()
-
-  /**
-    * Sets the value on this `Var`.
-    *
-    * @param value the value to apply
-    */
-  override def set(value: => T): Unit = {
-    val v = monitor(value)
-    _value = () => value
-    super.set(v)
+  def this(observables: List[Observable[T]], value: => T) = {
+    this()
+    update(observables, value)
   }
+
+  override protected def state: T = _value()
 
   /**
     * Convenience method to pre-evaluate the value instead of as an anonymous function.
     *
     * @param value the value to be set
     */
-  def setStatic(value: T): Unit = set(value)
+  def setStatic(value: T): Unit = update(Nil, value)
 
   /**
     * Convenience method to get the current value.
@@ -38,23 +34,23 @@ class Var[T] private() extends StateChannel[T] with MonitoringState[T] {
   /**
     * Convenience method to set the current value like a variable.
     */
-  def value_=(t: => T): Unit = set(t)
+  def value_=(value: => T): Unit = macro Macros.set
 
   /**
     * Convenience method to wrap this `Var` into a `Val`.
     */
-  def toVal: Val[T] = Val(value)
+  override def update(observables: List[Observable[T]], value: => T): Unit = {
+    _value = () => value
+
+    super.update(observables, value)
+  }
 }
 
 object Var {
   /**
     * Creates a new instance of `Var`.
     */
-  def apply[T](value: => T): Var[T] = {
-    val v = new Var[T]()
-    v := value
-    v
-  }
+  def apply[T](value: => T): Var[T] = macro Macros.newVar[T]
 
   /**
     * Convenience method to pre-evaluate the contents as opposed to apply that applies the contents as an anonymous
@@ -62,7 +58,7 @@ object Var {
     */
   def static[T](value: T): Var[T] = {
     val v = new Var[T]()
-    v := value
+    v.update(Nil, value)
     v
   }
 }
