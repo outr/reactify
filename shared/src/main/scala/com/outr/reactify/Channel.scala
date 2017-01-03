@@ -32,7 +32,7 @@ trait Channel[T] extends Observable[T] {
     */
   def asChannel: Channel[T] = this
 
-  def update(observables: List[Observable[T]], value: => T): Unit = {
+  def update(observables: List[Observable[_]], value: => T): Unit = {
     fire(value)
   }
 }

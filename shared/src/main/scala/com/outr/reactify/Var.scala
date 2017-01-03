@@ -39,7 +39,7 @@ class Var[T] private() extends StateChannel[T] {
   /**
     * Convenience method to wrap this `Var` into a `Val`.
     */
-  override def update(observables: List[Observable[T]], value: => T): Unit = {
+  override def update(observables: List[Observable[_]], value: => T): Unit = {
     _value = () => value
 
     super.update(observables, value)
