@@ -1,28 +1,28 @@
-# props
+# reactify
 ============
 
-[![Build Status](https://travis-ci.org/outr/props.svg?branch=master)](https://travis-ci.org/outr/props)
-[![Stories in Ready](https://badge.waffle.io/outr/props.png?label=ready&title=Ready)](https://waffle.io/outr/props)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/props)
-[![Maven Central](https://img.shields.io/maven-central/v/com.outr/props_2.12.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/props_2.12)
-[![Latest version](https://index.scala-lang.org/com.outr/props/props/latest.svg)](https://index.scala-lang.org/com.outr/props/props)
+[![Build Status](https://travis-ci.org/outr/reactify.svg?branch=master)](https://travis-ci.org/outr/reactify)
+[![Stories in Ready](https://badge.waffle.io/outr/reactify.png?label=ready&title=Ready)](https://waffle.io/outr/reactify)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/reactify)
+[![Maven Central](https://img.shields.io/maven-central/v/com.outr/reactify_2.12.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12)
+[![Latest version](https://index.scala-lang.org/com.outr/reactify/reactify/latest.svg)](https://index.scala-lang.org/com.outr/reactify/reactify)
 
 Functional Reactive Properties for observing changes and retaining values
 
 ## Setup
 
-props is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js on 2.11 and 2.12.
+reactify is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js on 2.11 and 2.12.
 
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "props" % "1.2.0"
+libraryDependencies += "com.outr" %% "reactify" % "1.2.0"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "props" % "1.2.0"
+libraryDependencies += "com.outr" %%% "reactify" % "1.2.0"
 ```
 
 ## Concepts
@@ -49,7 +49,7 @@ Props is a very simple framework and though you'll likely want access to some of
 in the package, everything can be had with a single import:
 
 ```
-import com.outr.props._
+import com.outr.reactify._
 ```
 
 ### Creating Props
@@ -126,6 +126,10 @@ this case. See `DepsSpec` for more detailed examples.
 handle the conversions.
 
 ## Versions
+
+### Features for 1.3.0 (In-Progress)
+
+* [X] Utilization of Macros instead of runtime Observable detection
 
 ### Features for 1.2.0 (Released 2016.12.27)
 

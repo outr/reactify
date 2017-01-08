@@ -7,8 +7,6 @@ object Test {
     val a = Var(5)
     val b = Var(5)
 
-    b := a + a + 5
-    println(b())
-//    b.test(a + a + 5)
+    b := b() + 5
   }
 }
