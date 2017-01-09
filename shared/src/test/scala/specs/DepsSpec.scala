@@ -1,6 +1,6 @@
 package specs
 
-import com.outr.props._
+import com.outr.reactify._
 import org.scalatest.{Matchers, WordSpec}
 
 class DepsSpec extends WordSpec with Matchers {

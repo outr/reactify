@@ -2,7 +2,7 @@ package com.outr
 
 import scala.language.implicitConversions
 
-package object props {
+package object reactify {
   /**
     * Converts a `State[T]` to `T` implicitly. This is useful for DSL type-based operations like `5 + stateVar`.
     */
@@ -18,24 +18,5 @@ package object props {
     override def combine(variable: => Double, adjustment: => Double): Double = variable + adjustment
 
     override def extract(value: => Double, adjustment: => Double): Double = value - adjustment
-  }
-
-  /**
-    * Syntactic sugar for mutating collections in a `StateChannel`
-    */
-  implicit class ListStateChannel[T](v: StateChannel[List[T]]) {
-    def +=(t: T): Unit = v.mod(_ :+ t)
-
-    def -=(t: T): Unit = v.mod(_.filterNot(_ == t))
-
-    def ++=(seq: Seq[T]): Unit = v.mod(_ ++ seq)
-  }
-
-  implicit class VectorStateChannel[T](v: StateChannel[Vector[T]]) {
-    def +=(t: T): Unit = v.mod(_ :+ t)
-
-    def -=(t: T): Unit = v.mod(_.filterNot(_ == t))
-
-    def ++=(seq: Seq[T]): Unit = v.mod(_ ++ seq)
   }
 }

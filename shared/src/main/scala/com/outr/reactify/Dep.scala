@@ -1,4 +1,6 @@
-package com.outr.props
+package com.outr.reactify
+
+import scala.language.experimental.macros
 
 /**
   * Dep is very much like a `Val`, but is also a `Channel`. The basic purpose is to represent a value dependent upon
@@ -20,19 +22,17 @@ package com.outr.props
 class Dep[T, V](variable: StateChannel[V],
                 adjustment: => T,
                 submissive: Boolean)
-               (implicit connector: DepConnector[T, V]) extends Val[T](() => connector.combine(variable, adjustment)) with StateChannel[T] {
-  override def set(value: => T): Unit = {
-    super.set(value)
+               (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
+  override protected val internalFunction: () => T = () => connector.combine(variable, adjustment)
 
-    set(value, submissive)
-  }
+  override def update(observables: List[Observable[_]], value: => T): Unit = {
+    super.update(List(variable), value)
 
-  def set(value: => T, submissive: Boolean): Unit = {
     if (submissive) {
       val adj: T = adjustment
-      variable := connector.extract(value, adj)
+      variable.update(observables, connector.extract(value, adj))
     } else {
-      variable := connector.extract(value, adjustment)
+      variable.update(observables, connector.extract(value, adjustment))
     }
   }
 }

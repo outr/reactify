@@ -1,4 +1,4 @@
-package com.outr.props
+package com.outr.reactify
 
 /**
   * Convenience functionality for classic change management referencing the old value along with the new value.
