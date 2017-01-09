@@ -14,6 +14,13 @@ class BasicSpec extends WordSpec with Matchers {
       val v2 = Val(v1 + 5)
       v2() should be(10)
     }
+    "update properly when referencing a Var" in {
+      val v1 = Var(5)
+      val v2 = Val(v1 + 5)
+      v2() should be(10)
+      v1 := 10
+      v2() should be(15)
+    }
   }
   "Vars" should {
     "container the proper value" in {
@@ -59,6 +66,13 @@ class BasicSpec extends WordSpec with Matchers {
       currentValue should be(10)
       v3.get should be(10)
     }
+    "derive a value from itself and not explode" in {
+      val v = Var(5)
+      v := v + 5
+      v() should be(10)
+      v := v + 5
+      v() should be(15)
+    }
     "create a list that is dependent on vars" in {
       val s1 = Var("One")
       val s2 = Var("Two")
@@ -73,11 +87,6 @@ class BasicSpec extends WordSpec with Matchers {
       list() should be(List("One", "Two", "Three"))
       s2 := "Four"
       list() should be(List("One", "Two", "Four"))
-    }
-    "derive a value from itself and not explode" in {
-      val v = Var(5)
-      v := v + 5
-      v() should be(10)
     }
   }
 }
