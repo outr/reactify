@@ -20,16 +20,25 @@ object Macros {
 
     val observables = retrieveObservables(c)(value)
     val channel = c.prefix.tree
+    val selfReference = observables.exists(_.equalsStructure(channel))
 
-    observables.foreach { o =>
-      if (o.equalsStructure(channel)) {
-        c.abort(c.enclosingPosition, s"Recursive reference detected ($channel) in assignment (including self in the assignment function). $value")
+    val transformed = if (selfReference) {
+      val transformer = new Transformer {
+        override def transform(tree: c.universe.Tree): c.universe.Tree = if (tree.equalsStructure(channel)) {
+          q"Val(previousValue())"
+        } else {
+          super.transform(tree)
+        }
       }
+      transformer.transform(value)
+    } else {
+      value
     }
-    q"""
-        val previousValue = $channel.get
-        $channel.update(List(..$observables), $value)
-     """
+
+    c.untypecheck(q"""
+        val previousValue = State.internalFunction($channel)
+        $channel.update(List(..$observables), $transformed)
+     """)
   }
 
   def mod(c: blackbox.Context)(f: c.Tree): c.Tree = {
@@ -38,8 +47,8 @@ object Macros {
     val observables = retrieveObservables(c)(f)
     val channel = c.prefix.tree
     q"""
-        val previousValue = $channel.get
-        $channel.update(List(..$observables), $f(previousValue))
+        val previousValue = State.internalFunction($channel)
+        $channel.update(List(..$observables), $f(previousValue()))
      """
   }
 

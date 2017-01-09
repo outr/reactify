@@ -76,12 +76,12 @@ class BasicSpec extends WordSpec with Matchers {
       }
       list() should be(List("One", "Two", "Three"))
       s2 := "Four"
-      list() should be(List("One", "Two", "Three"))
+      list() should be(List("One", "Two", "Four"))
     }
-//    "derive a value from itself and not explode" in {
-//      val v = Var(5)
-//      v := v() + 5
-//      v() should be(10)
-//    }
+    "derive a value from itself and not explode" in {
+      val v = Var(5)
+      v := v + 5
+      v() should be(10)
+    }
   }
 }

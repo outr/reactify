@@ -17,7 +17,7 @@ class Var[T] private() extends StateChannel[T] {
     update(observables, value)
   }
 
-  override protected def state: T = _value()
+  override protected def internalFunction: () => T = _value
 
   /**
     * Convenience method to pre-evaluate the value instead of as an anonymous function.

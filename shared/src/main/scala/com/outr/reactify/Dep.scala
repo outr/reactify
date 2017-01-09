@@ -23,7 +23,7 @@ class Dep[T, V](variable: StateChannel[V],
                 adjustment: => T,
                 submissive: Boolean)
                (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
-  override protected def state: T = connector.combine(variable, adjustment)
+  override protected val internalFunction: () => T = () => connector.combine(variable, adjustment)
 
   override def update(observables: List[Observable[_]], value: => T): Unit = {
     super.update(List(variable), value)

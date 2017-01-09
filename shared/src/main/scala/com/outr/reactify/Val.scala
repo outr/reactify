@@ -13,7 +13,7 @@ import scala.language.experimental.macros
 class Val[T](observables: List[Observable[_]], _value: => T) extends StateChannel[T] {
   update(observables, _value)
 
-  override protected def state: T = _value
+  override protected val internalFunction: () => T = () => _value
 
   /**
     * Convenience method to get the current value.
