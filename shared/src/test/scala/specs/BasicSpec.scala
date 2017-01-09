@@ -63,17 +63,13 @@ class BasicSpec extends WordSpec with Matchers {
       val s1 = Var("One")
       val s2 = Var("Two")
       val list = Var(List.empty[String])
-      list.mod { value =>
-        s1() :: s2() :: value
-      }
+      list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
       s2 := "Three"
       list() should be(List("One", "Three"))
       s1 := "Two"
       list() should be(List("Two", "Three"))
-      list.mod { value =>
-        "One" :: value
-      }
+      list := "One" :: list()
       list() should be(List("One", "Two", "Three"))
       s2 := "Four"
       list() should be(List("One", "Two", "Four"))
