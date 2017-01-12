@@ -5,8 +5,8 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/759324d19db5496dbd9867b4a113c806)](https://www.codacy.com/app/matthicks/reactify?utm_source=github.com&utm_medium=referral&utm_content=outr/reactify&utm_campaign=Badge_Coverage)
 [![Stories in Ready](https://badge.waffle.io/outr/reactify.png?label=ready&title=Ready)](https://waffle.io/outr/reactify)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/reactify)
-[![Maven Central](https://img.shields.io/maven-central/v/com.outr/reactify_2.12.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12)
-[![Latest version](https://index.scala-lang.org/com.outr/reactify/reactify/latest.svg)](https://index.scala-lang.org/com.outr/reactify/reactify)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12)
+[![Latest version](https://index.scala-lang.org/outr/reactify/reactify/latest.svg)](https://index.scala-lang.org/outr/reactify)
 
 Functional Reactive Properties for observing changes and retaining values
 
