@@ -2,6 +2,7 @@
 ============
 
 [![Build Status](https://travis-ci.org/outr/reactify.svg?branch=master)](https://travis-ci.org/outr/reactify)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/759324d19db5496dbd9867b4a113c806)](https://www.codacy.com/app/matthicks/reactify?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=outr/reactify&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/759324d19db5496dbd9867b4a113c806)](https://www.codacy.com/app/matthicks/reactify?utm_source=github.com&utm_medium=referral&utm_content=outr/reactify&utm_campaign=Badge_Coverage)
 [![Stories in Ready](https://badge.waffle.io/outr/reactify.png?label=ready&title=Ready)](https://waffle.io/outr/reactify)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/reactify)
