@@ -10,14 +10,14 @@ import scala.language.experimental.macros
   * @tparam T the type of value this channel receives
   */
 class Var[T] private() extends StateChannel[T] {
-  private var _value: () => T = _
+  private var internal: () => T = _
 
   def this(observables: List[Observable[T]], value: => T) = {
     this()
     update(observables, value)
   }
 
-  override protected def internalFunction: () => T = _value
+  override protected def internalFunction: () => T = internal
 
   /**
     * Convenience method to pre-evaluate the value instead of as an anonymous function.
@@ -40,7 +40,7 @@ class Var[T] private() extends StateChannel[T] {
     * Convenience method to wrap this `Var` into a `Val`.
     */
   override def update(observables: List[Observable[_]], value: => T): Unit = {
-    _value = () => value
+    internal = () => value
 
     super.update(observables, value)
   }

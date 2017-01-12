@@ -10,10 +10,10 @@ import scala.language.experimental.macros
   *
   * @tparam T the type of value retained by this `State`
   */
-class Val[T](observables: List[Observable[_]], _value: => T) extends StateChannel[T] {
-  update(observables, _value)
+class Val[T](observables: List[Observable[_]], internal: => T) extends StateChannel[T] {
+  update(observables, internal)
 
-  override protected val internalFunction: () => T = () => _value
+  override protected val internalFunction: () => T = () => internal
 
   /**
     * Convenience method to get the current value.

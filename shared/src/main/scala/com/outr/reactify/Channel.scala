@@ -25,13 +25,6 @@ trait Channel[T] extends Observable[T] {
     */
   def set(value: => T): Unit = macro Macros.set
 
-  /**
-    * Casts this instance as a Channel[T]. This is useful for representing sub-classes explicitly as a Channel.
-    *
-    * @return Channel[T]
-    */
-  def asChannel: Channel[T] = this
-
   def update(observables: List[Observable[_]], value: => T): Unit = {
     fire(value)
   }

@@ -16,8 +16,6 @@ trait State[T] extends Observable[T] {
   def get: T = internalFunction()
 
   def apply(): T = get
-
-  def asState: State[T] = this
 }
 
 object State {

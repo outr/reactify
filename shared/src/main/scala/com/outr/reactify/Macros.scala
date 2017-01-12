@@ -44,7 +44,7 @@ object Macros {
       }
 
       c.untypecheck(q"""
-        val previousValue = State.internalFunction($channel)
+        val previousValue = com.outr.reactify.State.internalFunction($channel)
         $channel.update(List(..$observables), $transformed)
      """)
     }
@@ -62,7 +62,7 @@ object Macros {
     val observables = retrieveObservables(c)(f)
     val channel = c.prefix.tree
     q"""
-        val previousValue = State.internalFunction($channel)
+        val previousValue = com.outr.reactify.State.internalFunction($channel)
         $channel.update(List(..$observables), $f(previousValue()))
      """
   }

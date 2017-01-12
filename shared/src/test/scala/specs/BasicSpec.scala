@@ -27,11 +27,20 @@ class BasicSpec extends WordSpec with Matchers {
     "contain the proper value" in {
       val v = Val(5)
       v() should be(5)
+      v.value should be(5)
     }
     "contain the proper value when added" in {
       val v1 = Val(5)
       val v2 = Val(v1 + 5)
       v2() should be(10)
+    }
+    "statically assign properly" in {
+      val v1 = Var.apply(5)
+      val v2 = Var.apply(5)
+      val v3 = Val.static(v1 + v2)
+      v3.get should be(10)
+      v1 := 10
+      v3.get should be(10)
     }
     "update properly when referencing a Var" in {
       val v1 = Var(5)
@@ -58,6 +67,24 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 10
       v2() should be(15)
     }
+    "statically assign properly" in {
+      val v1 = Var.apply(5)
+      val v2 = Var.apply(5)
+      val v3 = Var.static(v1 + v2)
+      v3.get should be(10)
+      v1 := 10
+      v3.get should be(10)
+      v3.setStatic(v1 + v2)
+      v3.get should be(15)
+      v2 := 10
+      v3.get should be(15)
+    }
+    "assign and get via 'value'" in {
+      val v = Var(5)
+      v.value should be(5)
+      v.value = 10
+      v.value should be(10)
+    }
     "observe a simple change" in {
       val v = Var(5)
       var changed = 0
@@ -69,6 +96,27 @@ class BasicSpec extends WordSpec with Matchers {
       v := 10
       currentValue should be(10)
       changed should be(1)
+    }
+    "observe a change with a ChangeListener" in {
+      val v = Var(5)
+      var changes = 0
+      var original = 0
+      var current = 0
+      v.changes(new ChangeListener[Int] {
+        override def change(oldValue: Int, newValue: Int) = {
+          original = oldValue
+          current = newValue
+          changes += 1
+        }
+      })
+      v := 10
+      changes should be(1)
+      original should be(5)
+      current should be(10)
+      v := 15
+      changes should be(2)
+      original should be(10)
+      current should be(15)
     }
     "observe a complex change" in {
       val v1 = Var(5)
