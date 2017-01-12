@@ -1,5 +1,7 @@
 package com.outr.reactify
 
+import scala.util.Try
+
 /**
   * Convenience functionality for classic change management referencing the old value along with the new value.
   *
@@ -14,11 +16,8 @@ object ChangeListener {
     var previous: Option[T] = initialValue
 
     (t: T) => {
-      try {
-        previous.foreach(listener.change(_, t))
-      } finally {
-        previous = Some(t)
-      }
+      previous.foreach(listener.change(_, t))
+      previous = Some(t)
     }
   }
 }
