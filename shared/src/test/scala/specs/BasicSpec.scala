@@ -4,6 +4,25 @@ import com.outr.reactify._
 import org.scalatest.{Matchers, WordSpec}
 
 class BasicSpec extends WordSpec with Matchers {
+  "Channels" should {
+    "notify when changed" in {
+      var changes = 0
+      var lastChange: Option[String] = None
+      val channel = Channel[String]
+      channel.attach { s =>
+        changes += 1
+        lastChange = Some(s)
+      }
+      changes should be(0)
+      lastChange should be(None)
+      channel := "Test 1"
+      changes should be(1)
+      lastChange should be(Some("Test 1"))
+      channel := "Test 2"
+      changes should be(2)
+      lastChange should be(Some("Test 2"))
+    }
+  }
   "Vals" should {
     "contain the proper value" in {
       val v = Val(5)

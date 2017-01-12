@@ -2,6 +2,7 @@
 ============
 
 [![Build Status](https://travis-ci.org/outr/reactify.svg?branch=master)](https://travis-ci.org/outr/reactify)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/759324d19db5496dbd9867b4a113c806)](https://www.codacy.com/app/matthicks/reactify?utm_source=github.com&utm_medium=referral&utm_content=outr/reactify&utm_campaign=Badge_Coverage)
 [![Stories in Ready](https://badge.waffle.io/outr/reactify.png?label=ready&title=Ready)](https://waffle.io/outr/reactify)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/reactify)
 [![Maven Central](https://img.shields.io/maven-central/v/com.outr/reactify_2.12.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12)
@@ -16,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "1.3.0"
+libraryDependencies += "com.outr" %% "reactify" % "1.3.1"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.3.0"
+libraryDependencies += "com.outr" %%% "reactify" % "1.3.1"
 ```
 
 ## Concepts
