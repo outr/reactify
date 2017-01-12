@@ -18,7 +18,3 @@ trait Observable[T] {
     obs(value)
   }
 }
-
-object Observable {
-  def fire[T](observable: Observable[T], value: T): Unit = observable.fire(value)
-}
