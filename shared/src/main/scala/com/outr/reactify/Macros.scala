@@ -10,7 +10,7 @@ object Macros {
 
     implicit val observableTypeTag = typeTag[Observable[_]]
     val observables = value.collect {
-      case tree if tree.tpe <:< c.typeOf[Observable[_]] => tree
+      case tree if tree.tpe <:< c.typeOf[Observable[_]] && !(tree.tpe =:= c.typeOf[Nothing]) => tree
     }
     observables
   }

@@ -155,5 +155,19 @@ class BasicSpec extends WordSpec with Matchers {
       s2 := "Four"
       list() should be(List("One", "Two", "Four"))
     }
+    "create a Container with a generic Child list" in {
+      val v1 = Var("One")
+      val v2 = Var("Two")
+      val container = new Container[String]
+      container.children := Vector(v1, v2)
+      container.children() should be(Vector("One", "Two"))
+      v1 := "First"
+      v2 := "Second"
+      container.children() should be(Vector("First", "Second"))
+    }
+  }
+
+  class Container[Child] {
+    val children: Var[Vector[Child]] = Var[Vector[Child]](Vector.empty)
   }
 }
