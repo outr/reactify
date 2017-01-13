@@ -160,6 +160,7 @@ class BasicSpec extends WordSpec with Matchers {
       val v2 = Var("Two")
       val container = new Container[String]
       container.children := Vector(v1, v2)
+      container.children.observing should be(List(v1, v2))
       container.children() should be(Vector("One", "Two"))
       v1 := "First"
       v2 := "Second"

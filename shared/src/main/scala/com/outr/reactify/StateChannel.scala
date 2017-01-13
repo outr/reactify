@@ -6,6 +6,8 @@ trait StateChannel[T] extends Channel[T] with State[T] {
   private var monitoring = List.empty[Observable[_]]
   private val monitorListener = (value: Any) => fire(get)
 
+  def observing: List[Observable[_]] = monitoring
+
   override def update(observables: List[Observable[_]], value: => T): Unit = {
     super.update(observables, value)
 
