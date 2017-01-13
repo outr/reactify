@@ -21,18 +21,19 @@ import scala.language.experimental.macros
   */
 class Dep[T, V](variable: StateChannel[V],
                 adjustment: => T,
-                submissive: Boolean)
+                submissive: Boolean,
+                baseObservables: List[Observable[_]])
                (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
   override protected val internalFunction: () => T = () => connector.combine(variable, adjustment)
 
   override def update(observables: List[Observable[_]], value: => T): Unit = {
-    super.update(List(variable), value)
+    super.update(observables, value)
 
     if (submissive) {
       val adj: T = adjustment
-      variable.update(observables, connector.extract(value, adj))
+      variable.update(observables ::: baseObservables, connector.extract(value, adj))
     } else {
-      variable.update(observables, connector.extract(value, adjustment))
+      variable.update(observables ::: baseObservables, connector.extract(value, adjustment))
     }
   }
 }
@@ -43,16 +44,17 @@ object Dep {
     *
     * @param variable the variable depended on
     * @param adjustment the adjustment to derive the value of the dependency from the variable
-    * @param submissive determination of whether setting a new value on the `Dep` will impact continued changes to the
-    *                   variable based on this `Dep`'s dependencies or if it should be submissive to the variable. Defaults
-    *                   to false.
     *
     * @return dependency instance
     */
   def apply[T, V](variable: StateChannel[V],
-                  adjustment: => T,
-                  submissive: Boolean = false)
-                 (implicit connector: DepConnector[T, V]): Dep[T, V] = {
-    new Dep[T, V](variable, adjustment, submissive)
-  }
+                  adjustment: => T)
+                 (implicit connector: DepConnector[T, V]): Dep[T, V] = macro Macros.newDep[T, V]
+
+  def submissive[T, V](variable: StateChannel[V],
+                       adjustment: => T)
+                      (implicit connector: DepConnector[T, V]): Dep[T, V] = macro Macros.newSubmissiveDep[T, V]
+  /* TODO: submissive determination of whether setting a new value on the `Dep` will impact continued changes to the
+    *                   variable based on this `Dep`'s dependencies or if it should be submissive to the variable. Defaults
+    *                   to false.*/
 }

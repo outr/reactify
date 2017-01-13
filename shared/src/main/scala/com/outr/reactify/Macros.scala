@@ -80,4 +80,24 @@ object Macros {
     val observables = retrieveObservables(c)(value)
     q"new Val[$t](List(..$observables), $value)"
   }
+
+  def newDep[T, V](c: blackbox.Context)
+                  (variable: c.Tree, adjustment: c.Tree)
+                  (connector: c.Tree)
+                  (implicit t: c.WeakTypeTag[T], v: c.WeakTypeTag[V]): c.Tree = {
+    import c.universe._
+
+    val observables = retrieveObservables(c)(adjustment)
+    q"new Dep[$t, $v]($variable, $adjustment, false, $observables)($connector)"
+  }
+
+  def newSubmissiveDep[T, V](c: blackbox.Context)
+                  (variable: c.Tree, adjustment: c.Tree)
+                  (connector: c.Tree)
+                  (implicit t: c.WeakTypeTag[T], v: c.WeakTypeTag[V]): c.Tree = {
+    import c.universe._
+
+    val observables = retrieveObservables(c)(adjustment)
+    q"new Dep[$t, $v]($variable, $adjustment, true, $observables)($connector)"
+  }
 }
