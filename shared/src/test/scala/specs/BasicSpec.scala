@@ -67,6 +67,24 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 10
       v2() should be(15)
     }
+    "only fire distinct values when using 'distinct'" in {
+      val v = Var(5)
+      var changed = 0
+      var latest = v()
+      v.distinct.attach { value =>
+        changed += 1
+        latest = value
+      }
+      v := 5
+      changed should be(0)
+      latest should be(5)
+      v := 6
+      changed should be(1)
+      latest should be(6)
+      v := 6
+      changed should be(1)
+      latest should be(6)
+    }
     "statically assign properly" in {
       val v1 = Var.apply(5)
       val v2 = Var.apply(5)

@@ -33,7 +33,7 @@ object Macros {
       val transformed = if (selfReference) {
         val transformer = new Transformer {
           override def transform(tree: c.universe.Tree): c.universe.Tree = if (tree.equalsStructure(channel)) {
-            q"Val(previousValue())"
+            q"com.outr.reactify.Val(previousValue())"
           } else {
             super.transform(tree)
           }
@@ -71,14 +71,14 @@ object Macros {
     import c.universe._
 
     val observables = retrieveObservables(c)(value)
-    q"new Var[$t](List(..$observables), $value)"
+    q"new com.outr.reactify.Var[$t](List(..$observables), $value)"
   }
 
   def newVal[T](c: blackbox.Context)(value: c.Tree)(implicit t: c.WeakTypeTag[T]): c.Tree = {
     import c.universe._
 
     val observables = retrieveObservables(c)(value)
-    q"new Val[$t](List(..$observables), $value)"
+    q"new com.outr.reactify.Val[$t](List(..$observables), $value)"
   }
 
   def newDep[T, V](c: blackbox.Context)
@@ -88,7 +88,7 @@ object Macros {
     import c.universe._
 
     val observables = retrieveObservables(c)(adjustment)
-    q"new Dep[$t, $v]($variable, $adjustment, false, $observables)($connector)"
+    q"new com.outr.reactify.Dep[$t, $v]($variable, $adjustment, false, $observables)($connector)"
   }
 
   def newSubmissiveDep[T, V](c: blackbox.Context)
@@ -98,6 +98,6 @@ object Macros {
     import c.universe._
 
     val observables = retrieveObservables(c)(adjustment)
-    q"new Dep[$t, $v]($variable, $adjustment, true, $observables)($connector)"
+    q"new com.outr.reactify.Dep[$t, $v]($variable, $adjustment, true, $observables)($connector)"
   }
 }

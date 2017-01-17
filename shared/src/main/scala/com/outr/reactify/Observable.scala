@@ -3,6 +3,8 @@ package com.outr.reactify
 trait Observable[T] {
   private var observers = Set.empty[T => Unit]
 
+  lazy val distinct: Observable[T] = new DistinctObservable[T](this)
+
   def attach(f: T => Unit): T => Unit = synchronized {
     observers += f
     f
