@@ -17,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "1.3.5"
+libraryDependencies += "com.outr" %% "reactify" % "1.3.7"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.3.5"
+libraryDependencies += "com.outr" %%% "reactify" % "1.3.6"
 ```
 
 ## Concepts
@@ -92,6 +92,44 @@ new value of `15` (`myVar + 5`). As a result, the listener we attached above wil
 ```
 myVal = 15
 ```
+
+### Derived Values
+
+You can do clever things like define a value that is derived from other values:
+
+```
+val a = Var("One")
+val b = Var("Two")
+val c = Var("Three")
+
+val list = Val(List(a, b, c))
+list()      // Outputs List("One", "Two", "Three")
+
+a := "Uno"
+b := "Dos"
+c := "Tres"
+
+list()      // Outputs List("Uno", "Dos", "Tres")
+```
+
+### More Advanced Example
+
+This is all pretty neat, but it's the more complex scenarios that show the power of what you can do with Reactify:
+
+```scala
+val v1 = Var(10)
+val v2 = Var("Yes")
+val v3 = Var("No")
+val complex = Val[String] {
+    if (v1 > 10) {
+      v2
+    } else {
+      v3
+    }
+}
+```
+
+Any changes to `v1`, `v2`, or `v3` will fire a change on `complex` and the entire inlined function will be re-evaluated.
 
 ### Channels
 

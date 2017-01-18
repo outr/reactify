@@ -184,6 +184,40 @@ class BasicSpec extends WordSpec with Matchers {
       v2 := "Second"
       container.children() should be(Vector("First", "Second"))
     }
+    "create an advanced derived value" in {
+      val v1 = Var(10)
+      val v2 = Var("Yes")
+      val v3 = Var("No")
+      val complex = Val[String] {
+        if (v1 > 10) {
+          v2
+        } else {
+          v3
+        }
+      }
+      complex.observables should be(List(v1, v2, v3))
+      var current = complex()
+      complex.attach { v =>
+        println(s"Complex: $v")
+        current = v
+      }
+
+      complex() should be("No")
+      current should be("No")
+
+      v1 := 15
+      complex() should be("Yes")
+      current should be("Yes")
+
+      v2 := "True"
+      v3 := "False"
+      complex() should be("True")
+      current should be("True")
+
+      v1 := 5
+      complex() should be("False")
+      current should be("False")
+    }
   }
 
   class Container[Child] {
