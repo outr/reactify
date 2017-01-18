@@ -197,10 +197,7 @@ class BasicSpec extends WordSpec with Matchers {
       }
       complex.observables should be(List(v1, v2, v3))
       var current = complex()
-      complex.attach { v =>
-        println(s"Complex: $v")
-        current = v
-      }
+      complex.attach(current = _)
 
       complex() should be("No")
       current should be("No")
