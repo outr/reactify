@@ -75,6 +75,36 @@ class DepsSpec extends WordSpec with Matchers {
     }
   }
   "Deps Specific Use-Cases" when {
+    "combining Ints" should {
+      "do simple addition" in {
+        val a = Var(5)
+        val b = Var(10)
+        val combined = Dep[Int, Int](a, b)
+        combined() should be(15)
+
+        a := 10
+        combined() should be(20)
+      }
+      "support customized connector" in {
+        val a = Var(5)
+        val b = Var(10)
+        val distance = Dep[Int, Int](a, b)(new DepConnector[Int, Int] {
+          override def combine(variable: => Int, adjustment: => Int): Int = math.abs(variable - adjustment)
+
+          override def extract(value: => Int, adjustment: => Int): Int = adjustment - value
+        })
+
+        distance() should be(5)
+
+        a := 20
+        distance() should be(10)
+
+        distance := 8
+        distance() should be(8)
+        a() should be(2)
+        b() should be(10)
+      }
+    }
     "validating derived observables" should {
       val left = Var(0.0)
       val width = Var(0.0)

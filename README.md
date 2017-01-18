@@ -23,7 +23,7 @@ libraryDependencies += "com.outr" %% "reactify" % "1.3.7"
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.3.6"
+libraryDependencies += "com.outr" %%% "reactify" % "1.3.7"
 ```
 
 ## Concepts

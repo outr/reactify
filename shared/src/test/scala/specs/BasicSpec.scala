@@ -115,6 +115,15 @@ class BasicSpec extends WordSpec with Matchers {
       currentValue should be(10)
       changed should be(1)
     }
+    "observe a simple change immediately with attachAndFire" in {
+      val v = Var(5)
+      var changed = 0
+      v.attachAndFire { value =>
+        changed += 1
+        value should be(5)
+      }
+      changed should be(1)
+    }
     "observe a change with a ChangeListener" in {
       val v = Var(5)
       var changes = 0
