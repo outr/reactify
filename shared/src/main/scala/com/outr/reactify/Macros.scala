@@ -22,7 +22,7 @@ object Macros {
       val observables = retrieveObservables(c)(value)
       val channel = c.prefix.tree
 
-      c.untypecheck(q"$channel.update(List(..$observables), $value)")
+      q"$channel.update(List(..$observables), $value)"
     }
 
     def setStateChannel(value: c.Tree): c.Tree = {
