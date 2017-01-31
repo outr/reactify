@@ -33,7 +33,7 @@ object Macros {
       val transformed = if (selfReference) {
         val transformer = new Transformer {
           override def transform(tree: c.universe.Tree): c.universe.Tree = if (tree.equalsStructure(channel)) {
-            q"com.outr.reactify.Val(previousValue())"
+            q"previousVal"
           } else {
             super.transform(tree)
           }
@@ -45,6 +45,7 @@ object Macros {
 
       c.untypecheck(q"""
         val previousValue = com.outr.reactify.State.internalFunction($channel)
+        val previousVal = com.outr.reactify.Val(previousValue())
         $channel.update(List(..$observables), $transformed)
      """)
     }
