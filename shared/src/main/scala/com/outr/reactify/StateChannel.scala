@@ -15,6 +15,4 @@ trait StateChannel[T] extends Channel[T] with State[T] {
     monitoring = observables.distinct.filterNot(_ eq this)
     monitoring.foreach(_.attach(monitorListener))
   }
-
-  def mod(f: T => T): Unit = macro Macros.mod
 }

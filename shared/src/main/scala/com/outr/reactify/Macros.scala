@@ -30,10 +30,19 @@ object Macros {
       val channel = c.prefix.tree
       val selfReference = observables.exists(_.equalsStructure(channel))
 
+      val untyped =
+        q"""
+            val previousValue = com.outr.reactify.State.internalFunction($channel)
+            val previousVal = com.outr.reactify.Val(previousValue())
+         """
+      val retyped = c.typecheck(untyped)
       val transformed = if (selfReference) {
         val transformer = new Transformer {
           override def transform(tree: c.universe.Tree): c.universe.Tree = if (tree.equalsStructure(channel)) {
-            q"previousVal"
+            val t = q"previousVal"
+            val Block(_ :: v :: Nil, _) = retyped
+            c.internal.setSymbol(t, v.symbol)
+            c.internal.setType(t, v.tpe)
           } else {
             super.transform(tree)
           }
@@ -42,12 +51,8 @@ object Macros {
       } else {
         value
       }
-
-      c.untypecheck(q"""
-        val previousValue = com.outr.reactify.State.internalFunction($channel)
-        val previousVal = com.outr.reactify.Val(previousValue())
-        $channel.update(List(..$observables), $transformed)
-     """)
+      val res = q"$channel.update(List(..$observables), $transformed)"
+      q"$retyped ; $res"
     }
 
     if (c.prefix.tree.tpe <:< c.typeOf[StateChannel[_]]) {
@@ -55,17 +60,6 @@ object Macros {
     } else {
       setChannel(value)
     }
-  }
-
-  def mod(c: blackbox.Context)(f: c.Tree): c.Tree = {
-    import c.universe._
-
-    val observables = retrieveObservables(c)(f)
-    val channel = c.prefix.tree
-    q"""
-        val previousValue = com.outr.reactify.State.internalFunction($channel)
-        $channel.update(List(..$observables), $f(previousValue()))
-     """
   }
 
   def newVar[T](c: blackbox.Context)(value: c.Tree)(implicit t: c.WeakTypeTag[T]): c.Tree = {
