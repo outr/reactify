@@ -8,6 +8,18 @@ trait StateChannel[T] extends Channel[T] with State[T] {
 
   def observing: List[Observable[_]] = monitoring
 
+  /**
+    * Convenience method to pre-evaluate the value instead of as an anonymous function.
+    *
+    * @param value the value to be set
+    */
+  def setStatic(value: T): Unit = update(Nil, value)
+
+  /**
+    * Convenience method to set the current value like a variable.
+    */
+  def value_=(value: => T): Unit = macro Macros.set
+
   override def update(observables: List[Observable[_]], value: => T): Unit = {
     super.update(observables, value)
 

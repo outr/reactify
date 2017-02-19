@@ -14,11 +14,6 @@ class Val[T](val observables: List[Observable[_]], internal: => T) extends State
   override protected val internalFunction: () => T = () => internal
 
   observables.distinct.foreach(_.attach(_ => fire(get)))
-
-  /**
-    * Convenience method to get the current value.
-    */
-  def value: T = get
 }
 
 object Val {

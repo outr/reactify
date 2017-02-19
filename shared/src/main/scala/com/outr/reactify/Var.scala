@@ -20,23 +20,6 @@ class Var[T] private() extends StateChannel[T] {
   override protected def internalFunction: () => T = internal
 
   /**
-    * Convenience method to pre-evaluate the value instead of as an anonymous function.
-    *
-    * @param value the value to be set
-    */
-  def setStatic(value: T): Unit = update(Nil, value)
-
-  /**
-    * Convenience method to get the current value.
-    */
-  def value: T = get
-
-  /**
-    * Convenience method to set the current value like a variable.
-    */
-  def value_=(value: => T): Unit = macro Macros.set
-
-  /**
     * Convenience method to wrap this `Var` into a `Val`.
     */
   override def update(observables: List[Observable[_]], value: => T): Unit = {

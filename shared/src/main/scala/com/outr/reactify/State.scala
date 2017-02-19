@@ -15,6 +15,11 @@ trait State[T] extends Observable[T] {
 
   def get: T = internalFunction()
 
+  /**
+    * Convenience method to get the current value.
+    */
+  def value: T = get
+
   def apply(): T = get
 }
 
