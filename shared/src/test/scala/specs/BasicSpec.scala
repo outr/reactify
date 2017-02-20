@@ -224,9 +224,35 @@ class BasicSpec extends WordSpec with Matchers {
       complex() should be("False")
       current should be("False")
     }
+    "create a nested scenario" in {
+      val users = Var[List[User]](Nil)
+
+      val adam = new User {
+        name := "Adam"
+      }
+      val betty = new User {
+        name := "Betty"
+      }
+      val chris = new User {
+        name := "Chris"
+      }
+      val debby = new User {
+        name := "Debby"
+      }
+      users := List(adam, betty, chris, debby)
+
+      val fiveLetterNames = Val(users.collect {
+        case user if user.name.length == 5 => user.name()
+      })
+      fiveLetterNames() should be(List("Betty", "Chris", "Debby"))
+    }
   }
 
   class Container[Child] {
     val children: Var[Vector[Child]] = Var[Vector[Child]](Vector.empty)
+  }
+
+  class User {
+    val name: Var[String] = Var[String]("")
   }
 }
