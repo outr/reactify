@@ -32,8 +32,8 @@ object Macros {
 
       val untyped =
         q"""
-            val previousValue = com.outr.reactify.State.internalFunction($channel)
-            val previousVal = com.outr.reactify.Val(previousValue())
+            val previousValue = _root_.com.outr.reactify.State.internalFunction($channel)
+            val previousVal = _root_.com.outr.reactify.Val(previousValue())
          """
       val retyped = c.typecheck(untyped)
       val transformed = if (selfReference) {
@@ -66,14 +66,14 @@ object Macros {
     import c.universe._
 
     val observables = retrieveObservables(c)(value)
-    q"new com.outr.reactify.Var[$t](List(..$observables), $value)"
+    q"new _root_.com.outr.reactify.Var[$t](List(..$observables), $value)"
   }
 
   def newVal[T](c: blackbox.Context)(value: c.Tree)(implicit t: c.WeakTypeTag[T]): c.Tree = {
     import c.universe._
 
     val observables = retrieveObservables(c)(value)
-    q"new com.outr.reactify.Val[$t](List(..$observables), $value)"
+    q"new _root_.com.outr.reactify.Val[$t](List(..$observables), $value)"
   }
 
   def newDep[T, V](c: blackbox.Context)
@@ -83,7 +83,7 @@ object Macros {
     import c.universe._
 
     val observables = retrieveObservables(c)(adjustment)
-    q"new com.outr.reactify.Dep[$t, $v]($variable, $adjustment, false, $observables)($connector)"
+    q"new _root_.com.outr.reactify.Dep[$t, $v]($variable, $adjustment, false, $observables)($connector)"
   }
 
   def newSubmissiveDep[T, V](c: blackbox.Context)
@@ -93,6 +93,6 @@ object Macros {
     import c.universe._
 
     val observables = retrieveObservables(c)(adjustment)
-    q"new com.outr.reactify.Dep[$t, $v]($variable, $adjustment, true, $observables)($connector)"
+    q"new _root_.com.outr.reactify.Dep[$t, $v]($variable, $adjustment, true, $observables)($connector)"
   }
 }
