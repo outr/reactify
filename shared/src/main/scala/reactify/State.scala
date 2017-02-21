@@ -1,7 +1,11 @@
 package reactify
 
-class State[T](private var instance: StateInstance[T]) extends Observable[T] {
-  private var previous: StateInstance[T] = _
+class State[T](private var stateInstance: StateInstance[T]) extends Observable[T] {
+  private[reactify] val replacement = new ThreadLocal[Option[StateInstance[T]]] {
+    override def initialValue(): Option[StateInstance[T]] = None
+  }
+
+  private def instance: StateInstance[T] = replacement.get().getOrElse(stateInstance)
 
   def observingIds: Set[Int] = instance.observables
 
@@ -15,9 +19,11 @@ class State[T](private var instance: StateInstance[T]) extends Observable[T] {
     instance.cached
   }
 
+  def apply(): T = get
+
   protected def set(value: => T): Unit = synchronized {
-    previous = instance
-    instance = new StateInstance[T](() => value)
+    val previous = instance
+    stateInstance = StateInstance[T](this, previous, () => value)
   }
 
   def update(): Unit = {
@@ -37,8 +43,23 @@ class StateInstance[T](val function: () => T) {
 }
 
 object StateInstance {
-  private val observing = new ThreadLocal[Var[_]]
   private val observables = new ThreadLocal[Set[Int]]
+
+  def apply[T](state: State[T], previous: StateInstance[T], function: () => T): StateInstance[T] = {
+    var instance = new StateInstance[T](function)
+    if (instance.observables.contains(state.id)) {
+      instance = new StateInstance[T](() => {
+        val original = state.replacement.get()
+        state.replacement.set(Some(previous))
+        try {
+          function()
+        } finally {
+          state.replacement.set(original)
+        }
+      })
+    }
+    instance
+  }
 
   def update[T](instance: StateInstance[T]): Unit = instance.synchronized {
     val previous = observables.get()

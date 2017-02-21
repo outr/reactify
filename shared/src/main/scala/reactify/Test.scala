@@ -21,7 +21,7 @@ object Test {
     v2.set(v1.get + 10)
     println(s"${v2.get} should be 20")
 
-//    v2.set(v2.get + v1.get)
-//    println(s"${v2.get} should be 30")
+    v2.set(v2.get + v1.get)
+    println(s"${v2.get} should be 30")
   }
 }
