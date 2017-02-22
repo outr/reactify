@@ -1,21 +1,22 @@
 package reactify
 
-class State[T](private var stateInstance: StateInstance[T]) extends Observable[T] {
+class State[T] private() extends Observable[T] {
+  def this(function: () => T) = {
+    this()
+    stateInstance = new StateInstance[T](this, function)
+  }
+
+  private var stateInstance: StateInstance[T] = _
   private[reactify] val replacement = new ThreadLocal[Option[StateInstance[T]]] {
     override def initialValue(): Option[StateInstance[T]] = None
   }
 
   private def instance: StateInstance[T] = replacement.get().getOrElse(stateInstance)
 
-  def observingIds: Set[Int] = instance.observables
-
-  // Listeners to all observables
-  Observable.attach((id: Int, _: Any) => if (observingIds.contains(id)) {
-    update()
-  })
+  def observing: Set[Observable[_]] = instance.observables
 
   def get: T = {
-    StateInstance.reference(id)
+    StateInstance.reference(this)
     instance.cached
   }
 
@@ -23,7 +24,7 @@ class State[T](private var stateInstance: StateInstance[T]) extends Observable[T
 
   protected def set(value: => T): Unit = synchronized {
     val previous = instance
-    stateInstance = StateInstance[T](this, previous, () => value)
+    stateInstance = StateInstance[T](previous, () => value)
   }
 
   def update(): Unit = {
@@ -35,20 +36,26 @@ class State[T](private var stateInstance: StateInstance[T]) extends Observable[T
   }
 }
 
-class StateInstance[T](val function: () => T) {
+class StateInstance[T](val state: State[T], val function: () => T) {
   var cached: T = _
-  var observables: Set[Int] = Set.empty
+  var observables: Set[Observable[_]] = Set.empty
+
+  val monitor: (Any) => Unit = (_: Any) => StateInstance.update(this)
+
+  def dispose(): Unit = observables.foreach(_.detach(monitor))
 
   StateInstance.update(this)
 }
 
 object StateInstance {
-  private val observables = new ThreadLocal[Set[Int]]
+  private val observables = new ThreadLocal[Set[Observable[_]]]
 
-  def apply[T](state: State[T], previous: StateInstance[T], function: () => T): StateInstance[T] = {
-    var instance = new StateInstance[T](function)
-    if (instance.observables.contains(state.id)) {
-      instance = new StateInstance[T](() => {
+  def apply[T](previous: StateInstance[T], function: () => T): StateInstance[T] = {
+    val state = previous.state
+    var instance = new StateInstance[T](state, function)
+    if (instance.observables.contains(state)) {
+      // TODO: replace state with instance (StateInstance should be an Observable)
+      instance = new StateInstance[T](state, () => {
         val original = state.replacement.get()
         state.replacement.set(Some(previous))
         try {
@@ -57,6 +64,8 @@ object StateInstance {
           state.replacement.set(original)
         }
       })
+    } else {
+      previous.dispose()      // Not necessary anymore, so dispose the old
     }
     instance
   }
@@ -66,14 +75,30 @@ object StateInstance {
     observables.set(Set.empty)
     try {
       instance.cached = instance.function()
-      instance.observables = observables.get()
+      val oldObservables = instance.observables
+      val newObservables = observables.get()
+
+      // Out with the old
+      oldObservables.foreach { ob =>
+        if (!newObservables.contains(ob)) {
+          ob.detach(instance.monitor)
+        }
+      }
+
+      // In with the new
+      newObservables.foreach { ob =>
+        if (!oldObservables.contains(ob)) {
+          ob.attach(instance.monitor)
+        }
+      }
+      instance.observables = newObservables
     } finally {
       observables.set(previous)
     }
   }
 
-  def reference(id: Int): Unit = Option(observables.get()) match {
-    case Some(obs) => observables.set(obs + id)
+  def reference(observable: Observable[_]): Unit = Option(observables.get()) match {
+    case Some(obs) => observables.set(obs + observable)
     case None => // Nothing being updated
   }
 }
