@@ -23,8 +23,12 @@ class State[T] private() extends Observable[T] {
   def apply(): T = get
 
   protected def set(value: => T): Unit = synchronized {
+    val previousValue = instance.cached
     val previous = instance
     stateInstance = StateInstance[T](previous, () => value)
+    if (previousValue != instance.cached) {
+      fire(instance.cached)
+    }
   }
 
   def update(): Unit = {
@@ -87,7 +91,6 @@ object StateInstance {
     val state = previous.state
     var instance = new StateInstance[T](state, function)
     if (instance.observables.contains(state)) {
-      instance.observables += previous
       // TODO: replace state with instance (StateInstance should be an Observable)
       instance = new StateInstance[T](state, () => {
         val original = state.replacement.get()
