@@ -6,7 +6,7 @@ class State[T] private() extends Observable[T] {
     stateInstance = new StateInstance[T](this, function)
   }
 
-  private var stateInstance: StateInstance[T] = _
+  private[reactify] var stateInstance: StateInstance[T] = _
   private[reactify] val replacement = new ThreadLocal[Option[StateInstance[T]]] {
     override def initialValue(): Option[StateInstance[T]] = None
   }
@@ -29,22 +29,55 @@ class State[T] private() extends Observable[T] {
 
   def update(): Unit = {
     val current = instance.cached
-    StateInstance.update(instance)
+    instance.update()
     if (current != instance.cached) {
       fire(instance.cached)
     }
   }
 }
 
-class StateInstance[T](val state: State[T], val function: () => T) {
+class StateInstance[T](val state: State[T], val function: () => T) extends Observable[T] {
   var cached: T = _
   var observables: Set[Observable[_]] = Set.empty
 
-  val monitor: (Any) => Unit = (_: Any) => StateInstance.update(this)
+  val monitor: (Any) => Unit = (_: Any) => {
+    val original = cached
+    update()
+    if (original != cached) {
+      fire(cached)
+    }
+  }
+
+  update()
 
   def dispose(): Unit = observables.foreach(_.detach(monitor))
 
-  StateInstance.update(this)
+  def update(): Unit = synchronized {
+    val previous = StateInstance.observables.get()
+    StateInstance.observables.set(Set.empty)
+    try {
+      cached = function()
+      val oldObservables = observables
+      val newObservables = StateInstance.observables.get()
+
+      // Out with the old
+      oldObservables.foreach { ob =>
+        if (!newObservables.contains(ob)) {
+          ob.detach(monitor)
+        }
+      }
+
+      // In with the new
+      newObservables.foreach { ob =>
+        if (!oldObservables.contains(ob)) {
+          ob.attach(monitor)
+        }
+      }
+      observables = newObservables
+    } finally {
+      StateInstance.observables.set(previous)
+    }
+  }
 }
 
 object StateInstance {
@@ -54,6 +87,7 @@ object StateInstance {
     val state = previous.state
     var instance = new StateInstance[T](state, function)
     if (instance.observables.contains(state)) {
+      instance.observables += previous
       // TODO: replace state with instance (StateInstance should be an Observable)
       instance = new StateInstance[T](state, () => {
         val original = state.replacement.get()
@@ -68,33 +102,6 @@ object StateInstance {
       previous.dispose()      // Not necessary anymore, so dispose the old
     }
     instance
-  }
-
-  def update[T](instance: StateInstance[T]): Unit = instance.synchronized {
-    val previous = observables.get()
-    observables.set(Set.empty)
-    try {
-      instance.cached = instance.function()
-      val oldObservables = instance.observables
-      val newObservables = observables.get()
-
-      // Out with the old
-      oldObservables.foreach { ob =>
-        if (!newObservables.contains(ob)) {
-          ob.detach(instance.monitor)
-        }
-      }
-
-      // In with the new
-      newObservables.foreach { ob =>
-        if (!oldObservables.contains(ob)) {
-          ob.attach(instance.monitor)
-        }
-      }
-      instance.observables = newObservables
-    } finally {
-      observables.set(previous)
-    }
   }
 
   def reference(observable: Observable[_]): Unit = Option(observables.get()) match {

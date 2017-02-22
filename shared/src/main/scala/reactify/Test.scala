@@ -28,6 +28,9 @@ object Test {
     v2.set(10)
 
     val v3 = Var(v1.get + v2.get)
+    v3.attach { value =>
+      println(s"v3 changed to $value")
+    }
     println(s"${v3.get} should be 15")
     v3.set(v3() + 5)
     println(s"${v3.get} should be 20")
