@@ -9,13 +9,11 @@ object Test {
     }
 
     val v1 = Var(5)
-    println(s"v1 observing ids: ${v1.observing}")
     v1.attach { value =>
       println(s"v1 changed to $value")
     }
     equality(v1, 5, "v1")
     v1.set(10)
-    println(s"v1 observing ids: ${v1.observing}")
     equality(v1, 10, "v1")
 
     val v2 = Var(v1.get + 5)
@@ -23,7 +21,6 @@ object Test {
       println(s"v2 changed to $value")
     }
     equality(v2, 15, "v2")
-    println(s"v2 observing ids: ${v2.observing}")
     v2.set(v1.get + 10)
     equality(v2, 20, "v2")
 

@@ -1,66 +1,61 @@
 package reactify
 
 class State[T] private() extends Observable[T] {
+  private[reactify] var instance: StateInstance[T] = _
+
   def this(function: () => T) = {
     this()
-    stateInstance = new StateInstance[T](this, function)
+    StateInstance.replace[T](this, function)
   }
-
-  private[reactify] var stateInstance: StateInstance[T] = _
-  private[reactify] val replacement = new ThreadLocal[Option[StateInstance[T]]] {
-    override def initialValue(): Option[StateInstance[T]] = None
-  }
-
-  private def instance: StateInstance[T] = replacement.get().getOrElse(stateInstance)
-
-  def observing: Set[Observable[_]] = instance.observables
 
   def get: T = {
     StateInstance.reference(this)
-    instance.cached
+    instance.value
   }
 
   def apply(): T = get
 
   protected def set(value: => T): Unit = synchronized {
-    val previousValue = instance.cached
-    val previous = instance
-    stateInstance = StateInstance[T](previous, () => value)
-    if (previousValue != instance.cached) {
-      fire(instance.cached)
-    }
-  }
-
-  def update(): Unit = {
-    val current = instance.cached
-    instance.update()
-    if (current != instance.cached) {
-      fire(instance.cached)
-    }
+    StateInstance.replace[T](this, () => value)
   }
 }
 
-class StateInstance[T](val state: State[T], val function: () => T) extends Observable[T] {
-  var cached: T = _
+class StateInstance[T](val state: State[T], val function: () => T, previousInstance: Option[StateInstance[T]]) extends Observable[T] {
+  private val replacement = new ThreadLocal[Option[StateInstance[T]]] {
+    override def initialValue(): Option[StateInstance[T]] = None
+  }
+  private var cached: T = _
   var observables: Set[Observable[_]] = Set.empty
+
+  def value: T = replacement.get().map(_.value).getOrElse(cached)
 
   val monitor: (Any) => Unit = (_: Any) => {
     val original = cached
     update()
     if (original != cached) {
-      fire(cached)
+      state.fire(cached)
     }
   }
 
   update()
 
-  def dispose(): Unit = observables.foreach(_.detach(monitor))
+  def dispose(): Unit = {
+    observables.foreach(_.detach(monitor))
+    previousInstance.foreach(_.dispose())
+  }
 
   def update(): Unit = synchronized {
     val previous = StateInstance.observables.get()
     StateInstance.observables.set(Set.empty)
     try {
-      cached = function()
+      previousInstance.foreach(_.update())
+      val oldReplacement = replacement.get()
+      replacement.set(previousInstance)
+      try {
+        cached = function()
+      } finally {
+        replacement.set(oldReplacement)
+      }
       val oldObservables = observables
       val newObservables = StateInstance.observables.get()
 
@@ -87,24 +82,18 @@ class StateInstance[T](val state: State[T], val function: () => T) extends Obser
 object StateInstance {
   private val observables = new ThreadLocal[Set[Observable[_]]]
 
-  def apply[T](previous: StateInstance[T], function: () => T): StateInstance[T] = {
-    val state = previous.state
-    var instance = new StateInstance[T](state, function)
+  def replace[T](state: State[T], function: () => T): Unit = {
+    val previous = state.instance
+    var instance = new StateInstance[T](state, function, None)
     if (instance.observables.contains(state)) {
-      // TODO: replace state with instance (StateInstance should be an Observable)
-      instance = new StateInstance[T](state, () => {
-        val original = state.replacement.get()
-        state.replacement.set(Some(previous))
-        try {
-          function()
-        } finally {
-          state.replacement.set(original)
-        }
-      })
-    } else {
-      previous.dispose()      // Not necessary anymore, so dispose the old
+      instance = new StateInstance[T](state, function, Option(previous))
+    } else if (previous != null) {
+      previous.dispose()  // Cleanup old instance
     }
-    instance
+    state.instance = instance
+    if (previous != null && previous.value != instance.value) {
+      state.fire(instance.value)
+    }
   }
 
   def reference(observable: Observable[_]): Unit = Option(observables.get()) match {

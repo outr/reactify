@@ -1,6 +1,8 @@
 package reactify
 
 class Var[T] private(function: () => T) extends State[T](function) {
+  def :=(value: => T): Unit = set(value)
+
   override def set(value: => T): Unit = super.set(value)
 }
 

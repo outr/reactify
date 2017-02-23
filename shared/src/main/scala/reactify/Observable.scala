@@ -14,7 +14,7 @@ trait Observable[T] {
 
   def changes(listener: ChangeListener[T]): T => Unit = attach(ChangeListener.createFunction(listener, None))
 
-  protected def fire(value: T): Unit = observers.foreach { obs =>
+  protected[reactify] def fire(value: T): Unit = observers.foreach { obs =>
     obs(value)
   }
 }
