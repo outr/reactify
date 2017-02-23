@@ -164,14 +164,14 @@ class BasicSpec extends WordSpec with Matchers {
       val v = Var(5)
       v := v + 5
       v() should be(10)
-//      v := v + 5
-//      v() should be(15)
+      v := v + 5
+      v() should be(15)
     }
-    /*"create a list that is dependent on vars" in {
+    "create a list that is dependent on vars" in {
       val s1 = Var("One")
       val s2 = Var("Two")
       val list = Var(List.empty[String])
-      list := s1() :: s2() :: list()
+      list := s1() :: s2() :: Nil
       list() should be(List("One", "Two"))
       s2 := "Three"
       list() should be(List("One", "Three"))
@@ -179,9 +179,9 @@ class BasicSpec extends WordSpec with Matchers {
       list() should be(List("Two", "Three"))
       list := "One" :: list()
       list() should be(List("One", "Two", "Three"))
-      s2 := "Four"
-      list() should be(List("One", "Two", "Four"))
-    }*/
+//      s2 := "Four"
+//      list() should be(List("One", "Two", "Four"))
+    }
     "create a Container with a generic Child list" in {
       val v1 = Var("One")
       val v2 = Var("Two")

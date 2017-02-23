@@ -44,7 +44,7 @@ class State[T] private() extends Observable[T] {
   }
 }
 
-class StateInstance[T](val state: State[T], val function: () => T, previousInstance: Option[StateInstance[T]]) extends Observable[T] {
+class StateInstance[T](val state: State[T], val function: () => T, val previousInstance: Option[StateInstance[T]]) extends Observable[T] {
   private val replacement = new ThreadLocal[Option[StateInstance[T]]] {
     override def initialValue(): Option[StateInstance[T]] = None
   }
@@ -72,16 +72,24 @@ class StateInstance[T](val state: State[T], val function: () => T, previousInsta
     val previous = StateInstance.observables.get()
     StateInstance.observables.set(Set.empty)
     try {
-      previousInstance.foreach(_.update())
+//      previousInstance.foreach(_.update())
       val oldReplacement = replacement.get()
-      replacement.set(previousInstance)
+      oldReplacement match {
+        case Some(old) => if (old.previousInstance.nonEmpty) {
+          replacement.set(old.previousInstance)
+        } else {
+          replacement.set(oldReplacement)
+        }
+        case None => replacement.set(previousInstance)
+      }
+      replacement.set(oldReplacement.flatMap(_.previousInstance).orElse(previousInstance))
       try {
         cached = function()
       } finally {
         replacement.set(oldReplacement)
       }
       val oldObservables = observables
-      val newObservables = StateInstance.observables.get()
+      val newObservables = StateInstance.observables.get() - state
 
       // Out with the old
       oldObservables.foreach { ob =>
