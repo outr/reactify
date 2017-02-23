@@ -69,10 +69,11 @@ class StateInstance[T](val state: State[T], val function: () => T, val previousI
   }
 
   def update(): Unit = synchronized {
+    previousInstance.foreach(_.update())
+
     val previous = StateInstance.observables.get()
     StateInstance.observables.set(Set.empty)
     try {
-//      previousInstance.foreach(_.update())
       val oldReplacement = replacement.get()
       oldReplacement match {
         case Some(old) => if (old.previousInstance.nonEmpty) {
@@ -82,7 +83,7 @@ class StateInstance[T](val state: State[T], val function: () => T, val previousI
         }
         case None => replacement.set(previousInstance)
       }
-      replacement.set(oldReplacement.flatMap(_.previousInstance).orElse(previousInstance))
+//      replacement.set(oldReplacement.flatMap(_.previousInstance).orElse(previousInstance))
       try {
         cached = function()
       } finally {
