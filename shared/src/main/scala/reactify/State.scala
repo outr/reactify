@@ -8,6 +8,8 @@ class State[T] private() extends Observable[T] {
     StateInstance.replace[T](this, function)
   }
 
+  def observing: Set[Observable[_]] = instance.observables
+
   def get: T = {
     StateInstance.reference(this)
     instance.value
@@ -15,8 +17,30 @@ class State[T] private() extends Observable[T] {
 
   def apply(): T = get
 
+  def value: T = get
+
+  def attachAndFire(f: T => Unit): T => Unit = {
+    attach(f)
+    fire(get)
+    f
+  }
+
+  override def changes(listener: ChangeListener[T]): (T) => Unit = {
+    attach(ChangeListener.createFunction(listener, Some(get)))
+  }
+
   protected def set(value: => T): Unit = synchronized {
     StateInstance.replace[T](this, () => value)
+  }
+
+  /**
+    * Convenience method to pre-evaluate the value instead of as an anonymous function.
+    *
+    * @param value the value to be set
+    */
+  protected def setStatic(value: T): Unit = synchronized {
+    val v: T = value
+    StateInstance.replace[T](this, () => v)
   }
 }
 
