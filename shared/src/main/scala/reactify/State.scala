@@ -50,12 +50,13 @@ class StateInstance[T](val state: State[T], val function: () => T, val previousI
   }
   private var cached: T = _
   var observables: Set[Observable[_]] = Set.empty
+  var hasSelfReference: Boolean = false
 
   def value: T = replacement.get().map(_.value).getOrElse(cached)
 
   val monitor: (Any) => Unit = (_: Any) => {
     val original = cached
-    update()
+    state.instance.update()
     if (original != cached) {
       state.fire(cached)
     }
@@ -83,14 +84,21 @@ class StateInstance[T](val state: State[T], val function: () => T, val previousI
         }
         case None => replacement.set(previousInstance)
       }
-//      replacement.set(oldReplacement.flatMap(_.previousInstance).orElse(previousInstance))
       try {
         cached = function()
       } finally {
         replacement.set(oldReplacement)
       }
       val oldObservables = observables
-      val newObservables = StateInstance.observables.get() - state
+      hasSelfReference = StateInstance.observables.get().contains(state)
+      var newObservables = StateInstance.observables.get()
+      if (hasSelfReference) {
+        newObservables -= state
+      }
+      previousInstance match {
+        case Some(pi) => newObservables += pi
+        case None => // Nothing to do
+      }
 
       // Out with the old
       oldObservables.foreach { ob =>
@@ -118,7 +126,7 @@ object StateInstance {
   def replace[T](state: State[T], function: () => T): Unit = {
     val previous = state.instance
     var instance = new StateInstance[T](state, function, None)
-    if (instance.observables.contains(state)) {
+    if (instance.hasSelfReference) {
       instance = new StateInstance[T](state, function, Option(previous))
     } else if (previous != null) {
       previous.dispose()  // Cleanup old instance
