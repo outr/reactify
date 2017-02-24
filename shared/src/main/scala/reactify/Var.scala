@@ -7,10 +7,8 @@ package reactify
   *
   * @tparam T the type of value this channel receives
   */
-class Var[T] private(function: () => T) extends State[T](function) with Channel[T] {
+class Var[T] private[reactify](function: () => T) extends State[T](function) with Channel[T] {
   override def set(value: => T): Unit = super.set(value)
-
-  override def :=(value: => T): Unit = set(value)
 
   /**
     * Convenience method to set the current value like a variable.

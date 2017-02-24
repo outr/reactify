@@ -1,6 +1,6 @@
 package reactify
 
-class State[T] private() extends Observable[T] {
+class State[T] private[reactify]() extends Observable[T] {
   private[reactify] var instance: StateInstance[T] = _
 
   def this(function: () => T) = {
