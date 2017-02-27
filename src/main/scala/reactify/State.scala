@@ -36,14 +36,15 @@ class State[T] private[reactify]() extends Observable[T] {
   protected def replace(function: () => T): Unit = {
     val previous = this.instance
     var instance = new StateInstance[T](this, function, None)
-    if (instance.hasSelfReference) {
-      instance = new StateInstance[T](this, function, Option(previous))
-    } else if (previous != null) {
-      previous.dispose()  // Cleanup old instance
+    instance.hasSelfReference match {
+      case true => instance = new StateInstance[T](this, function, Option(previous))
+      case false if Option(previous).nonEmpty => previous.dispose()    // Cleanup old instance
+      case _ =>
     }
     this.instance = instance
-    if (previous != null && previous.value != instance.value) {
-      fire(instance.value)
+    Option(previous).foreach {
+      case p if p.value != instance.value => fire(instance.value)
+      case _ =>
     }
   }
 
