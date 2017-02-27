@@ -20,22 +20,29 @@ package reactify
 class Dep[T, V] private(variable: Var[V],
                         adjustment: => T,
                         submissive: Boolean)
-                       (implicit connector: DepConnector[T, V]) extends Var[T](() => connector.combine(variable(), adjustment)) {
-  variable.attach { value =>
-    val adjusted = connector.combine(value, adjustment)
-    if (get != adjusted) {
-      set(adjusted)
+                       (implicit connector: DepConnector[T, V]) extends Observable[T] {
+  private val internal = Val[T](connector.combine(variable, adjustment))
+
+  override def attach(f: (T) => Unit): (T) => Unit = internal.attach(f)
+
+  override def detach(f: (T) => Unit): Unit = internal.detach(f)
+
+  override def changes(listener: ChangeListener[T]): (T) => Unit = internal.changes(listener)
+
+  override protected[reactify] def fire(value: T): Unit = {}
+
+  def set(value: => T, submissive: Boolean = submissive): Unit = {
+    if (submissive) {
+      val adj: T = adjustment
+      variable := connector.extract(value, adj)
+    } else {
+      variable := connector.extract(value, adjustment)
     }
   }
 
-  override protected[reactify] def fire(value: T): Unit = {
-    super.fire(value)
+  def apply(): T = internal.apply()
 
-    val adjusted = connector.extract(value, adjustment)
-    if (variable() != adjusted) {
-      variable := adjusted
-    }
-  }
+  def :=(value: => T): Unit = set(value)
 }
 
 object Dep {

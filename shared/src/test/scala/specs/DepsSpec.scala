@@ -119,7 +119,7 @@ class DepsSpec extends WordSpec with Matchers {
         center := 500.0
         left() should be(500.0)
         right() should be(500.0)
-        left.observing should be(List(width))
+        left.observing should be(Set(width))
         leftValue should be(500.0)
       }
       "update width" in {

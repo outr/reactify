@@ -8,7 +8,7 @@ package reactify
   *
   * @tparam T the type of value retained by this `State`
   */
-class Val[T] private(function: () => T) extends State[T](function)
+class Val[T] private[reactify](function: () => T) extends State[T](function)
 
 object Val {
   /**

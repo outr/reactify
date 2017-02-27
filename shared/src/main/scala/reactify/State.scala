@@ -5,7 +5,7 @@ class State[T] private[reactify]() extends Observable[T] {
 
   def this(function: () => T) = {
     this()
-    StateInstance.replace[T](this, function)
+    replace(function)
   }
 
   def observing: Set[Observable[_]] = instance.observables
@@ -30,7 +30,21 @@ class State[T] private[reactify]() extends Observable[T] {
   }
 
   protected def set(value: => T): Unit = synchronized {
-    StateInstance.replace[T](this, () => value)
+    replace(() => value)
+  }
+
+  protected def replace(function: () => T): Unit = {
+    val previous = this.instance
+    var instance = new StateInstance[T](this, function, None)
+    if (instance.hasSelfReference) {
+      instance = new StateInstance[T](this, function, Option(previous))
+    } else if (previous != null) {
+      previous.dispose()  // Cleanup old instance
+    }
+    this.instance = instance
+    if (previous != null && previous.value != instance.value) {
+      fire(instance.value)
+    }
   }
 
   /**
@@ -40,7 +54,7 @@ class State[T] private[reactify]() extends Observable[T] {
     */
   protected def setStatic(value: T): Unit = synchronized {
     val v: T = value
-    StateInstance.replace[T](this, () => v)
+    replace(() => v)
   }
 }
 
@@ -122,20 +136,6 @@ class StateInstance[T](val state: State[T], val function: () => T, val previousI
 
 object StateInstance {
   private val observables = new ThreadLocal[Set[Observable[_]]]
-
-  def replace[T](state: State[T], function: () => T): Unit = {
-    val previous = state.instance
-    var instance = new StateInstance[T](state, function, None)
-    if (instance.hasSelfReference) {
-      instance = new StateInstance[T](state, function, Option(previous))
-    } else if (previous != null) {
-      previous.dispose()  // Cleanup old instance
-    }
-    state.instance = instance
-    if (previous != null && previous.value != instance.value) {
-      state.fire(instance.value)
-    }
-  }
 
   def reference(observable: Observable[_]): Unit = Option(observables.get()) match {
     case Some(obs) => observables.set(obs + observable)
