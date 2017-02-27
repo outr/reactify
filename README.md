@@ -61,7 +61,7 @@ those classes, unless you are creating a custom `Observable` you will probably o
 Creating instances is incredibly simple:
 
 ```
-val myChannel = Channel[String]()         // Creates a Channel that receives Strings
+val myChannel = Channel[String]           // Creates a Channel that receives Strings
 val myVar = Var[Int](5)                   // Creates a Var containing the explicit value `5`
 val myVal = Val[Int](myVar + 5)           // Create a Val containing the sum of `myVar` + `5`
 ```
