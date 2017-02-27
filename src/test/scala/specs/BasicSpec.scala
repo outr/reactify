@@ -1,6 +1,6 @@
 package specs
 
-import com.outr.reactify._
+import reactify._
 import org.scalatest.{Matchers, WordSpec}
 
 class BasicSpec extends WordSpec with Matchers {
@@ -67,11 +67,11 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 10
       v2() should be(15)
     }
-    "only fire distinct values when using 'distinct'" in {
+    "only fire distinct values" in {
       val v = Var(5)
       var changed = 0
       var latest = v()
-      v.distinct.attach { value =>
+      v.attach { value =>
         changed += 1
         latest = value
       }
@@ -171,7 +171,7 @@ class BasicSpec extends WordSpec with Matchers {
       val s1 = Var("One")
       val s2 = Var("Two")
       val list = Var(List.empty[String])
-      list := s1() :: s2() :: list()
+      list := s1() :: s2() :: Nil
       list() should be(List("One", "Two"))
       s2 := "Three"
       list() should be(List("One", "Three"))
@@ -187,7 +187,7 @@ class BasicSpec extends WordSpec with Matchers {
       val v2 = Var("Two")
       val container = new Container[String]
       container.children := Vector(v1, v2)
-      container.children.observing should be(List(v1, v2))
+      container.children.observing should be(Set(v1, v2))
       container.children() should be(Vector("One", "Two"))
       v1 := "First"
       v2 := "Second"
@@ -204,7 +204,7 @@ class BasicSpec extends WordSpec with Matchers {
           v3
         }
       }
-      complex.observables should be(List(v1, v2, v3))
+      complex.observing should be(Set(v1, v3))  // Happens at runtime, so in its current state it only watches v1 and v3
       var current = complex()
       complex.attach(current = _)
 

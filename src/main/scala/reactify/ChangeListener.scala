@@ -1,6 +1,4 @@
-package com.outr.reactify
-
-import scala.util.Try
+package reactify
 
 /**
   * Convenience functionality for classic change management referencing the old value along with the new value.

@@ -1,9 +1,7 @@
-package com.outr.reactify
+package reactify
 
 trait Observable[T] {
   private var observers = Set.empty[T => Unit]
-
-  lazy val distinct: Observable[T] = new DistinctObservable[T](this)
 
   def attach(f: T => Unit): T => Unit = synchronized {
     observers += f
@@ -16,7 +14,7 @@ trait Observable[T] {
 
   def changes(listener: ChangeListener[T]): T => Unit = attach(ChangeListener.createFunction(listener, None))
 
-  protected def fire(value: T): Unit = observers.foreach { obs =>
+  protected[reactify] def fire(value: T): Unit = observers.foreach { obs =>
     obs(value)
   }
 }

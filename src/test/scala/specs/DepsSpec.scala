@@ -1,6 +1,6 @@
 package specs
 
-import com.outr.reactify._
+import reactify._
 import org.scalatest.{Matchers, WordSpec}
 
 class DepsSpec extends WordSpec with Matchers {
@@ -9,7 +9,7 @@ class DepsSpec extends WordSpec with Matchers {
 
     val left: Var[Double] = Var(0.0)
     val center: Dep[Double, Double] = Dep(left, width / 2.0)
-    val right: Dep[Double, Double] = Dep.submissive(left, width)
+    val right: Dep[Double, Double] = Dep(left, width, submissive = true)
 
     "have the basic values" in {
       left() should be(0.0)
@@ -113,13 +113,13 @@ class DepsSpec extends WordSpec with Matchers {
 
       var leftValue = left()
       left.attach(d => leftValue = d)
-      left.observing should be(Nil)
+      left.observing should be(Set.empty)
 
       "update center" in {
         center := 500.0
         left() should be(500.0)
         right() should be(500.0)
-        left.observing should be(List(width))
+        left.observing should be(Set(width))
         leftValue should be(500.0)
       }
       "update width" in {

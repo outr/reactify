@@ -1,5 +1,3 @@
-package com.outr
-
 import scala.language.implicitConversions
 
 package object reactify {

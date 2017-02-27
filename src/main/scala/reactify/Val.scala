@@ -1,6 +1,4 @@
-package com.outr.reactify
-
-import scala.language.experimental.macros
+package reactify
 
 /**
   * Val, as the name suggests, is like a Scala `val`. This represents an immutable value that is set in the first place
@@ -10,21 +8,20 @@ import scala.language.experimental.macros
   *
   * @tparam T the type of value retained by this `State`
   */
-class Val[T](val observables: List[Observable[_]], internal: => T) extends State[T] {
-  override protected val internalFunction: () => T = () => internal
-
-  observables.distinct.foreach(_.attach(_ => fire(get)))
-}
+class Val[T] private[reactify](function: () => T) extends State[T](function)
 
 object Val {
   /**
     * Creates a new instance of a `Val[T]`
     */
-  def apply[T](value: => T): Val[T] = macro Macros.newVal[T]
+  def apply[T](value: => T): Val[T] = new Val[T](() => value)
 
   /**
     * Convenience method to pre-evaluate the contents as opposed to apply that applies the contents as an anonymous
     * function.
     */
-  def static[T](value: T): Val[T] = new Val[T](Nil, value)
+  def static[T](value: => T): Val[T] = {
+    val v: T = value
+    apply[T](v)
+  }
 }
