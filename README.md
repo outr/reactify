@@ -17,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "1.3.7"
+libraryDependencies += "com.outr" %% "reactify" % "1.4.0"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.3.7"
+libraryDependencies += "com.outr" %%% "reactify" % "1.4.0"
 ```
 
 ## Concepts
@@ -50,7 +50,7 @@ Props is a very simple framework and though you'll likely want access to some of
 in the package, everything can be had with a single import:
 
 ```
-import com.outr.reactify._
+import reactify._
 ```
 
 ### Creating Props
@@ -165,6 +165,12 @@ this case. See `DepsSpec` for more detailed examples.
 handle the conversions.
 
 ## Versions
+
+### Features for 1.4.0 (In-Progress)
+
+* [X] Complete reworking of internals to support more advanced usage
+* [X] Removal of Macros as they were creating serious limitations
+* [X] Simplified package naming
 
 ### Features for 1.3.0 (Released 2017.01.09)
 
