@@ -166,7 +166,7 @@ handle the conversions.
 
 ## Versions
 
-### Features for 1.4.0 (In-Progress)
+### Features for 1.4.0 (Released 2017.02.26)
 
 * [X] Complete reworking of internals to support more advanced usage
 * [X] Removal of Macros as they were creating serious limitations
