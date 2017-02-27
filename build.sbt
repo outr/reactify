@@ -9,10 +9,11 @@ lazy val root = project.in(file("."))
   .aggregate(js, jvm)
   .settings(
     publish := {},
-    publishLocal := {}
+    publishLocal := {},
+    test := {}
   )
 
-lazy val reactify = crossProject.in(file("."))
+lazy val reactify = crossProject.crossType(CrossType.Pure).in(file("."))
   .settings(
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
