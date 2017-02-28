@@ -171,7 +171,7 @@ class BasicSpec extends WordSpec with Matchers {
       val s1 = Var("One")
       val s2 = Var("Two")
       val list = Var(List.empty[String])
-      list := s1() :: s2() :: Nil
+      list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
       s2 := "Three"
       list() should be(List("One", "Three"))

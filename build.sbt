@@ -9,14 +9,12 @@ lazy val root = project.in(file("."))
   .aggregate(js, jvm)
   .settings(
     publish := {},
-    publishLocal := {},
-    test := {}
+    publishLocal := {}
   )
 
-lazy val reactify = crossProject.crossType(CrossType.Pure).in(file("."))
+lazy val reactify = crossProject.in(file("."))
   .settings(
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
-
 lazy val js = reactify.js
 lazy val jvm = reactify.jvm
