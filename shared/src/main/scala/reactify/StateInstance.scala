@@ -1,6 +1,9 @@
 package reactify
 
-class StateInstance[T](val state: State[T], val function: () => T, val previousInstance: Option[StateInstance[T]]) extends Observable[T] {
+class StateInstance[T](val state: State[T],
+                       val function: () => T,
+                       val previousInstance: Option[StateInstance[T]],
+                       val cache: Boolean = false) extends Observable[T] {
   private val replacement = new ThreadLocal[Option[StateInstance[T]]] {
     override def initialValue(): Option[StateInstance[T]] = None
   }
@@ -8,13 +11,14 @@ class StateInstance[T](val state: State[T], val function: () => T, val previousI
   var observables: Set[Observable[_]] = Set.empty
   var hasSelfReference: Boolean = false
 
-  def value: T = replacement.get().map(_.value).getOrElse(cached)
+  def value: T = replacement.get().map(_.value).getOrElse(if (cache) cached else function())
 
   val monitor: (Any) => Unit = (_: Any) => {
-    val original = cached
+    val original: T = value
     state.instance.update()
-    if (original != cached) {
-      state.fire(cached)
+    val updated: T = value
+    if (original != updated) {
+      state.fire(updated)
     }
   }
 
