@@ -1,18 +1,57 @@
 package reactify
 
-class State[T] private[reactify]() extends Observable[T] {
-  private[reactify] var instance: StateInstance[T] = _
+import java.util.concurrent.atomic.AtomicReference
 
-  def this(function: () => T) = {
-    this()
+abstract class State[T] private(distinct: Boolean, cache: Boolean) extends Observable[T] {
+  private var lastValue: T = _
+  private val function = new AtomicReference[() => T]
+  private val previous = new AtomicReference[Option[PreviousFunction[T]]](None)
+  private val monitoring = new AtomicReference[Set[Observable[_]]](Set.empty)
+
+  private val replacement = new ThreadLocal[Option[PreviousFunction[T]]] {
+    override def initialValue(): Option[PreviousFunction[T]] = None
+  }
+
+  private val monitor: (Any) => Unit = (_: Any) => {
+    updateValue(get(cache = false))
+  }
+
+  private def updateValue(value: T): Unit = {
+    if (!distinct || value != lastValue) {
+      lastValue = value
+      fire(value)
+    }
+  }
+
+  def this(function: () => T,
+           distinct: Boolean = true,
+           cache: Boolean = true) = {
+    this(distinct, cache)
     replace(function)
   }
 
-  def observing: Set[Observable[_]] = instance.observables
+  def observing: Set[Observable[_]] = monitoring.get()
 
-  def get: T = {
-    StateInstance.reference(this)
-    instance.value
+  def get: T = get(cache)
+
+  def get(cache: Boolean): T = replacement.get() match {
+    case Some(p) => {
+      replacement.set(p.previous)
+      p.function()
+    }
+    case None => {
+      State.reference(this)
+      replacement.set(previous.get())
+      try {
+        if (cache) {
+          lastValue
+        } else {
+          function.get()()
+        }
+      } finally {
+        replacement.set(None)
+      }
+    }
   }
 
   def apply(): T = get
@@ -34,17 +73,38 @@ class State[T] private[reactify]() extends Observable[T] {
   }
 
   protected def replace(function: () => T): Unit = {
-    val previous = this.instance
-    var instance = new StateInstance[T](this, function, None)
-    instance.hasSelfReference match {
-      case true => instance = new StateInstance[T](this, function, Option(previous))
-      case false if Option(previous).nonEmpty => previous.dispose()    // Cleanup old instance
-      case _ =>
-    }
-    this.instance = instance
-    Option(previous).foreach {
-      case p if p.value != instance.value => fire(instance.value)
-      case _ =>
+    previous.set(Some(new PreviousFunction[T](this.function.get(), previous.get())))
+    val previousObservables = State.observables.get()
+    State.observables.set(Set.empty)
+    try {
+      this.function.set(function)
+      val value: T = get(cache = false)
+
+      val oldObservables = observing
+      var newObservables = State.observables.get()
+      if (!newObservables.contains(this)) {
+        // No recursive reference, we can clear previous
+        previous.set(None)
+      }
+      newObservables -= this
+      // Out with the old
+      oldObservables.foreach { ob =>
+        if (!newObservables.contains(ob)) {
+          ob.detach(monitor)
+        }
+      }
+
+      // In with the new
+      newObservables.foreach { ob =>
+        if (!oldObservables.contains(ob)) {
+          ob.attach(monitor)
+        }
+      }
+
+      monitoring.set(newObservables)
+      updateValue(value)
+    } finally {
+      State.observables.set(previousObservables)
     }
   }
 
@@ -58,3 +118,15 @@ class State[T] private[reactify]() extends Observable[T] {
     replace(() => v)
   }
 }
+
+object State {
+  private val observables = new ThreadLocal[Set[Observable[_]]]
+
+  def reference(observable: Observable[_]): Unit = Option(observables.get()) match {
+    case Some(obs) => observables.set(obs + observable)
+    case None => // Nothing being updated
+  }
+}
+
+class PreviousFunction[T](val function: () => T,
+                          val previous: Option[PreviousFunction[T]])

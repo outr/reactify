@@ -37,7 +37,7 @@ class BasicSpec extends WordSpec with Matchers {
     "statically assign properly" in {
       val v1 = Var.apply(5)
       val v2 = Var.apply(5)
-      val v3 = Val.static(v1 + v2)
+      val v3 = Val(v1 + v2, static = true)
       v3.get should be(10)
       v1 := 10
       v3.get should be(10)
@@ -88,7 +88,7 @@ class BasicSpec extends WordSpec with Matchers {
     "statically assign properly" in {
       val v1 = Var.apply(5)
       val v2 = Var.apply(5)
-      val v3 = Var.static(v1 + v2)
+      val v3 = Var(v1 + v2, static = true)
       v3.get should be(10)
       v1 := 10
       v3.get should be(10)

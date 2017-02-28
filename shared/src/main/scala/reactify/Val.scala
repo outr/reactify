@@ -8,20 +8,22 @@ package reactify
   *
   * @tparam T the type of value retained by this `State`
   */
-class Val[T] private[reactify](function: () => T) extends State[T](function)
+class Val[T] private[reactify](function: () => T, distinct: Boolean, cache: Boolean) extends State[T](function, distinct, cache)
 
 object Val {
   /**
     * Creates a new instance of a `Val[T]`
     */
-  def apply[T](value: => T): Val[T] = new Val[T](() => value)
-
-  /**
-    * Convenience method to pre-evaluate the contents as opposed to apply that applies the contents as an anonymous
-    * function.
-    */
-  def static[T](value: => T): Val[T] = {
-    val v: T = value
-    apply[T](v)
+  def apply[T](value: => T,
+               static: Boolean = false,
+               distinct: Boolean = true,
+               cache: Boolean = true): Val[T] = {
+    val f = if (static) {
+      val v: T = value
+      () => v
+    } else {
+      () => value
+    }
+    new Val[T](f, distinct, cache)
   }
 }

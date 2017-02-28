@@ -7,7 +7,7 @@ package reactify
   *
   * @tparam T the type of value this channel receives
   */
-class Var[T] private[reactify](function: () => T) extends State[T](function) with Channel[T] {
+class Var[T] private[reactify](function: () => T, distinct: Boolean, cache: Boolean) extends State[T](function, distinct, cache) with Channel[T] {
   override def set(value: => T): Unit = super.set(value)
 
   /**
@@ -22,14 +22,16 @@ object Var {
   /**
     * Creates a new instance of `Var`.
     */
-  def apply[T](value: => T): Var[T] = new Var[T](() => value)
-
-  /**
-    * Convenience method to pre-evaluate the contents as opposed to apply that applies the contents as an anonymous
-    * function.
-    */
-  def static[T](value: => T): Var[T] = {
-    val v: T = value
-    apply[T](v)
+  def apply[T](value: => T,
+               static: Boolean = false,
+               distinct: Boolean = true,
+               cache: Boolean = true): Var[T] = {
+    val f = if (static) {
+      val v: T = value
+      () => v
+    } else {
+      () => value
+    }
+    new Var[T](f, distinct, cache)
   }
 }
