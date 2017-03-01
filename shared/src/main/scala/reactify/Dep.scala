@@ -17,10 +17,10 @@ package reactify
   * if you change `width` to 50.0? Should `left` change to 75.0 (`submissive = false`) or should `right` change to 75.0
   * (`submissive = true`)?
   */
-class Dep[T, V] private(variable: Var[V],
-                        adjustment: => T,
-                        submissive: Boolean)
-                       (implicit connector: DepConnector[T, V]) extends Observable[T] {
+class Dep[T, V](variable: Var[V],
+                adjustment: => T,
+                submissive: Boolean)
+               (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
   private val internal = Val[T](connector.combine(variable, adjustment))
 
   override def attach(f: (T) => Unit): (T) => Unit = internal.attach(f)
@@ -31,7 +31,13 @@ class Dep[T, V] private(variable: Var[V],
 
   override protected[reactify] def fire(value: T): Unit = {}
 
-  def set(value: => T, submissive: Boolean = submissive): Unit = {
+  override def set(value: => T): Unit = set(value, submissive)
+
+  override def observing: Set[Observable[_]] = internal.observing
+
+  override def get: T = internal.get
+
+  def set(value: => T, submissive: Boolean): Unit = {
     if (submissive) {
       val adj: T = adjustment
       variable := connector.extract(value, adj)
@@ -40,9 +46,7 @@ class Dep[T, V] private(variable: Var[V],
     }
   }
 
-  def apply(): T = internal.apply()
-
-  def :=(value: => T): Unit = set(value)
+  override def apply(): T = internal.apply()
 }
 
 object Dep {

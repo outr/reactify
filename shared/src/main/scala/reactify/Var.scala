@@ -7,7 +7,9 @@ package reactify
   *
   * @tparam T the type of value this channel receives
   */
-class Var[T] private[reactify](function: () => T, distinct: Boolean, cache: Boolean) extends State[T](function, distinct, cache) with Channel[T] {
+class Var[T] (function: () => T,
+              distinct: Boolean,
+              cache: Boolean) extends AbstractState[T](function, distinct, cache) with StateChannel[T] {
   override def set(value: => T): Unit = super.set(value)
 
   /**

@@ -8,7 +8,9 @@ package reactify
   *
   * @tparam T the type of value retained by this `State`
   */
-class Val[T] private[reactify](function: () => T, distinct: Boolean, cache: Boolean) extends State[T](function, distinct, cache)
+class Val[T](function: () => T,
+             distinct: Boolean,
+             cache: Boolean) extends AbstractState[T](function, distinct, cache)
 
 object Val {
   /**

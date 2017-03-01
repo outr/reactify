@@ -17,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "1.4.1"
+libraryDependencies += "com.outr" %% "reactify" % "1.4.2"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.4.1"
+libraryDependencies += "com.outr" %%% "reactify" % "1.4.2"
 ```
 
 ## Concepts
@@ -171,6 +171,8 @@ handle the conversions.
 * [X] Complete reworking of internals to support more advanced usage
 * [X] Removal of Macros as they were creating serious limitations
 * [X] Simplified package naming
+* [X] Introduced ultra light-weight `Prop` as a simpler bare minimum alternative to `Val`
+* [X] Better cleanup and re-introduction of `StateChannel`, `State`, and `Channel` as better interface representations.
 
 ### Features for 1.3.0 (Released 2017.01.09)
 

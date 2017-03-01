@@ -246,6 +246,12 @@ class BasicSpec extends WordSpec with Matchers {
       })
       fiveLetterNames() should be(List("Betty", "Chris", "Debby"))
     }
+    "use syntactic sugar to add to a list" in {
+      val v = Var[List[Int]](Nil)
+      v += 5
+      v.length should be(1)
+      v.head should be(5)
+    }
   }
 
   class Container[Child] {
