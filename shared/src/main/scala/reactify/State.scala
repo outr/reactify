@@ -16,3 +16,14 @@ trait State[T] extends Observable[T] {
     attach(ChangeListener.createFunction(listener, Some(get)))
   }
 }
+
+object State {
+  /**
+    * Creates a State instance with a defined value.
+    *
+    * @param value the value to set to the state.
+    * @tparam T the type
+    * @return a pre-defined, immutable State instance
+    */
+  def apply[T](value: T): State[T] = Prop[T](value)
+}
