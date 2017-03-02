@@ -73,21 +73,24 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
         previous.set(None)
       }
       newObservables -= this
-      // Out with the old
-      oldObservables.foreach { ob =>
-        if (!newObservables.contains(ob)) {
-          ob.detach(monitor)
-        }
-      }
 
-      // In with the new
-      newObservables.foreach { ob =>
-        if (!oldObservables.contains(ob)) {
-          ob.attach(monitor)
+      if (oldObservables != newObservables) {
+        // Out with the old
+        oldObservables.foreach { ob =>
+          if (!newObservables.contains(ob)) {
+            ob.detach(monitor)
+          }
         }
-      }
 
-      monitoring.set(newObservables)
+        // In with the new
+        newObservables.foreach { ob =>
+          if (!oldObservables.contains(ob)) {
+            ob.attach(monitor)
+          }
+        }
+
+        monitoring.set(newObservables)
+      }
       updateValue(value)
     } finally {
       AbstractState.observables.set(previousObservables)
