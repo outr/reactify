@@ -13,7 +13,7 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
   }
 
   private val monitor: (Any) => Unit = (_: Any) => {
-    updateValue(get(cache = false))
+    replace(function.get(), newFunction = false)
   }
 
   private def updateValue(value: T): Unit = {
@@ -27,7 +27,7 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
            distinct: Boolean = true,
            cache: Boolean = true) = {
     this(distinct, cache)
-    replace(function)
+    replace(function, newFunction = true)
   }
 
   override def observing: Set[Observable[_]] = monitoring.get()
@@ -55,11 +55,11 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
   }
 
   protected def set(value: => T): Unit = synchronized {
-    replace(() => value)
+    replace(() => value, newFunction = true)
   }
 
-  protected def replace(function: () => T): Unit = {
-    previous.set(Some(new PreviousFunction[T](this.function.get(), previous.get())))
+  protected def replace(function: () => T, newFunction: Boolean): Unit = {
+    if (newFunction) previous.set(Some(new PreviousFunction[T](this.function.get(), previous.get())))
     val previousObservables = AbstractState.observables.get()
     AbstractState.observables.set(Set.empty)
     try {
@@ -68,7 +68,7 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
 
       val oldObservables = observing
       var newObservables = AbstractState.observables.get()
-      if (!newObservables.contains(this)) {
+      if (newFunction && !newObservables.contains(this)) {
         // No recursive reference, we can clear previous
         previous.set(None)
       }
@@ -101,7 +101,7 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
     */
   protected def setStatic(value: T): Unit = synchronized {
     val v: T = value
-    replace(() => v)
+    replace(() => v, newFunction = true)
   }
 }
 

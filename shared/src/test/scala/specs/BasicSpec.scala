@@ -252,6 +252,16 @@ class BasicSpec extends WordSpec with Matchers {
       v.length should be(1)
       v.head should be(5)
     }
+    "create a nested observing scenario" in {
+      val screen1 = new Screen
+      val screen2 = new Screen
+      val screen3 = new Screen
+      val screens: Var[List[Screen]] = Var(Nil)
+      val active = Val(screens.filter(_.active()))
+      active.observing should be(Set(screens))
+      screens := List(screen1, screen2, screen3)
+      active.observing should be(Set(screens, screen1.active, screen2.active, screen3.active))
+    }
   }
 
   class Container[Child] {
@@ -260,5 +270,9 @@ class BasicSpec extends WordSpec with Matchers {
 
   class User {
     val name: Var[String] = Var[String]("")
+  }
+
+  class Screen {
+    val active: Var[Boolean] = Var(false)
   }
 }

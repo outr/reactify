@@ -18,6 +18,8 @@ class Var[T] (function: () => T,
   def value_=(value: => T): Unit = set(value)
 
   override def setStatic(value: T): Unit = super.setStatic(value)
+
+  override def toString: String = s"Var($get)"
 }
 
 object Var {

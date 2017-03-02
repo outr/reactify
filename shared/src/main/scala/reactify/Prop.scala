@@ -22,6 +22,8 @@ class Prop[T](@volatile private var stored: T,
   override def observing: Set[Observable[_]] = Set.empty
 
   override def get: T = stored
+
+  override def toString: String = s"Prop($get)"
 }
 
 object Prop {

@@ -10,7 +10,9 @@ package reactify
   */
 class Val[T](function: () => T,
              distinct: Boolean,
-             cache: Boolean) extends AbstractState[T](function, distinct, cache)
+             cache: Boolean) extends AbstractState[T](function, distinct, cache) {
+  override def toString: String = s"Val($get)"
+}
 
 object Val {
   /**

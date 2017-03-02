@@ -47,6 +47,8 @@ class Dep[T, V](variable: Var[V],
   }
 
   override def apply(): T = internal.apply()
+
+  override def toString: String = s"Dep($get)"
 }
 
 object Dep {
