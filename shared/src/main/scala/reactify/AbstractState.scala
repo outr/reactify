@@ -106,6 +106,15 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
     val v: T = value
     replace(() => v, newFunction = true)
   }
+
+  override def dispose(): Unit = synchronized {
+    super.dispose()
+
+    monitoring.get().foreach { ob =>
+      ob.detach(monitor)
+    }
+    monitoring.set(Set.empty)
+  }
 }
 
 object AbstractState {

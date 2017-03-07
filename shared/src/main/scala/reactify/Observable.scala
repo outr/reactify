@@ -17,4 +17,12 @@ trait Observable[T] {
   protected[reactify] def fire(value: T): Unit = observers.foreach { obs =>
     obs(value)
   }
+
+  def clear(): Unit = synchronized {
+    observers = Set.empty
+  }
+
+  def dispose(): Unit = {
+    clear()
+  }
 }
