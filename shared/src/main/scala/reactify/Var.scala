@@ -7,15 +7,17 @@ package reactify
   *
   * @tparam T the type of value this channel receives
   */
-class Var[T] (function: () => T,
-              distinct: Boolean,
-              cache: Boolean) extends AbstractState[T](function, distinct, cache) with StateChannel[T] {
+class Var[T](function: () => T,
+             distinct: Boolean,
+             cache: Boolean) extends Val[T](function, distinct, cache) with StateChannel[T] {
   override def set(value: => T): Unit = super.set(value)
 
   /**
     * Convenience method to set the current value like a variable.
     */
   def value_=(value: => T): Unit = set(value)
+
+  def asVal: Val[T] = this
 
   override def setStatic(value: T): Unit = super.setStatic(value)
 

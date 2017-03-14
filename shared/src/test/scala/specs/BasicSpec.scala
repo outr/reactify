@@ -262,6 +262,21 @@ class BasicSpec extends WordSpec with Matchers {
       screens := List(screen1, screen2, screen3)
       active.observing should be(Set(screens, screen1.active, screen2.active, screen3.active))
     }
+    "test iterative observing scenario" in {
+      val adjusts = Var(Vector(Var(0), Var(0), Var(0), Var(0), Var(0)))
+      var previous = adjusts.head
+      previous := 5
+      adjusts.tail.foreach { v =>
+        v := previous + 5
+        previous = v
+      }
+
+      adjusts(0)() should be(5)
+      adjusts(1)() should be(10)
+      adjusts(2)() should be(15)
+      adjusts(3)() should be(20)
+      adjusts(4)() should be(25)
+    }
   }
 
   class Container[Child] {
