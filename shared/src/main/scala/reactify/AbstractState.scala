@@ -59,7 +59,12 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
   }
 
   protected def replace(function: () => T, newFunction: Boolean): Unit = {
-    if (newFunction) previous.set(Some(new PreviousFunction[T](this.function.get(), previous.get())))
+    if (newFunction) {
+      val p = Option(this.function.get()).map { f =>
+        new PreviousFunction[T](f, previous.get())
+      }.getOrElse(new PreviousFunction[T](() => lastValue, previous.get()))
+      previous.set(Some(p))
+    }
     val previousObservables = AbstractState.observables.get()
     AbstractState.observables.set(Set.empty)
     try {
