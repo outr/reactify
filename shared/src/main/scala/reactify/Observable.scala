@@ -23,6 +23,14 @@ trait Observable[T] {
   }
 
   /**
+    * Works like `attach`, but doesn't receive the fired value.
+    *
+    * @param f function to invoke on fire
+    * @return listener
+    */
+  def on(f: => Unit): T => Unit = attach(_ => f)
+
+  /**
     * Detaches a function from listening to this Observable.
     *
     * @param f function listener that was previously attached

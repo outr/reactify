@@ -9,8 +9,8 @@ package reactify
   * @tparam T the type of value retained by this `State`
   */
 class Val[T](function: () => T,
-             distinct: Boolean,
-             cache: Boolean) extends AbstractState[T](function, distinct, cache) {
+             distinct: Boolean = true,
+             cache: Boolean = true) extends AbstractState[T](function, distinct, cache) {
   override def toString: String = s"Val($get)"
 }
 
