@@ -51,3 +51,7 @@ class Trigger {
     */
   def dispose(): Unit = channel.dispose()
 }
+
+object Trigger {
+  def apply(): Trigger = new Trigger
+}

@@ -9,7 +9,7 @@ import scala.concurrent.{Future, Promise}
   * @tparam T the type of value this Observable will receive
   */
 trait Observable[T] {
-  private var observers = Set.empty[T => Unit]
+  private[reactify] var observers = Set.empty[T => Unit]
 
   /**
     * Attaches a function to listen to values fired against this Observable.

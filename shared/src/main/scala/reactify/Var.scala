@@ -40,4 +40,30 @@ object Var {
     }
     new Var[T](f, distinct, cache)
   }
+
+  /**
+    * Creates a new instance of `Var` mixing in `DirtyObservable`.
+    */
+  def dirty[T](value: => T,
+               static: Boolean = false,
+               distinct: Boolean = true,
+               cache: Boolean = true): Var[T] with DirtyObservable[T] = {
+    val f = if (static) {
+      val v: T = value
+      () => v
+    } else {
+      () => value
+    }
+    new Var[T](f, distinct, cache) with DirtyObservable[T]
+  }
+
+  def bound[T](get: => T,
+               set: T => Unit,
+               static: Boolean = false,
+               distinct: Boolean = true,
+               cache: Boolean = true): Var[T] = {
+    val v = Var[T](get, static, distinct, cache)
+    v.attach(t => set(t))
+    v
+  }
 }

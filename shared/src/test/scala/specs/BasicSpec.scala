@@ -3,6 +3,8 @@ package specs
 import reactify._
 import org.scalatest.{Matchers, WordSpec}
 
+import scala.collection.mutable.ListBuffer
+
 class BasicSpec extends WordSpec with Matchers {
   "Channels" should {
     "notify when changed" in {
@@ -276,6 +278,35 @@ class BasicSpec extends WordSpec with Matchers {
       adjusts(2)() should be(15)
       adjusts(3)() should be(20)
       adjusts(4)() should be(25)
+    }
+    "test a dirty var" in {
+      val v = Var.dirty[Int](0)
+      var firedFor = ListBuffer.empty[Int]
+      v.attach(i => firedFor += i)
+      v := 1
+      firedFor.toList should be(Nil)
+      v.update()
+      firedFor.toList should be(List(1))
+      v := 2
+      firedFor.toList should be(List(1))
+      v := 3
+      firedFor.toList should be(List(1))
+      v := 4
+      firedFor.toList should be(List(1))
+      v.update()
+      firedFor.toList should be(List(1, 4))
+    }
+  }
+  "Triggers" should {
+    "handle simple invocations" in {
+      val t = Trigger()
+      var invoked = 0
+      t.attach(invoked += 1)
+      t.fire()
+      invoked should be(1)
+      t.fire()
+      t.fire()
+      invoked should be(3)
     }
   }
 
