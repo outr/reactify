@@ -166,6 +166,17 @@ handle the conversions.
 
 ## Versions
 
+### Features for 1.5.0 (In-Progress)
+
+* [ ] Listener and ListenerBuilder for easier configuration and removability
+    * [ ] Stop Propagation feature
+    * [ ] Prioritization support
+* [ ] Interceptor support (like a Listener, but may modify the value before continuing)
+* [ ] Support for chaining Observables to a single listener
+* [ ] Hierarchical Observables
+* [ ] Complete Documentation of all classes
+* [ ] Atomic support
+
 ### Features for 1.4.0 (Released 2017.02.26)
 
 * [X] Complete reworking of internals to support more advanced usage
