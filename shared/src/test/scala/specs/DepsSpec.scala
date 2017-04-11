@@ -122,8 +122,8 @@ class DepsSpec extends WordSpec with Matchers {
       right() should be(250.0)
 
       checkChanges(leftChanges, 175.0 -> 150.0)
-      checkChanges(centerChanges, 200.0 -> 225.0, 225.0 -> 200.0)
-      checkChanges(rightChanges, 225.0 -> 275.0, 275.0 -> 250.0)
+      checkChanges(centerChanges)
+      checkChanges(rightChanges, 225.0 -> 250.0)
     }
     "set left and verify center and right adjust" in {
       resetChanges()

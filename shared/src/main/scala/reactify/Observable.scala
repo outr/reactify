@@ -9,7 +9,7 @@ import scala.concurrent.{Future, Promise}
   * @tparam T the type of value this Observable will receive
   */
 trait Observable[T] {
-  private[reactify] var observers = Set.empty[T => Unit]
+  private[reactify] var observers = List.empty[T => Unit]
 
   /**
     * Attaches a function to listen to values fired against this Observable.
@@ -18,7 +18,7 @@ trait Observable[T] {
     * @return the supplied function. This reference is useful for detaching the function later
     */
   def attach(f: T => Unit): T => Unit = synchronized {
-    observers += f
+    observers = f :: observers
     f
   }
 
@@ -36,7 +36,7 @@ trait Observable[T] {
     * @param f function listener that was previously attached
     */
   def detach(f: T => Unit): Unit = synchronized {
-    observers -= f
+    observers = observers.filterNot(_ eq f)
   }
 
   /**
@@ -76,15 +76,22 @@ trait Observable[T] {
     */
   def changes(listener: ChangeListener[T]): T => Unit = attach(ChangeListener.createFunction(listener, None))
 
-  protected[reactify] def fire(value: T): Unit = observers.foreach { obs =>
-    obs(value)
+  protected[reactify] def fire(value: T): Unit = fireRecursive(value, Invocation().reset(), observers)
+
+  final protected def fireRecursive(value: T, invocation: Invocation, observers: List[T => Unit]): Unit = {
+    if (observers.nonEmpty && !invocation.isStopped) {
+      val listener = observers.head
+      listener(value)
+
+      fireRecursive(value, invocation, observers.tail)
+    }
   }
 
   /**
     * Clears all attached observers from this Observable.
     */
   def clear(): Unit = synchronized {
-    observers = Set.empty
+    observers = List.empty
   }
 
   /**
