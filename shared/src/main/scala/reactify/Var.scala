@@ -59,10 +59,14 @@ object Var {
 
   def bound[T](get: => T,
                set: T => Unit,
+               setImmediately: Boolean = false,
                static: Boolean = false,
                distinct: Boolean = true,
                cache: Boolean = true): Var[T] = {
     val v = Var[T](get, static, distinct, cache)
+    if (setImmediately) {
+      set(v())
+    }
     v.attach(t => set(t))
     v
   }
