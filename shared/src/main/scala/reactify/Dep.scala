@@ -23,11 +23,11 @@ class Dep[T, V](variable: Var[V],
                (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
   private val internal = Val[T](connector.combine(variable, adjustment))
 
-  override def attach(f: (T) => Unit): (T) => Unit = internal.attach(f)
+  override def attach(f: (T) => Unit): Listener[T] = internal.attach(f)
 
-  override def detach(f: (T) => Unit): Unit = internal.detach(f)
+  override def detach(listener: Listener[T]): Unit = internal.detach(listener)
 
-  override def changes(listener: ChangeListener[T]): (T) => Unit = internal.changes(listener)
+  override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
 
   override protected[reactify] def fire(value: T): Unit = {}
 

@@ -12,9 +12,9 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
     override def initialValue(): Option[PreviousFunction[T]] = None
   }
 
-  private val monitor: (Any) => Unit = (_: Any) => {
+  private val monitor: Listener[Any] = new FunctionListener[Any]((_: Any) => {
     replace(function.get(), newFunction = false)
-  }
+  })
 
   private def updateValue(value: T): Unit = {
     if (!distinct || value != lastValue) {
@@ -83,14 +83,14 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
         // Out with the old
         oldObservables.foreach { ob =>
           if (!newObservables.contains(ob)) {
-            ob.detach(monitor)
+            ob.asInstanceOf[Observable[Any]].detach(monitor)
           }
         }
 
         // In with the new
         newObservables.foreach { ob =>
           if (!oldObservables.contains(ob)) {
-            ob.attach(monitor)
+            ob.asInstanceOf[Observable[Any]].observe(monitor)
           }
         }
 
@@ -116,7 +116,7 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
     super.dispose()
 
     monitoring.get().foreach { ob =>
-      ob.detach(monitor)
+      ob.asInstanceOf[Observable[Any]].detach(monitor)
     }
     monitoring.set(Set.empty)
   }

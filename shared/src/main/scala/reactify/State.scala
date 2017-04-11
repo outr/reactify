@@ -12,7 +12,7 @@ trait State[T] extends Observable[T] {
     f
   }
 
-  override def changes(listener: ChangeListener[T]): (T) => Unit = {
+  override def changes(listener: ChangeListener[T]): Listener[T] = {
     attach(ChangeListener.createFunction(listener, Some(get)))
   }
 }

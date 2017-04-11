@@ -9,7 +9,7 @@ import scala.concurrent.{Future, Promise}
   * @tparam T the type of value this Observable will receive
   */
 trait Observable[T] {
-  private[reactify] var observers = List.empty[T => Unit]
+  private[reactify] var observers = List.empty[Listener[T]]
 
   /**
     * Attaches a function to listen to values fired against this Observable.
@@ -17,9 +17,11 @@ trait Observable[T] {
     * @param f function listener
     * @return the supplied function. This reference is useful for detaching the function later
     */
-  def attach(f: T => Unit): T => Unit = synchronized {
-    observers = f :: observers
-    f
+  def attach(f: T => Unit): Listener[T] = observe(new FunctionListener[T](f))
+
+  def observe(listener: Listener[T]): Listener[T] = synchronized {
+    observers = listener :: observers
+    listener
   }
 
   /**
@@ -28,15 +30,15 @@ trait Observable[T] {
     * @param f function to invoke on fire
     * @return listener
     */
-  def on(f: => Unit): T => Unit = attach(_ => f)
+  def on(f: => Unit): Listener[T] = attach(_ => f)
 
   /**
     * Detaches a function from listening to this Observable.
     *
-    * @param f function listener that was previously attached
+    * @param listener function listener that was previously attached
     */
-  def detach(f: T => Unit): Unit = synchronized {
-    observers = observers.filterNot(_ eq f)
+  def detach(listener: Listener[T]): Unit = synchronized {
+    observers = observers.filterNot(_ eq listener)
   }
 
   /**
@@ -46,14 +48,15 @@ trait Observable[T] {
     * @param f the function listener
     * @param condition the condition under which the listener will be invoked. Defaults to always return true.
     */
-  def once(f: T => Unit, condition: T => Boolean = (t: T) => true): Unit = {
-    var wrapper: T => Unit = f
-    wrapper = attach((t: T) => synchronized {
-      if (condition(t)) {
-        detach(wrapper)
-        f(t)
+  def once(f: T => Unit, condition: T => Boolean = (t: T) => true): Listener[T] = {
+    var listener: Listener[T] = null
+    listener = new FunctionListener[T](f) {
+      override def apply(value: T): Unit = if (condition(value)) {
+        detach(listener)
+        super.apply(value)
       }
-    })
+    }
+    listener
   }
 
   /**
@@ -74,11 +77,11 @@ trait Observable[T] {
     * @param listener the ChangeListener
     * @return the listener attached. This can be passed to `detach` to remove this listener
     */
-  def changes(listener: ChangeListener[T]): T => Unit = attach(ChangeListener.createFunction(listener, None))
+  def changes(listener: ChangeListener[T]): Listener[T] = attach(ChangeListener.createFunction(listener, None))
 
   protected[reactify] def fire(value: T): Unit = fireRecursive(value, Invocation().reset(), observers)
 
-  final protected def fireRecursive(value: T, invocation: Invocation, observers: List[T => Unit]): Unit = {
+  final protected def fireRecursive(value: T, invocation: Invocation, observers: List[Listener[T]]): Unit = {
     if (observers.nonEmpty && !invocation.isStopped) {
       val listener = observers.head
       listener(value)

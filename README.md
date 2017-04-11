@@ -169,7 +169,8 @@ handle the conversions.
 ### Features for 1.5.0 (In-Progress)
 
 * [X] Stop Propagation feature
-* [ ] Listener and ListenerBuilder for easier configuration and removability
+* [X] Listener
+    * [ ] ListenerBuilder
     * [ ] Prioritization support
 * [ ] Interceptor support (like a Listener, but may modify the value before continuing)
 * [ ] Support for chaining Observables to a single listener

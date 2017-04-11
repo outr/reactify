@@ -15,14 +15,14 @@ class Trigger {
     * @param f function listener
     * @return the listener instance
     */
-  def attach(f: => Unit): Unit => Unit = channel.attach(_ => f)
+  def attach(f: => Unit): Listener[Unit] = channel.attach(_ => f)
 
   /**
     * Detaches a listener from this Trigger.
     *
     * @param f the listener to detach
     */
-  def detach(f: Unit => Unit): Unit = channel.detach(f)
+  def detach(f: Listener[Unit]): Unit = channel.detach(f)
 
   /**
     * Attaches the listener but automatically detaches after being invoked once.
