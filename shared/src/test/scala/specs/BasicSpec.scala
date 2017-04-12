@@ -296,6 +296,20 @@ class BasicSpec extends WordSpec with Matchers {
       v.update()
       firedFor.toList should be(List(1, 4))
     }
+    "test stopping propagation" in {
+      val v = Var(0)
+      var invoked = false
+      v.on {
+        println("One!")
+        Invocation().stopPropagation()
+      }
+      v.on {
+        println("Two!")
+        invoked = true
+      }
+      v := 1
+      invoked should be(false)
+    }
   }
   "Triggers" should {
     "handle simple invocations" in {

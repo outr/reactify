@@ -6,9 +6,14 @@ class Invocation private() {
   def isStopped: Boolean = stopped
   def stopPropagation(): Unit = stopped = true
 
-  private[reactify] def reset(): Invocation = {
+  private[reactify] def wrap[R](f: => R): R = {
+    val previous = stopped
     stopped = false
-    this
+    try {
+      f
+    } finally {
+      stopped = previous
+    }
   }
 }
 

@@ -25,6 +25,8 @@ trait DirtyObservable[T] extends Observable[T] {
     * fired and then resetting the dirty state.
     */
   def update(): Unit = dirty.getAndSet(None).foreach { value =>
-    fireRecursive(value, Invocation().reset(), observers)
+    Invocation().wrap {
+      fireRecursive(value, Invocation(), observers)
+    }
   }
 }

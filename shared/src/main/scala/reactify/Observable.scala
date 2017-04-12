@@ -23,7 +23,7 @@ trait Observable[T] {
   }
 
   def observe(listener: Listener[T]): Listener[T] = synchronized {
-    observers = (listener :: observers).sorted
+    observers = (observers ::: List(listener)).sorted
     listener
   }
 
@@ -84,7 +84,9 @@ trait Observable[T] {
     */
   def changes(listener: ChangeListener[T]): Listener[T] = attach(ChangeListener.createFunction(listener, None))
 
-  protected[reactify] def fire(value: T): Unit = fireRecursive(value, Invocation().reset(), observers)
+  protected[reactify] def fire(value: T): Unit = Invocation().wrap {
+    fireRecursive(value, Invocation(), observers)
+  }
 
   final protected def fireRecursive(value: T, invocation: Invocation, observers: List[Listener[T]]): Unit = {
     if (observers.nonEmpty && !invocation.isStopped) {
