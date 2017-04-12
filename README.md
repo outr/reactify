@@ -166,7 +166,7 @@ handle the conversions.
 
 ## Versions
 
-### Features for 1.5.0 (In-Progress)
+### Features for 1.5.0 (Released 2017.04.12)
 
 * [X] Stop Propagation feature
 * [X] Listener
