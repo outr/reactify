@@ -108,4 +108,10 @@ trait Observable[T] {
   def dispose(): Unit = {
     clear()
   }
+
+  def and(that: Observable[T]): Observable[T] = Observable.wrap(this, that)
+}
+
+object Observable {
+  def wrap[T](observables: Observable[T]*): Observable[T] = new WrappedObservable[T](observables.toList)
 }

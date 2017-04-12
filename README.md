@@ -171,10 +171,7 @@ handle the conversions.
 * [X] Stop Propagation feature
 * [X] Listener
     * [X] Prioritization support
-* [ ] Support for chaining Observables to a single listener
-* [ ] Hierarchical Observables
-* [ ] Complete Documentation of all classes
-* [ ] Atomic support
+* [X] Support for chaining Observables to a single listener
 
 ### Features for 1.4.0 (Released 2017.02.26)
 
