@@ -279,6 +279,28 @@ class BasicSpec extends WordSpec with Matchers {
       adjusts(3)() should be(20)
       adjusts(4)() should be(25)
     }
+    "test using 'once'" in {
+      val v = Var(0)
+      var fired = 0
+      v.once { value =>
+        fired = value
+      }
+      v := 1
+      fired should be(1)
+      v := 2
+      fired should be(1)
+    }
+    "test using 'future'" in {
+      val v = Var(0)
+      val f = v.future()
+      f.isCompleted should be(false)
+      v := 1
+      f.isCompleted should be(true)
+      val result = f.value.get.get
+      result should be(1)
+      v := 2
+      f.value.get.get should be(1)
+    }
     "test a dirty var" in {
       val v = Var.dirty[Int](0)
       var firedFor = ListBuffer.empty[Int]
