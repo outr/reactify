@@ -300,15 +300,67 @@ class BasicSpec extends WordSpec with Matchers {
       val v = Var(0)
       var invoked = false
       v.on {
-        println("One!")
         Invocation().stopPropagation()
       }
       v.on {
-        println("Two!")
         invoked = true
       }
       v := 1
       invoked should be(false)
+    }
+    "test prioritization" in {
+      val v = Var(0)
+      val order = ListBuffer.empty[String]
+      v.on({
+        order += "highest"
+      }, Listener.Priority.Highest)
+      v.on({
+        order += "normal"
+      }, Listener.Priority.Normal)
+      v.on({
+        order += "low"
+      }, Listener.Priority.Low)
+      v.on({
+        order += "high"
+      }, Listener.Priority.High)
+      v.on({
+        order += "lowest"
+      }, Listener.Priority.Lowest)
+      v := 1
+
+      order.toList should be(List("lowest", "low", "normal", "high", "highest"))
+    }
+    "test simple wrapping" in {
+      val v1 = Var(1)
+      val v2 = Var(2)
+      val v3 = Var(3)
+
+      val modified = ListBuffer.empty[Int]
+
+      Observable.wrap(v1, v2, v3).attach { i =>
+        modified += i
+      }
+
+      v2 := 22
+      v3 := 33
+      v1 := 11
+      modified.toList should be(List(22, 33, 11))
+    }
+    "test dsl wrapping" in {
+      val v1 = Var(1)
+      val v2 = Var(2)
+      val v3 = Var(3)
+
+      val modified = ListBuffer.empty[Int]
+
+      v1.and(v2).and(v3).attach { i =>
+        modified += i
+      }
+
+      v2 := 22
+      v3 := 33
+      v1 := 11
+      modified.toList should be(List(22, 33, 11))
     }
   }
   "Triggers" should {

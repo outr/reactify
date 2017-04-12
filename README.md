@@ -17,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "1.4.8"
+libraryDependencies += "com.outr" %% "reactify" % "1.5.0"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.4.8"
+libraryDependencies += "com.outr" %%% "reactify" % "1.5.0"
 ```
 
 ## Concepts
@@ -170,7 +170,7 @@ handle the conversions.
 
 * [X] Stop Propagation feature
 * [X] Listener
-    * [X] Prioritization support
+* [X] Prioritization support
 * [X] Support for chaining Observables to a single listener
 
 ### Features for 1.4.0 (Released 2017.02.26)
