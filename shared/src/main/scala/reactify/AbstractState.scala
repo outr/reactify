@@ -14,7 +14,7 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
 
   private val monitor: Listener[Any] = new FunctionListener[Any]((_: Any) => {
     replace(function.get(), newFunction = false)
-  })
+  }, Listener.Priority.Normal)
 
   private def updateValue(value: T): Unit = {
     if (!distinct || value != lastValue) {

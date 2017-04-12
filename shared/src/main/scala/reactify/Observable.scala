@@ -17,10 +17,13 @@ trait Observable[T] {
     * @param f function listener
     * @return the supplied function. This reference is useful for detaching the function later
     */
-  def attach(f: T => Unit): Listener[T] = observe(new FunctionListener[T](f))
+  def attach(f: T => Unit,
+             priority: Double = Listener.Priority.Normal): Listener[T] = {
+    observe(new FunctionListener[T](f, priority))
+  }
 
   def observe(listener: Listener[T]): Listener[T] = synchronized {
-    observers = listener :: observers
+    observers = (listener :: observers).sorted
     listener
   }
 
@@ -30,7 +33,7 @@ trait Observable[T] {
     * @param f function to invoke on fire
     * @return listener
     */
-  def on(f: => Unit): Listener[T] = attach(_ => f)
+  def on(f: => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = attach(_ => f, priority)
 
   /**
     * Detaches a function from listening to this Observable.
@@ -48,9 +51,11 @@ trait Observable[T] {
     * @param f the function listener
     * @param condition the condition under which the listener will be invoked. Defaults to always return true.
     */
-  def once(f: T => Unit, condition: T => Boolean = (t: T) => true): Listener[T] = {
+  def once(f: T => Unit,
+           condition: T => Boolean = (_: T) => true,
+           priority: Double = Listener.Priority.Normal): Listener[T] = {
     var listener: Listener[T] = null
-    listener = new FunctionListener[T](f) {
+    listener = new FunctionListener[T](f, priority) {
       override def apply(value: T): Unit = if (condition(value)) {
         detach(listener)
         super.apply(value)

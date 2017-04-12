@@ -170,9 +170,7 @@ handle the conversions.
 
 * [X] Stop Propagation feature
 * [X] Listener
-    * [ ] ListenerBuilder
-    * [ ] Prioritization support
-* [ ] Interceptor support (like a Listener, but may modify the value before continuing)
+    * [X] Prioritization support
 * [ ] Support for chaining Observables to a single listener
 * [ ] Hierarchical Observables
 * [ ] Complete Documentation of all classes

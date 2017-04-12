@@ -23,7 +23,9 @@ class Dep[T, V](variable: Var[V],
                (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
   private val internal = Val[T](connector.combine(variable, adjustment))
 
-  override def attach(f: (T) => Unit): Listener[T] = internal.attach(f)
+  override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
+    internal.attach(f, priority)
+  }
 
   override def detach(listener: Listener[T]): Unit = internal.detach(listener)
 
