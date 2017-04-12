@@ -6,10 +6,10 @@ trait State[T] extends Observable[T] {
   def apply(): T = get
   def value: T = get
 
-  def attachAndFire(f: T => Unit): T => Unit = {
-    attach(f)
+  def attachAndFire(f: T => Unit): Listener[T] = {
+    val listener = attach(f)
     fire(get)
-    f
+    listener
   }
 
   override def changes(listener: ChangeListener[T]): Listener[T] = {

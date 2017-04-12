@@ -19,7 +19,7 @@ trait Observable[T] {
     */
   def attach(f: T => Unit,
              priority: Double = Listener.Priority.Normal): Listener[T] = {
-    observe(new FunctionListener[T](f, priority))
+    observe(Listener[T](f, priority))
   }
 
   def observe(listener: Listener[T]): Listener[T] = synchronized {
@@ -55,13 +55,11 @@ trait Observable[T] {
            condition: T => Boolean = (_: T) => true,
            priority: Double = Listener.Priority.Normal): Listener[T] = {
     var listener: Listener[T] = null
-    listener = new FunctionListener[T](f, priority) {
-      override def apply(value: T): Unit = if (condition(value)) {
-        detach(listener)
-        super.apply(value)
-      }
-    }
-    listener
+    listener = Listener[T]((value: T) => if (condition(value)) {
+      detach(listener)
+      f(value)
+    }, priority)
+    observe(listener)
   }
 
   /**

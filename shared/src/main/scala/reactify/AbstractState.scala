@@ -12,9 +12,9 @@ abstract class AbstractState[T] private(distinct: Boolean, cache: Boolean) exten
     override def initialValue(): Option[PreviousFunction[T]] = None
   }
 
-  private val monitor: Listener[Any] = new FunctionListener[Any]((_: Any) => {
+  private val monitor: Listener[Any] = (_: Any) => {
     replace(function.get(), newFunction = false)
-  }, Listener.Priority.Normal)
+  }
 
   private def updateValue(value: T): Unit = {
     if (!distinct || value != lastValue) {
