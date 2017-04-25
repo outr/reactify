@@ -22,6 +22,12 @@ trait Observable[T] {
     observe(Listener[T](f, priority))
   }
 
+  /**
+    * Direct attachment of a listener.
+    *
+    * @param listener the listener to attach
+    * @return the same listener supplied
+    */
   def observe(listener: Listener[T]): Listener[T] = synchronized {
     observers = (observers ::: List(listener)).sorted
     listener
