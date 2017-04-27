@@ -52,14 +52,25 @@ trait TransformableChannel[T] extends Channel[T] {
     def clear(): Unit = synchronized {
       transformers = List.empty
     }
-  }
 
-  override protected[reactify] def fire(value: T): Unit = {
-    fireTransformRecursive(value, transformers) match {
-      case Some(v) => super.fire(v)
-      case None => // Cancelled
+    /**
+      * Applies transformations to the supplied value. The default operation of this method works exactly like calling
+      * `fire` except you also get the benefit of receiving the transformation result.
+      *
+      * @param value the value to transform
+      * @param fireResult whether the resulting value should be fired on the channel. Defaults to true.
+      * @return the result of the transformations
+      */
+    def apply(value: T, fireResult: Boolean = true): Option[T] = {
+      val o = fireTransformRecursive(value, transformers)
+      if (fireResult) {
+        o.foreach(TransformableChannel.super.fire)
+      }
+      o
     }
   }
+
+  override protected[reactify] def fire(value: T): Unit = transform(value)
 
   @tailrec
   final protected def fireTransformRecursive(value: T, observers: List[TransformingListener[T]]): Option[T] = {
