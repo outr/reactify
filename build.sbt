@@ -1,8 +1,8 @@
 name := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "1.5.3"
-scalaVersion in ThisBuild := "2.12.1"
-crossScalaVersions in ThisBuild := List("2.12.1", "2.11.8")
+version in ThisBuild := "1.5.4-SNAPSHOT"
+scalaVersion in ThisBuild := "2.12.2"
+crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
 
 lazy val root = project.in(file("."))
   .aggregate(js, jvm)
