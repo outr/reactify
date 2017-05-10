@@ -1,6 +1,6 @@
 name := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "1.5.4-SNAPSHOT"
+version in ThisBuild := "2.0.0-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.2"
 crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
 
@@ -11,7 +11,7 @@ lazy val root = project.in(file("."))
     publishLocal := {}
   )
 
-lazy val reactify = crossProject.in(file("."))
+lazy val reactify = crossProject.crossType(CrossType.Pure).in(file("."))
   .settings(
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.3" % "test"
   )
