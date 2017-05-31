@@ -384,6 +384,28 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 11
       modified.toList should be(List(22, 33, 11))
     }
+    "validate complex hierarchical nesting" in {
+      class Complex {
+        val screen: Var[Option[Screen]] = Var[Option[Screen]](None)
+      }
+      val complex: Var[Option[Complex]] = Var[Option[Complex]](None)
+      var active = false
+      val enabled: Val[Boolean] = Val(complex.flatMap(_.screen.map(_.active())).getOrElse(false))
+      enabled.attach(active = _)
+      active should be(false)
+      enabled() should be(false)
+      val c = new Complex
+      complex := Some(c)
+      active should be(false)
+      enabled() should be(false)
+      val s = new Screen
+      c.screen := Some(s)
+      active should be(false)
+      enabled() should be(false)
+      s.active := true
+      active should be(true)
+      enabled() should be(true)
+    }
   }
   "Triggers" should {
     "handle simple invocations" in {
