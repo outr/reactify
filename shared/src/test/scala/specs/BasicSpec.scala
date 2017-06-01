@@ -419,6 +419,45 @@ class BasicSpec extends WordSpec with Matchers {
       invoked should be(3)
     }
   }
+  "Bindings" when {
+    "dealing with a simple binding" should {
+      val a = Var[String]("a")
+      val b = Var[String]("b")
+      var binding: Binding[String] = null
+      "have the proper initial values" in {
+        a() should be("a")
+        b() should be("b")
+      }
+      "bind the two values" in {
+        binding = a bind b
+        a() should be("a")
+        b() should be("a")
+      }
+      "propagate a -> b" in {
+        a := "one"
+        a() should be("one")
+        b() should be("one")
+      }
+      "propagate b -> a" in {
+        b := "two"
+        a() should be("two")
+        b() should be("two")
+      }
+      "detach the binding" in {
+        binding.detach()
+      }
+      "verify a -> b no longer propagates" in {
+        a := "three"
+        a() should be("three")
+        b() should be("two")
+      }
+      "verify b -> a no longer propagates" in {
+        b := "four"
+        a() should be("three")
+        b() should be("four")
+      }
+    }
+  }
 
   class Container[Child] {
     val children: Var[Vector[Child]] = Var[Vector[Child]](Vector.empty)
