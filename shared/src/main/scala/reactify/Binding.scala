@@ -1,6 +1,6 @@
 package reactify
 
-class Binding[T](left: StateChannel[T], right: StateChannel[T], leftToRight: Listener[T], rightToLeft: Listener[T]) {
+class Binding[L, R](left: StateChannel[L], right: StateChannel[R], leftToRight: Listener[L], rightToLeft: Listener[R]) {
   def detach(): Unit = {
     left.detach(leftToRight)
     right.detach(rightToLeft)

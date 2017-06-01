@@ -423,7 +423,7 @@ class BasicSpec extends WordSpec with Matchers {
     "dealing with a simple binding" should {
       val a = Var[String]("a")
       val b = Var[String]("b")
-      var binding: Binding[String] = null
+      var binding: Binding[String, String] = null
       "have the proper initial values" in {
         a() should be("a")
         b() should be("b")
@@ -455,6 +455,47 @@ class BasicSpec extends WordSpec with Matchers {
         b := "four"
         a() should be("three")
         b() should be("four")
+      }
+    }
+    "dealing with binding between different types" should {
+      val a = Var[String]("5")
+      val b = Var[Int](10)
+      var binding: Binding[String, Int] = null
+
+      implicit val s2i: String => Int = (s: String) => Integer.parseInt(s)
+      implicit val i2s: Int => String = (i: Int) => i.toString
+
+      "have the proper initial values" in {
+        a() should be("5")
+        b() should be(10)
+      }
+      "bind the two values" in {
+        binding = a bind b
+        a() should be("5")
+        b() should be(5)
+      }
+      "propagate a -> b" in {
+        a := "25"
+        a() should be("25")
+        b() should be(25)
+      }
+      "propagate b -> a" in {
+        b := 50
+        a() should be("50")
+        b() should be(50)
+      }
+      "detach the binding" in {
+        binding.detach()
+      }
+      "verify a -> b no longer propagates" in {
+        a := "100"
+        a() should be("100")
+        b() should be(50)
+      }
+      "verify b -> a no longer propagates" in {
+        b := "200"
+        a() should be("100")
+        b() should be(200)
       }
     }
   }
