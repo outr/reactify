@@ -14,7 +14,7 @@ trait StateChannel[T] extends State[T] with Channel[T] {
     val leftToRight = this.attach { t =>
       if (changing.compareAndSet(false, true)) {
         try {
-          that := v2t(get)
+          that := t2v(get)
         } finally {
           changing.set(false)
         }
@@ -23,7 +23,7 @@ trait StateChannel[T] extends State[T] with Channel[T] {
     val rightToLeft = that.attach { t =>
       if (changing.compareAndSet(false, true)) {
         try {
-          StateChannel.this := t2v(that.get)
+          StateChannel.this := v2t(that.get)
         } finally {
           changing.set(false)
         }
