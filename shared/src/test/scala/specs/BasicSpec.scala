@@ -368,6 +368,21 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 11
       modified.toList should be(List(22, 33, 11))
     }
+    // TODO: add proper support for wrapping covariant
+    /*"test different typed wrapping" in {
+      val v1 = Var(1)
+      val v2 = Var("two")
+
+      val modified = ListBuffer.empty[Any]
+
+      Observable.wrap(v1, v2).attach { v =>
+        modified += v
+      }
+
+      v1 := 11
+      v2 := "two two"
+      modified.toList should be(List(11, "two two"))
+    }*/
     "test dsl wrapping" in {
       val v1 = Var(1)
       val v2 = Var(2)
