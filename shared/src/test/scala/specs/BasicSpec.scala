@@ -296,23 +296,6 @@ class BasicSpec extends WordSpec with Matchers {
       v := 2
       f.value.get.get should be(1)
     }
-    "test a dirty var" in {
-      val v = Var.dirty[Int](0)
-      var firedFor = ListBuffer.empty[Int]
-      v.attach(i => firedFor += i)
-      v := 1
-      firedFor.toList should be(Nil)
-      v.update()
-      firedFor.toList should be(List(1))
-      v := 2
-      firedFor.toList should be(List(1))
-      v := 3
-      firedFor.toList should be(List(1))
-      v := 4
-      firedFor.toList should be(List(1))
-      v.update()
-      firedFor.toList should be(List(1, 4))
-    }
     "test stopping propagation" in {
       val v = Var(0)
       var invoked = false
@@ -492,6 +475,33 @@ class BasicSpec extends WordSpec with Matchers {
         a() should be("100")
         b() should be(200)
       }
+    }
+  }
+  "DirtyState" should {
+    "modify the value but not apply it" in {
+      val v = Var.dirty[String]("One")
+      v() should be("One")
+      v := "Two"
+      v() should be("One")
+      v.update()
+      v() should be("Two")
+    }
+    "only fire events upon update" in {
+      val v = Var.dirty[Int](0)
+      var firedFor = ListBuffer.empty[Int]
+      v.attach(i => firedFor += i)
+      v := 1
+      firedFor.toList should be(Nil)
+      v.update()
+      firedFor.toList should be(List(1))
+      v := 2
+      firedFor.toList should be(List(1))
+      v := 3
+      firedFor.toList should be(List(1))
+      v := 4
+      firedFor.toList should be(List(1))
+      v.update()
+      firedFor.toList should be(List(1, 4))
     }
   }
 

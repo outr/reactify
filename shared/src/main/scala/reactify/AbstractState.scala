@@ -5,7 +5,7 @@ import reactify.instance.{RecursionMode, StateInstanceManager}
 class AbstractState[T](override val distinct: Boolean,
                        cache: Boolean,
                        recursion: RecursionMode) extends State[T] {
-  private val manager = new StateInstanceManager[T](this, cache, recursion)
+  protected val manager = new StateInstanceManager[T](this, cache, recursion)
 
   override def observing: Set[Observable[_]] = manager.observables
 

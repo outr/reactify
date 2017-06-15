@@ -43,19 +43,20 @@ object Var {
   def prop[T](value: => T): Var[T] = apply(value, static = true, recursion = RecursionMode.Static)
 
   /**
-    * Creates a new instance of `Var` mixing in `DirtyObservable`.
+    * Creates a new instance of `Var` mixing in `DirtyState`.
     */
   def dirty[T](value: => T,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Var[T] with DirtyObservable[T] = {
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Var[T] with DirtyState[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache) with DirtyObservable[T]
+    new Var[T](f, distinct, cache, recursion) with DirtyState[T]
   }
 
   def bound[T](get: => T,
@@ -63,8 +64,9 @@ object Var {
                setImmediately: Boolean = false,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Var[T] = {
-    val v = Var[T](get, static, distinct, cache)
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Var[T] = {
+    val v = Var[T](get, static, distinct, cache, recursion)
     if (setImmediately) {
       set(v())
     }

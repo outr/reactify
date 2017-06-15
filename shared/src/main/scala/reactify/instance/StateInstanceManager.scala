@@ -11,6 +11,8 @@ class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: Recurs
   }
   private val updateInstanceListener: Listener[Any] = (_: Any) => updateInstance()
 
+  def isEmpty: Boolean = instance.isEmpty
+
   def get: T = useInstance(_.get)
 
   def useInstance[R](f: StateInstance[T] => R): R = {
@@ -57,13 +59,6 @@ class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: Recurs
 
     // Cleanup recursive
     val cleaned = instance.cleanup(references)
-//    println(s"References for Observables: ${references.observables}, Instances: ${references.instances}")
-//    if (cleaned ne instance) {
-//      println(s"\tOriginal: $instance")
-//      println(s"\tCleaned: $cleaned")
-//    } else {
-//      println("\tnothing to clean!")
-//    }
     instance = cleaned
 
     val pv = previousValue
