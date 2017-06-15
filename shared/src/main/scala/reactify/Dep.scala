@@ -96,6 +96,8 @@ class Dep[T, V](variable: Var[V],
                 adjustment: => T,
                 submissive: Boolean)
                (implicit connector: DepConnector[T, V]) extends Var[T](() => connector.combine(variable, adjustment)) {
+  assert(!submissive, "Submissive is currently disabled until it can be more thoroughly tested.")
+
   override def set(value: => T): Unit = set(value, submissive)
 
   private lazy val changing = new AtomicBoolean(false)

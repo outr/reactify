@@ -18,24 +18,20 @@ trait StateChannel[T] extends State[T] with Channel[T] {
     val changing = new AtomicBoolean(false)
     val leftToRight = this.attach { t =>
       if (changing.compareAndSet(false, true)) {
-        println(s"Assigning this to that...")
         try {
           that := t2v(get)
         } finally {
           changing.set(false)
         }
-        println("\tfinished assigning this to that...")
       }
     }
     val rightToLeft = that.attach { t =>
       if (changing.compareAndSet(false, true)) {
-        println(s"Assigning that to this...")
         try {
           StateChannel.this := v2t(that.get)
         } finally {
           changing.set(false)
         }
-        println("\tfinished assigning that to this...")
       }
     }
     new Binding(this, that, leftToRight, rightToLeft)

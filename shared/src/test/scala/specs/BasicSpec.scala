@@ -296,7 +296,7 @@ class BasicSpec extends WordSpec with Matchers {
       v := 2
       f.value.get.get should be(1)
     }
-    /*"test a dirty var" in {
+    "test a dirty var" in {
       val v = Var.dirty[Int](0)
       var firedFor = ListBuffer.empty[Int]
       v.attach(i => firedFor += i)
@@ -312,7 +312,7 @@ class BasicSpec extends WordSpec with Matchers {
       firedFor.toList should be(List(1))
       v.update()
       firedFor.toList should be(List(1, 4))
-    }*/
+    }
     "test stopping propagation" in {
       val v = Var(0)
       var invoked = false
@@ -363,21 +363,6 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 11
       modified.toList should be(List(22, 33, 11))
     }
-    // TODO: add proper support for wrapping covariant
-    /*"test different typed wrapping" in {
-      val v1 = Var(1)
-      val v2 = Var("two")
-
-      val modified = ListBuffer.empty[Any]
-
-      Observable.wrap(v1, v2).attach { v =>
-        modified += v
-      }
-
-      v1 := 11
-      v2 := "two two"
-      modified.toList should be(List(11, "two two"))
-    }*/
     "test dsl wrapping" in {
       val v1 = Var(1)
       val v2 = Var(2)
@@ -417,7 +402,7 @@ class BasicSpec extends WordSpec with Matchers {
       enabled() should be(true)
     }
   }
-  /*"Triggers" should {
+  "Triggers" should {
     "handle simple invocations" in {
       val t = Trigger()
       var invoked = 0
@@ -428,7 +413,7 @@ class BasicSpec extends WordSpec with Matchers {
       t.fire()
       invoked should be(3)
     }
-  }*/
+  }
   "Bindings" when {
     "dealing with a simple binding" should {
       val a = Var[String]("a")
