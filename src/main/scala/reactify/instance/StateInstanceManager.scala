@@ -66,7 +66,9 @@ class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: Recurs
 //    }
     instance = cleaned
 
-    state.changed(value, previousValue)
+    val pv = previousValue
+    previousValue = value
+    state.changed(value, pv)
   }
 
   def replaceInstance(f: () => T): Unit = synchronized {

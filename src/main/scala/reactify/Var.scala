@@ -14,11 +14,7 @@ class Var[T](function: () => T,
              cache: Boolean = true,
              recursion: RecursionMode = RecursionMode.RetainPreviousValue) extends Val[T](function, distinct, cache, recursion) with StateChannel[T] {
   override def set(value: => T): Unit = super.set(value)
-
-  /**
-    * Convenience method to set the current value like a variable.
-    */
-  def value_=(value: => T): Unit = set(value)
+  override def static(value: T): Unit = super.static(value)
 
   def asVal: Val[T] = this
 
@@ -32,14 +28,15 @@ object Var {
   def apply[T](value: => T,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Var[T] = {
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Var[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache)
+    new Var[T](f, distinct, cache, recursion)
   }
 
   def bound[T](get: => T,

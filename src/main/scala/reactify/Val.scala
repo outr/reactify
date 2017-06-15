@@ -26,7 +26,8 @@ object Val {
   def apply[T](value: => T,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Val[T] = {
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Val[T] = {
     val f = if (static) {
       val v: T = value
       () => v

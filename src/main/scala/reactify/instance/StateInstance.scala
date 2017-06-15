@@ -27,6 +27,8 @@ sealed trait StateInstance[T] {
   } else {
     StateInstance.empty[T]
   }
+
+  def levels: Int = if (isEmpty || isUninitialized) 0 else previous.levels + 1
 }
 
 class FunctionalInstance[T](f: () => T, val previous: StateInstance[T]) extends StateInstance[T] {
