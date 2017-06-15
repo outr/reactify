@@ -16,6 +16,17 @@ sealed trait StateInstance[T] {
   }
 
   def withPrevious(previous: StateInstance[T]): StateInstance[T]
+
+  def cleanup(references: LocalReferences): StateInstance[T] = if (references.instances.contains(this)) {
+    val previous = this.previous.cleanup(references)
+    if (previous eq this.previous) {
+      this
+    } else {
+      withPrevious(previous)
+    }
+  } else {
+    StateInstance.empty[T]
+  }
 }
 
 class FunctionalInstance[T](f: () => T, val previous: StateInstance[T]) extends StateInstance[T] {
@@ -67,6 +78,8 @@ object EmptyStateInstance extends StateInstance[Any] {
 
   override def reset(): Unit = {}
 
+  override def cleanup(references: LocalReferences): StateInstance[Any] = this
+
   override def toString: String = s"EmptyStateInstance"
 }
 
@@ -78,6 +91,8 @@ object UninitializedStateInstance extends StateInstance[Any] {
   def withPrevious(previous: StateInstance[Any]): StateInstance[Any] = this
 
   override def reset(): Unit = {}
+
+  override def cleanup(references: LocalReferences): StateInstance[Any] = this
 
   override def toString: String = s"UninitializedStateInstance"
 }

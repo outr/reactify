@@ -28,7 +28,7 @@ class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: Recurs
     }
   }
 
-  def updateInstance(): Unit = {
+  def updateInstance(): Unit = synchronized {
     // Reset cache
     instance.reset()
 
@@ -55,11 +55,18 @@ class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: Recurs
       }
     }
 
-    state.changed(value, previousValue)
+    // Cleanup recursive
+    val cleaned = instance.cleanup(references)
+//    println(s"References for Observables: ${references.observables}, Instances: ${references.instances}")
+//    if (cleaned ne instance) {
+//      println(s"\tOriginal: $instance")
+//      println(s"\tCleaned: $cleaned")
+//    } else {
+//      println("\tnothing to clean!")
+//    }
+    instance = cleaned
 
-    println(s"References for Observables: ${references.observables}, Instances: ${references.instances}")
-    // TODO: invoke instance to determine observers and (if RecursionMode.Full or RetainPreviousValue) snip off unused previous entries
-    // TODO: listen for changes to update
+    state.changed(value, previousValue)
   }
 
   def replaceInstance(f: () => T): Unit = synchronized {
