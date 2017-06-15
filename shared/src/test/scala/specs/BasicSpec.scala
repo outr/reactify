@@ -504,6 +504,29 @@ class BasicSpec extends WordSpec with Matchers {
       firedFor.toList should be(List(1, 4))
     }
   }
+  "Transactions" should {
+    "not apply the value until the transaction concludes" in {
+      val v1 = Var[Int](1)
+      val v2 = Var[String]("Two")
+      Transaction {
+        v1 := 10
+        v2 := "Twenty"
+        v1() should be(1)
+        v2() should be("Two")
+      }
+      v1() should be(10)
+      v2() should be("Twenty")
+    }
+    "not apply dependency changes until the transaction concludes" in {
+      val v1 = Var[Int](1, transactional = false)
+      val v2 = Val[String](s"v1 is ${v1()}")
+      Transaction {
+        v1 := 2
+        v2() should be("v1 is 1")
+      }
+      v2() should be("v1 is 2")
+    }
+  }
 
   class Container[Child] {
     val children: Var[Vector[Child]] = Var[Vector[Child]](Vector.empty)

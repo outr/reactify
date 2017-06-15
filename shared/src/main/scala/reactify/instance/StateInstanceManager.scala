@@ -1,8 +1,11 @@
 package reactify.instance
 
-import reactify.{Listener, Observable, State}
+import reactify.{Listener, Observable, State, Transaction}
 
-class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: RecursionMode) {
+class StateInstanceManager[T](state: State[T],
+                              cache: Boolean,
+                              recursion: RecursionMode,
+                              transactional: Boolean) {
   @volatile private var previousValue: T = _
   @volatile private var instance: StateInstance[T] = StateInstance.empty[T]
   @volatile private[reactify] var observables: Set[Observable[_]] = Set.empty
@@ -30,57 +33,65 @@ class StateInstanceManager[T](state: State[T], cache: Boolean, recursion: Recurs
     }
   }
 
-  def updateInstance(): Unit = synchronized {
-    // Reset cache
-    instance.reset()
+  def updateInstance(force: Boolean = false): Unit = synchronized {
+    if (!force && transactional && Transaction.inTransaction) {
+      Transaction.update(this, None)
+    } else {
+      // Reset cache
+      instance.reset()
 
-    var value: T = previousValue
-    val references = StateInstanceManager.withReferences {
-      value = get
-    }
-    val oldObservables = observables
-    observables = references.observables - state      // Update new observables list and remove reference to this
+      var value: T = previousValue
+      val references = StateInstanceManager.withReferences {
+        value = get
+      }
+      val oldObservables = observables
+      observables = references.observables - state // Update new observables list and remove reference to this
 
-    if (oldObservables != observables) {
-      // Out with the old
-      oldObservables.foreach { ob =>
-        if (!observables.contains(ob)) {
-          ob.asInstanceOf[Observable[Any]].detach(updateInstanceListener)
+      if (oldObservables != observables) {
+        // Out with the old
+        oldObservables.foreach { ob =>
+          if (!observables.contains(ob)) {
+            ob.asInstanceOf[Observable[Any]].detach(updateInstanceListener)
+          }
+        }
+
+        // In with the new
+        observables.foreach { ob =>
+          if (!oldObservables.contains(ob)) {
+            ob.asInstanceOf[Observable[Any]].observe(updateInstanceListener)
+          }
         }
       }
 
-      // In with the new
-      observables.foreach { ob =>
-        if (!oldObservables.contains(ob)) {
-          ob.asInstanceOf[Observable[Any]].observe(updateInstanceListener)
-        }
-      }
+      // Cleanup recursive
+      val cleaned = instance.cleanup(references)
+      instance = cleaned
+
+      val pv = previousValue
+      previousValue = value
+      state.changed(value, pv)
     }
-
-    // Cleanup recursive
-    val cleaned = instance.cleanup(references)
-    instance = cleaned
-
-    val pv = previousValue
-    previousValue = value
-    state.changed(value, pv)
   }
 
-  def replaceInstance(f: () => T): Unit = synchronized {
-    val previous = recursion match {
-      case RecursionMode.Static => StateInstance.empty[T]
-      case RecursionMode.None => StateInstance.empty[T]
-      case RecursionMode.RetainPreviousValue => if (instance.isEmpty) instance else StateInstance.cached(instance.get)
-      case RecursionMode.Full => instance
-    }
-    instance = if (recursion == RecursionMode.Static) {
-      StateInstance.cached(f())
-    } else if (cache) {
-      StateInstance.updatable(f, None, previous)
+  def replaceInstance(f: () => T, force: Boolean = false): Unit = synchronized {
+    if (!force && transactional && Transaction.inTransaction) {
+      Transaction.update(this, Some(f))
     } else {
-      StateInstance.functional(f, previous)
+      val previous = recursion match {
+        case RecursionMode.Static => StateInstance.empty[T]
+        case RecursionMode.None => StateInstance.empty[T]
+        case RecursionMode.RetainPreviousValue => if (instance.isEmpty) instance else StateInstance.cached(instance.get)
+        case RecursionMode.Full => instance
+      }
+      instance = if (recursion == RecursionMode.Static) {
+        StateInstance.cached(f())
+      } else if (cache) {
+        StateInstance.updatable(f, None, previous)
+      } else {
+        StateInstance.functional(f, previous)
+      }
+      updateInstance(force)
     }
-    updateInstance()
   }
 }
 

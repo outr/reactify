@@ -2,6 +2,7 @@ package reactify
 
 import java.util.concurrent.atomic.AtomicReference
 
+// TODO: apply in StateInstanceManager
 trait DirtyState[T] extends AbstractState[T] {
   private lazy val dirty = new AtomicReference[Option[() => T]](None)
 

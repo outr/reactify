@@ -13,7 +13,8 @@ import reactify.instance.RecursionMode
 class Val[T](function: () => T,
              distinct: Boolean = true,
              cache: Boolean = true,
-             recursion: RecursionMode = RecursionMode.RetainPreviousValue) extends AbstractState[T](distinct, cache, recursion) {
+             recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+             transactional: Boolean = true) extends AbstractState[T](distinct, cache, recursion, transactional) {
   set(function())
 
   override def toString: String = s"Val($get)"
@@ -27,13 +28,14 @@ object Val {
                static: Boolean = false,
                distinct: Boolean = true,
                cache: Boolean = true,
-               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Val[T] = {
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Val[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Val[T](f, distinct, cache)
+    new Val[T](f, distinct, cache, recursion, transactional)
   }
 }

@@ -12,8 +12,9 @@ import reactify.instance.RecursionMode
 class Var[T](function: () => T,
              distinct: Boolean = true,
              cache: Boolean = true,
-             recursion: RecursionMode = RecursionMode.RetainPreviousValue
-            ) extends Val[T](function, distinct, cache, recursion) with StateChannel[T] {
+             recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+             transactional: Boolean = true
+            ) extends Val[T](function, distinct, cache, recursion, transactional) with StateChannel[T] {
   def asVal: Val[T] = this
 
   override def toString: String = s"Var($get)"
@@ -27,20 +28,23 @@ object Var {
                static: Boolean = false,
                distinct: Boolean = true,
                cache: Boolean = true,
-               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Var[T] = {
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Var[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache, recursion)
+    new Var[T](f, distinct, cache, recursion, transactional)
   }
 
   /**
     * Creates a simple Var instance that only stores the value from the function, not the function.
     */
-  def prop[T](value: => T): Var[T] = apply(value, static = true, recursion = RecursionMode.Static)
+  def prop[T](value: => T, transactional: Boolean = true): Var[T] = {
+    apply(value, static = true, recursion = RecursionMode.Static, transactional = transactional)
+  }
 
   /**
     * Creates a new instance of `Var` mixing in `DirtyState`.
@@ -49,14 +53,15 @@ object Var {
                static: Boolean = false,
                distinct: Boolean = true,
                cache: Boolean = true,
-               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Var[T] with DirtyState[T] = {
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Var[T] with DirtyState[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache, recursion) with DirtyState[T]
+    new Var[T](f, distinct, cache, recursion, transactional) with DirtyState[T]
   }
 
   def bound[T](get: => T,
@@ -65,8 +70,9 @@ object Var {
                static: Boolean = false,
                distinct: Boolean = true,
                cache: Boolean = true,
-               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Var[T] = {
-    val v = Var[T](get, static, distinct, cache, recursion)
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Var[T] = {
+    val v = Var[T](get, static, distinct, cache, recursion, transactional)
     if (setImmediately) {
       set(v())
     }
