@@ -1,5 +1,7 @@
 package reactify
 
+import reactify.instance.RecursionMode
+
 /**
   * Val, as the name suggests, is like a Scala `val`. This represents an immutable value that is set in the first place
   * and then not modified. However, since the value set may be built from `Observables`, the generated value may change
@@ -10,7 +12,10 @@ package reactify
   */
 class Val[T](function: () => T,
              distinct: Boolean = true,
-             cache: Boolean = true) extends AbstractState[T](function, distinct, cache) {
+             cache: Boolean = true,
+             recursion: RecursionMode = RecursionMode.RetainPreviousValue) extends AbstractState[T](distinct, cache, recursion) {
+  set(function())
+
   override def toString: String = s"Val($get)"
 }
 
@@ -21,7 +26,8 @@ object Val {
   def apply[T](value: => T,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Val[T] = {
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue): Val[T] = {
     val f = if (static) {
       val v: T = value
       () => v

@@ -11,7 +11,7 @@ lazy val root = project.in(file("."))
     publishLocal := {}
   )
 
-lazy val reactify = crossProject.crossType(CrossType.Pure).in(file("."))
+lazy val reactify = crossProject.in(file("."))
   .settings(
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.3" % "test"
   )
