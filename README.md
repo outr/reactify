@@ -17,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "1.5.3"
+libraryDependencies += "com.outr" %% "reactify" % "1.6.0"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "1.5.3"
+libraryDependencies += "com.outr" %%% "reactify" % "1.6.0"
 ```
 
 ## Concepts
@@ -112,9 +112,11 @@ c := "Tres"
 list()      // Outputs List("Uno", "Dos", "Tres")
 ```
 
-### More Advanced Example
+### More Advanced Examples
 
 This is all pretty neat, but it's the more complex scenarios that show the power of what you can do with Reactify:
+
+#### Complex Function with Conditional
 
 ```scala
 val v1 = Var(10)
@@ -130,6 +132,68 @@ val complex = Val[String] {
 ```
 
 Any changes to `v1`, `v2`, or `v3` will fire a change on `complex` and the entire inlined function will be re-evaluated.
+
+#### Multi-Level Observation
+
+A much more advanced scenario is when you have a `Var` that contains a `class` that has a `Var` and you want to keep track
+of the resulting value no matter what the first `Var`'s instance is currently set to.
+
+Consider the following two classes:
+
+```scala
+class Foo {
+  val active: Var[Boolean] = Var(false)
+}
+class Bar {
+  val foo: Var[Option[Foo]] = Var[Option[Foo]](None)
+}
+```
+
+A `Bar` has a `Var` `foo` that holds an `Option[Foo]`. Now, say I have a `Var[Option[Bar]]`:
+
+```scala
+val bar: Var[Option[Bar]] = Var[Option[Bar]](None)
+```
+
+If we want to determine `active` on `Foo` we have several layers of mutability between the optional `bar` `Var`, the
+optional `foo` `Var`, and then the ultimate `active` `Var` in `Foo`. For a one-off we could do something like:
+
+```scala
+val active: Boolean = bar().flatMap(_.foo().map(_.active())).getOrElse(false)
+```
+
+This would give us `true` only if there is a `Bar`, `Bar` has a `Foo`, and `active` is true. But, if we want to listen
+for when that changes at any level (`Bar`, `Foo`, and `active`) it should be just as easy. Fortunately with Reactify it
+is:
+
+```scala
+val active: Val[Boolean] = Val(bar().flatMap(_.foo().map(_.active())).getOrElse(false))
+```
+
+Yep, it's that easy. Now if I set `bar` to `Some(new Bar)` then `foo := Some(new Foo)` on that, and finally set `active`
+to true on `Foo` my `active` `Val` will fire that it has changed. Reactify will monitor every level of the `Var`s and
+automatically update itself and fire when the resulting value from the function above has changed.
+
+```scala
+// Monitor the value change
+active.attach { b =>
+  ... do something ...    
+}
+
+// Set Bar
+val b = new Bar
+bar := Some(b)
+
+// Set Foo
+val f = new Foo
+b.foo := Some(f)
+
+// Set active
+f.active := true
+```
+
+With Reactify you don't have to do any magic in your code, you just write Scala code the way you always have and let
+Reactify handle the magic.
 
 ### Channels
 
@@ -164,7 +228,44 @@ this case. See `DepsSpec` for more detailed examples.
 `Dep` also supports conversions between different types as well, but must have an implicit `DepConnector` available to
 handle the conversions.
 
+### Binding
+
+As of 1.6 you can now do two-way binding incredibly easily:
+
+```scala
+val a = Var[String]("Hello")
+val b = Var[String]("World")
+val binding = a bind b
+```
+
+By default this will assign the value of `a` to `b` and then changes to either will propagate to the other. If you want
+to detach the binding:
+
+```scala
+binding.detach()
+```
+
+This will disconnect the two to operate independently of each other again.
+
+You can also do different typed binding:
+
+```scala
+implicit val s2i: String => Int = (s: String) => Integer.parseInt(s)
+implicit val i2s: Int => String = (i: Int) => i.toString
+
+val a = Var[String]("5")
+val b = Var[Int](10)
+a bind b
+```
+
+We need implicits to be able to convert between the two, but now changes to one will propagate to the other.
+
 ## Versions
+
+### Features for 1.6.0 (Released 2017.06.01)
+
+* [X] Binding support
+    * [X] Different type binding
 
 ### Features for 1.5.0 (Released 2017.04.12)
 

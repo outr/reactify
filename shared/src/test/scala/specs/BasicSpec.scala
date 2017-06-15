@@ -368,6 +368,21 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 11
       modified.toList should be(List(22, 33, 11))
     }
+    // TODO: add proper support for wrapping covariant
+    /*"test different typed wrapping" in {
+      val v1 = Var(1)
+      val v2 = Var("two")
+
+      val modified = ListBuffer.empty[Any]
+
+      Observable.wrap(v1, v2).attach { v =>
+        modified += v
+      }
+
+      v1 := 11
+      v2 := "two two"
+      modified.toList should be(List(11, "two two"))
+    }*/
     "test dsl wrapping" in {
       val v1 = Var(1)
       val v2 = Var(2)
@@ -384,6 +399,28 @@ class BasicSpec extends WordSpec with Matchers {
       v1 := 11
       modified.toList should be(List(22, 33, 11))
     }
+    "validate complex hierarchical nesting" in {
+      class Complex {
+        val screen: Var[Option[Screen]] = Var[Option[Screen]](None)
+      }
+      val complex: Var[Option[Complex]] = Var[Option[Complex]](None)
+      var active = false
+      val enabled: Val[Boolean] = Val(complex.flatMap(_.screen.map(_.active())).getOrElse(false))
+      enabled.attach(active = _)
+      active should be(false)
+      enabled() should be(false)
+      val c = new Complex
+      complex := Some(c)
+      active should be(false)
+      enabled() should be(false)
+      val s = new Screen
+      c.screen := Some(s)
+      active should be(false)
+      enabled() should be(false)
+      s.active := true
+      active should be(true)
+      enabled() should be(true)
+    }
   }
   "Triggers" should {
     "handle simple invocations" in {
@@ -395,6 +432,86 @@ class BasicSpec extends WordSpec with Matchers {
       t.fire()
       t.fire()
       invoked should be(3)
+    }
+  }
+  "Bindings" when {
+    "dealing with a simple binding" should {
+      val a = Var[String]("a")
+      val b = Var[String]("b")
+      var binding: Binding[String, String] = null
+      "have the proper initial values" in {
+        a() should be("a")
+        b() should be("b")
+      }
+      "bind the two values" in {
+        binding = a bind b
+        a() should be("a")
+        b() should be("a")
+      }
+      "propagate a -> b" in {
+        a := "one"
+        a() should be("one")
+        b() should be("one")
+      }
+      "propagate b -> a" in {
+        b := "two"
+        a() should be("two")
+        b() should be("two")
+      }
+      "detach the binding" in {
+        binding.detach()
+      }
+      "verify a -> b no longer propagates" in {
+        a := "three"
+        a() should be("three")
+        b() should be("two")
+      }
+      "verify b -> a no longer propagates" in {
+        b := "four"
+        a() should be("three")
+        b() should be("four")
+      }
+    }
+    "dealing with binding between different types" should {
+      val a = Var[String]("5")
+      val b = Var[Int](10)
+      var binding: Binding[String, Int] = null
+
+      implicit val s2i: String => Int = (s: String) => Integer.parseInt(s)
+      implicit val i2s: Int => String = (i: Int) => i.toString
+
+      "have the proper initial values" in {
+        a() should be("5")
+        b() should be(10)
+      }
+      "bind the two values" in {
+        binding = a bind b
+        a() should be("5")
+        b() should be(5)
+      }
+      "propagate a -> b" in {
+        a := "25"
+        a() should be("25")
+        b() should be(25)
+      }
+      "propagate b -> a" in {
+        b := 50
+        a() should be("50")
+        b() should be(50)
+      }
+      "detach the binding" in {
+        binding.detach()
+      }
+      "verify a -> b no longer propagates" in {
+        a := "100"
+        a() should be("100")
+        b() should be(50)
+      }
+      "verify b -> a no longer propagates" in {
+        b := "200"
+        a() should be("100")
+        b() should be(200)
+      }
     }
   }
 
