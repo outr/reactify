@@ -1,5 +1,11 @@
 package reactify
 
+import java.util.concurrent.atomic.AtomicBoolean
+
+import reactify.bind.{BindSet, Binding}
+
+import scala.concurrent.Future
+
 /**
   * Dep is very much like a `Val`, but is also a `Channel`. The basic purpose is to represent a value dependent upon
   * another variable. An example of this might be if you are representing a position `left` and you also wanted to
@@ -17,41 +23,43 @@ package reactify
   * if you change `width` to 50.0? Should `left` change to 75.0 (`submissive = false`) or should `right` change to 75.0
   * (`submissive = true`)?
   */
-class Dep[T, V](variable: Var[V],
-                adjustment: => T,
-                submissive: Boolean)
-               (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
-  private val internal = Val[T](connector.combine(variable, adjustment))
-
-  override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
-    internal.attach(f, priority)
-  }
-
-  override def detach(listener: Listener[T]): Unit = internal.detach(listener)
-
-  override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
-
-  override protected[reactify] def fire(value: T): Unit = {}
-
-  override def set(value: => T): Unit = set(value, submissive)
-
-  override def observing: Set[Observable[_]] = internal.observing
-
-  override def get: T = internal.get
-
-  def set(value: => T, submissive: Boolean): Unit = {
-    if (submissive) {
-      val adj: T = adjustment
-      variable := connector.extract(value, adj)
-    } else {
-      variable := connector.extract(value, adjustment)
-    }
-  }
-
-  override def apply(): T = internal.apply()
-
-  override def toString: String = s"Dep($get)"
-}
+//class Dep[T, V](variable: Var[V],
+//                adjustment: => T,
+//                submissive: Boolean)
+//               (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
+//  override def distinct: Boolean = true
+//
+//  override protected def value(): T = internal.get
+//
+//  private val internal = Val[T](connector.combine(variable, adjustment))
+//
+//  override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
+//    internal.attach(f, priority)
+//  }
+//
+//  override def detach(listener: Listener[T]): Unit = internal.detach(listener)
+//
+//  override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
+//
+//  override protected[reactify] def fire(value: T): Unit = {}
+//
+//  override def set(value: => T): Unit = set(value, submissive)
+//
+//  override def observing: Set[Observable[_]] = internal.observing
+//
+//  def set(value: => T, submissive: Boolean): Unit = {
+//    if (submissive) {
+//      val adj: T = adjustment
+//      variable := connector.extract(value, adj)
+//    } else {
+//      variable := connector.extract(value, adjustment)
+//    }
+//  }
+//
+//  override def apply(): T = internal.apply()
+//
+//  override def toString: String = s"Dep($get)"
+//}
 
 object Dep {
   /**
@@ -63,10 +71,73 @@ object Dep {
     *
     * @return dependency instance
     */
+//  def apply[T, V](variable: Var[V],
+//                  adjustment: => T,
+//                  submissive: Boolean = false)
+//                 (implicit connector: DepConnector[T, V]): Dep[T, V] = {
+//    new Dep[T, V](variable, adjustment, submissive)
+//  }
+
   def apply[T, V](variable: Var[V],
                   adjustment: => T,
                   submissive: Boolean = false)
                  (implicit connector: DepConnector[T, V]): Dep[T, V] = {
+//    val v = Var[T](connector.combine(variable, adjustment))
+//    v.bind(variable, BindSet.None)(
+//      t2v = (t: T) => connector.extract(t, adjustment),
+//      v2t = (v: V) => connector.combine(v, adjustment)
+//    )
+//    v
     new Dep[T, V](variable, adjustment, submissive)
   }
 }
+
+class Dep[T, V](variable: Var[V],
+                adjustment: => T,
+                submissive: Boolean)
+               (implicit connector: DepConnector[T, V]) extends Var[T](() => connector.combine(variable, adjustment)) {
+  assert(!submissive, "Submissive is currently disabled until it can be more thoroughly tested.")
+
+  override def set(value: => T): Unit = set(value, submissive)
+
+  private lazy val changing = new AtomicBoolean(false)
+
+  def set(value: => T, submissive: Boolean): Unit = if (changing.compareAndSet(false, true)) {
+    try {
+      super.set(value)
+      if (submissive) {
+        val adj: T = adjustment
+        variable := connector.extract(get, adj)
+      } else {
+        variable := connector.extract(get, adjustment)
+      }
+    } finally {
+      changing.set(false)
+    }
+  }
+
+  variable.attach { v =>
+    if (changing.compareAndSet(false, true)) {
+      try {
+        super.set(connector.combine(variable, adjustment))
+      } finally {
+        changing.set(false)
+      }
+    }
+  }
+}
+
+/*
+class Dep[T, V](variable: Var[V],
+                adjustment: => T,
+                submissive: Boolean)
+               (implicit connector: DepConnector[T, V]) extends Val[T](() => connector.combine(variable, adjustment)) with StateChannel[T] {
+  override def set(value: => T): Unit = {
+    if (submissive) {
+      val adj: T = adjustment
+      variable := connector.extract(get, adj)
+    } else {
+      variable := connector.extract(get, adjustment)
+    }
+  }
+}*/

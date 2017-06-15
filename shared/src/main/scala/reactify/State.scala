@@ -1,10 +1,20 @@
 package reactify
 
+import reactify.instance.StateInstanceManager
+
 trait State[T] extends Observable[T] {
+  def distinct: Boolean
   def observing: Set[Observable[_]]
-  def get: T
+  final def get: T = {
+    StateInstanceManager.referenced(this)
+    value()
+  }
   def apply(): T = get
-  def value: T = get
+
+  protected def value(): T
+
+  protected def set(value: => T): Unit
+  protected def static(value: T): Unit = set(value)
 
   def attachAndFire(f: T => Unit): Listener[T] = {
     val listener = attach(f)
@@ -15,15 +25,8 @@ trait State[T] extends Observable[T] {
   override def changes(listener: ChangeListener[T]): Listener[T] = {
     attach(ChangeListener.createFunction(listener, Some(get)))
   }
-}
 
-object State {
-  /**
-    * Creates a State instance with a defined value.
-    *
-    * @param value the value to set to the state.
-    * @tparam T the type
-    * @return a pre-defined, immutable State instance
-    */
-  def apply[T](value: T): State[T] = Prop[T](value)
+  protected[reactify] def changed(value: T, previous: T): Unit = if (!distinct || value != previous) {
+    fire(value)
+  }
 }

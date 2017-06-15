@@ -1,6 +1,7 @@
 package reactify
 
 import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Observable, as the name suggests, observes values being fired against it. This is the core functionality of Reactify
@@ -120,4 +121,8 @@ trait Observable[T] {
 
 object Observable {
   def wrap[T](observables: Observable[T]*): Observable[T] = new WrappedObservable[T](observables.toList)
+  def apply[T](init: (T => Unit) => Unit): Observable[T] = new Observable[T] {
+    init(fire)
+  }
+  def apply[T](future: Future[T]): Observable[T] = apply(fire => future.foreach(fire))
 }

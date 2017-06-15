@@ -1,5 +1,7 @@
 package reactify
 
+import reactify.instance.RecursionMode
+
 /**
   * Var, as the name suggests, is very similar to a Scala `var`. The value is defined during instantiation, but may be
   * modified later. The value may be a static value, or may be a derived value depending on multiple `Observables`. If
@@ -9,17 +11,11 @@ package reactify
   */
 class Var[T](function: () => T,
              distinct: Boolean = true,
-             cache: Boolean = true) extends Val[T](function, distinct, cache) with StateChannel[T] {
-  override def set(value: => T): Unit = super.set(value)
-
-  /**
-    * Convenience method to set the current value like a variable.
-    */
-  def value_=(value: => T): Unit = set(value)
-
+             cache: Boolean = true,
+             recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+             transactional: Boolean = true
+            ) extends Val[T](function, distinct, cache, recursion, transactional) with StateChannel[T] {
   def asVal: Val[T] = this
-
-  override def setStatic(value: T): Unit = super.setStatic(value)
 
   override def toString: String = s"Var($get)"
 }
@@ -31,30 +27,41 @@ object Var {
   def apply[T](value: => T,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Var[T] = {
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Var[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache)
+    new Var[T](f, distinct, cache, recursion, transactional)
   }
 
   /**
-    * Creates a new instance of `Var` mixing in `DirtyObservable`.
+    * Creates a simple Var instance that only stores the value from the function, not the function.
+    */
+  def prop[T](value: => T, transactional: Boolean = true): Var[T] = {
+    apply(value, static = true, recursion = RecursionMode.Static, transactional = transactional)
+  }
+
+  /**
+    * Creates a new instance of `Var` mixing in `DirtyState`.
     */
   def dirty[T](value: => T,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Var[T] with DirtyObservable[T] = {
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Var[T] with DirtyState[T] = {
     val f = if (static) {
       val v: T = value
       () => v
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache) with DirtyObservable[T]
+    new Var[T](f, distinct, cache, recursion, transactional) with DirtyState[T]
   }
 
   def bound[T](get: => T,
@@ -62,8 +69,10 @@ object Var {
                setImmediately: Boolean = false,
                static: Boolean = false,
                distinct: Boolean = true,
-               cache: Boolean = true): Var[T] = {
-    val v = Var[T](get, static, distinct, cache)
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Var[T] = {
+    val v = Var[T](get, static, distinct, cache, recursion, transactional)
     if (setImmediately) {
       set(v())
     }

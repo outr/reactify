@@ -11,7 +11,7 @@ class DepsSpec extends WordSpec with Matchers {
 
     val left: Var[Double] = Var(0.0)
     val center: Dep[Double, Double] = Dep(left, width / 2.0)
-    val right: Dep[Double, Double] = Dep(left, width, submissive = true)
+    val right: Dep[Double, Double] = Dep(left, width)
 
     var leftChanges = ListBuffer.empty[(Double, Double)]
     var centerChanges = ListBuffer.empty[(Double, Double)]
@@ -90,14 +90,14 @@ class DepsSpec extends WordSpec with Matchers {
       resetChanges()
 
       width := 50.0
-      left() should be(75.0)
+      left() should be(50.0)
       width() should be(50.0)
-      center() should be(100.0)
-      right() should be(125.0)
+      center() should be(75.0)
+      right() should be(100.0)
 
-      checkChanges(leftChanges)
-      checkChanges(centerChanges, 87.5 -> 100.0)
-      checkChanges(rightChanges, 100.0 -> 125.0)
+      checkChanges(leftChanges, 75.0 -> 50.0)
+      checkChanges(centerChanges, 87.5 -> 100.0, 100.0 -> 75.0)
+      checkChanges(rightChanges)
     }
     "set center and reflect properly in left and right" in {
       resetChanges()
@@ -108,9 +108,9 @@ class DepsSpec extends WordSpec with Matchers {
       center() should be(200.0)
       right() should be(225.0)
 
-      checkChanges(leftChanges, 75.0 -> 175.0)
-      checkChanges(centerChanges, 100.0 -> 200.0)
-      checkChanges(rightChanges, 125.0 -> 225.0)
+      checkChanges(leftChanges, 50.0 -> 175.0)
+      checkChanges(centerChanges, 75.0 -> 200.0)
+      checkChanges(rightChanges, 100.0 -> 225.0)
     }
     "set width another time and retain center" in {
       resetChanges()
@@ -122,8 +122,8 @@ class DepsSpec extends WordSpec with Matchers {
       right() should be(250.0)
 
       checkChanges(leftChanges, 175.0 -> 150.0)
-      checkChanges(centerChanges, 200.0 -> 225.0, 225.0 -> 200.0)
-      checkChanges(rightChanges, 225.0 -> 275.0, 275.0 -> 250.0)
+      checkChanges(centerChanges)
+      checkChanges(rightChanges, 225.0 -> 250.0)
     }
     "set left and verify center and right adjust" in {
       resetChanges()
@@ -191,30 +191,28 @@ class DepsSpec extends WordSpec with Matchers {
 
       var leftValue = left()
       left.attach(d => leftValue = d)
-      left.observing should be(Set.empty)
 
+      def verify(l: Double, c: Double, r: Double, w: Double, v: Double): Unit = {
+        val list = List(l, c, r, w, v)
+        List(left(), center(), right(), width(), leftValue) should be(list)
+      }
+
+      "verify initial observing state" in {
+        left.observing should be(Set(width, right))
+      }
       "update center" in {
         center := 500.0
-        left() should be(500.0)
-        right() should be(500.0)
-        left.observing should be(Set(width))
-        leftValue should be(500.0)
+        verify(500.0, 500.0, 500.0, 0.0, 500.0)
+        left.observing should be(Set(width, center))
       }
       "update width" in {
         width := 100.0
-        center() should be(500.0)
-        left() should be(450.0)
-        right() should be(550.0)
-        leftValue should be(450.0)
+        verify(450.0, 500.0, 550.0, 100.0, 450.0)
       }
-      // TODO: fix this (bug #10)
-      /*"increment center from itself" in {
+      "increment center from itself" in {
         center := center() + 10.0
-        center() should be(510.0)
-        left() should be(460.0)
-        right() should be(560.0)
-        leftValue should be(460.0)
-      }*/
+        verify(460.0, 510.0, 560.0, 100.0, 460.0)
+      }
     }
   }
 }
