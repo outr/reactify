@@ -5,9 +5,10 @@ import reactify.instance.StateInstanceManager
 trait State[T] extends Observable[T] {
   def distinct: Boolean
   def observing: Set[Observable[_]]
-  final def get: T = {
-    StateInstanceManager.referenced(this)
+  final def get: T = try {
     value()
+  } finally {
+    StateInstanceManager.referenced(this)
   }
   def apply(): T = get
 

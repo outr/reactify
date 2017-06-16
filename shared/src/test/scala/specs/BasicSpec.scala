@@ -8,6 +8,8 @@ import reactify.instance.RecursionMode
 import scala.collection.mutable.ListBuffer
 
 class BasicSpec extends WordSpec with Matchers {
+  lazy val lazyDouble: Var[Double] = Var(0.0)
+
   "Channels" should {
     "notify when changed" in {
       var changes = 0
@@ -383,6 +385,12 @@ class BasicSpec extends WordSpec with Matchers {
       s.active := true
       active should be(true)
       enabled() should be(true)
+    }
+    "verify dependency value properly updates dependant when using lazy" in {
+      val v = Var[Double](lazyDouble)
+      v.observing should be(Set(lazyDouble))
+      lazyDouble := 100.0
+      v() should be(100.0)
     }
   }
   "Triggers" should {

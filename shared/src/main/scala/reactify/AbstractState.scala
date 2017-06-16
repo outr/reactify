@@ -7,7 +7,7 @@ class AbstractState[T](override val distinct: Boolean,
                        recursion: RecursionMode,
                        transactional: Boolean,
                        onUpdate: Boolean) extends State[T] {
-  protected val manager = new StateInstanceManager[T](this, cache, recursion, transactional, onUpdate)
+  val manager = new StateInstanceManager[T](this, cache, recursion, transactional, onUpdate)
 
   override def observing: Set[Observable[_]] = manager.observables
 

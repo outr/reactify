@@ -1,6 +1,6 @@
 name := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.0.0"
+version in ThisBuild := "2.0.1-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.2"
 crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
 

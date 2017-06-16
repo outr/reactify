@@ -20,6 +20,8 @@ class StateInstanceManager[T](state: State[T],
 
   def get: T = useInstance(_.get)
 
+  def stateInstance: StateInstance[T] = instance
+
   def useInstance[R](f: StateInstance[T] => R): R = {
     val startingInstance = threadLocal.get()
     val instance: StateInstance[T] = startingInstance match {
@@ -134,12 +136,13 @@ object StateInstanceManager {
 
   def withReferences(f: => Unit): LocalReferences = {
     val references = new LocalReferences
+    val previous = localReferences.get()
     localReferences.set(Some(references))
     try {
       f
       references
     } finally {
-      localReferences.remove()
+      localReferences.set(previous)
     }
   }
 
