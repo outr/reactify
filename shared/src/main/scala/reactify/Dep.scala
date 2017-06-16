@@ -23,43 +23,43 @@ import scala.concurrent.Future
   * if you change `width` to 50.0? Should `left` change to 75.0 (`submissive = false`) or should `right` change to 75.0
   * (`submissive = true`)?
   */
-//class Dep[T, V](variable: Var[V],
-//                adjustment: => T,
-//                submissive: Boolean)
-//               (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
-//  override def distinct: Boolean = true
-//
-//  override protected def value(): T = internal.get
-//
-//  private val internal = Val[T](connector.combine(variable, adjustment))
-//
-//  override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
-//    internal.attach(f, priority)
-//  }
-//
-//  override def detach(listener: Listener[T]): Unit = internal.detach(listener)
-//
-//  override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
-//
-//  override protected[reactify] def fire(value: T): Unit = {}
-//
-//  override def set(value: => T): Unit = set(value, submissive)
-//
-//  override def observing: Set[Observable[_]] = internal.observing
-//
-//  def set(value: => T, submissive: Boolean): Unit = {
-//    if (submissive) {
-//      val adj: T = adjustment
-//      variable := connector.extract(value, adj)
-//    } else {
-//      variable := connector.extract(value, adjustment)
-//    }
-//  }
-//
-//  override def apply(): T = internal.apply()
-//
-//  override def toString: String = s"Dep($get)"
-//}
+class Dep[T, V](variable: Var[V],
+                adjustment: => T,
+                submissive: Boolean)
+               (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
+  override def distinct: Boolean = true
+
+  override protected def value(): T = internal.get
+
+  private val internal = Val[T](connector.combine(variable, adjustment))
+
+  override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
+    internal.attach(f, priority)
+  }
+
+  override def detach(listener: Listener[T]): Unit = internal.detach(listener)
+
+  override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
+
+  override protected[reactify] def fire(value: T): Unit = {}
+
+  override def set(value: => T): Unit = set(value, submissive)
+
+  override def observing: Set[Observable[_]] = internal.observing
+
+  def set(value: => T, submissive: Boolean): Unit = {
+    if (submissive) {
+      val adj: T = adjustment
+      variable := connector.extract(value, adj)
+    } else {
+      variable := connector.extract(value, adjustment)
+    }
+  }
+
+  override def apply(): T = internal.apply()
+
+  override def toString: String = s"Dep($get)"
+}
 
 object Dep {
   /**
@@ -92,7 +92,7 @@ object Dep {
   }
 }
 
-class Dep[T, V](variable: Var[V],
+/*class Dep[T, V](variable: Var[V],
                 adjustment: => T,
                 submissive: Boolean)
                (implicit connector: DepConnector[T, V]) extends Var[T](() => connector.combine(variable, adjustment)) {
@@ -125,7 +125,7 @@ class Dep[T, V](variable: Var[V],
       }
     }
   }
-}
+}*/
 
 /*
 class Dep[T, V](variable: Var[V],
