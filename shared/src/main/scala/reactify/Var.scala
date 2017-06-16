@@ -13,8 +13,10 @@ class Var[T](function: () => T,
              distinct: Boolean = true,
              cache: Boolean = true,
              recursion: RecursionMode = RecursionMode.RetainPreviousValue,
-             transactional: Boolean = true
-            ) extends Val[T](function, distinct, cache, recursion, transactional) with StateChannel[T] {
+             transactional: Boolean = true,
+             onUpdate: Boolean = false
+            ) extends Val[T](function, distinct, cache, recursion, transactional, onUpdate) with StateChannel[T] {
+  override def set(value: => T): Unit = super.set(value)
   def asVal: Val[T] = this
 
   override def toString: String = s"Var($get)"
@@ -61,7 +63,7 @@ object Var {
     } else {
       () => value
     }
-    new Var[T](f, distinct, cache, recursion, transactional) with DirtyState[T]
+    new Var[T](f, distinct, cache, recursion, transactional, onUpdate = true) with DirtyState[T]
   }
 
   def bound[T](get: => T,

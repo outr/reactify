@@ -5,10 +5,12 @@ import reactify.{Listener, Observable, State, Transaction}
 class StateInstanceManager[T](state: State[T],
                               cache: Boolean,
                               recursion: RecursionMode,
-                              transactional: Boolean) {
+                              transactional: Boolean,
+                              onUpdate: Boolean) {
   @volatile private var previousValue: T = _
   @volatile private var instance: StateInstance[T] = StateInstance.empty[T]
   @volatile private[reactify] var observables: Set[Observable[_]] = Set.empty
+  @volatile private var updateTransaction: Option[Transaction] = None
   private val threadLocal = new ThreadLocal[StateInstance[T]] {
     override def initialValue(): StateInstance[T] = StateInstance.uninitialized[T]
   }
@@ -33,9 +35,29 @@ class StateInstanceManager[T](state: State[T],
     }
   }
 
+  def isDirty: Boolean = updateTransaction.nonEmpty
+
+  def update(): Boolean = synchronized {
+    updateTransaction.exists { t =>
+      t.commit()
+      updateTransaction = None
+      true
+    }
+  }
+
   def updateInstance(force: Boolean = false): Unit = synchronized {
     if (!force && transactional && Transaction.inTransaction) {
       Transaction.update(this, None)
+    } else if (!force && onUpdate && !instance.isEmpty) {
+      val transaction = updateTransaction match {
+        case Some(t) => t
+        case None => {
+          val t = new Transaction()
+          updateTransaction = Some(t)
+          t
+        }
+      }
+      transaction.update(this, None)
     } else {
       // Reset cache
       instance.reset()
@@ -76,6 +98,16 @@ class StateInstanceManager[T](state: State[T],
   def replaceInstance(f: () => T, force: Boolean = false): Unit = synchronized {
     if (!force && transactional && Transaction.inTransaction) {
       Transaction.update(this, Some(f))
+    } else if (!force && onUpdate && !instance.isEmpty) {
+      val transaction = updateTransaction match {
+        case Some(t) => t
+        case None => {
+          val t = new Transaction()
+          updateTransaction = Some(t)
+          t
+        }
+      }
+      transaction.update(this, Some(f))
     } else {
       val previous = recursion match {
         case RecursionMode.Static => StateInstance.empty[T]

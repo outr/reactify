@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import reactify.bind._
 
 trait StateChannel[T] extends State[T] with Channel[T] {
-  override def set(value: => T): Unit
   override def static(value: T): Unit = super.static(value)
 
   def bind[V](that: StateChannel[V], setNow: BindSet = BindSet.LeftToRight)

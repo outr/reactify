@@ -486,6 +486,16 @@ class BasicSpec extends WordSpec with Matchers {
       v.update()
       v() should be("Two")
     }
+    "modify the dependant value but not apply it" in {
+      val v1 = Var[Int](1)
+      val v2 = Val.dirty[String](s"v1 is ${v1()}")
+      v2.update()
+      v1 := 2
+      v1() should be(2)
+      v2() should be("v1 is 1")
+      v2.update()
+      v2() should be("v1 is 2")
+    }
     "only fire events upon update" in {
       val v = Var.dirty[Int](0)
       var firedFor = ListBuffer.empty[Int]

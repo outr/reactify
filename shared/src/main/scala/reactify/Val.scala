@@ -14,7 +14,8 @@ class Val[T](function: () => T,
              distinct: Boolean = true,
              cache: Boolean = true,
              recursion: RecursionMode = RecursionMode.RetainPreviousValue,
-             transactional: Boolean = true) extends AbstractState[T](distinct, cache, recursion, transactional) {
+             transactional: Boolean = true,
+             onUpdate: Boolean = false) extends AbstractState[T](distinct, cache, recursion, transactional, onUpdate) {
   set(function())
 
   override def toString: String = s"Val($get)"
@@ -37,5 +38,23 @@ object Val {
       () => value
     }
     new Val[T](f, distinct, cache, recursion, transactional)
+  }
+
+  /**
+    * Creates a new instance of `Var` mixing in `DirtyState`.
+    */
+  def dirty[T](value: => T,
+               static: Boolean = false,
+               distinct: Boolean = true,
+               cache: Boolean = true,
+               recursion: RecursionMode = RecursionMode.RetainPreviousValue,
+               transactional: Boolean = true): Val[T] with DirtyState[T] = {
+    val f = if (static) {
+      val v: T = value
+      () => v
+    } else {
+      () => value
+    }
+    new Val[T](f, distinct, cache, recursion, transactional, onUpdate = true) with DirtyState[T]
   }
 }

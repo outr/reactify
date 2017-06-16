@@ -21,6 +21,17 @@ object Transaction {
     f
   }
 
+  def withTransaction(f: => Unit, transaction: Transaction = new Transaction()): Transaction = {
+    val previous = threadLocal.get()
+    threadLocal.set(Some(transaction))
+    try {
+      f
+    } finally {
+      threadLocal.set(previous)
+    }
+    transaction
+  }
+
   def inTransaction: Boolean = threadLocal.get().nonEmpty
 
   def update[T](manager: StateInstanceManager[T], f: Option[() => T]): Unit = threadLocal.get().get.update(manager, f)
