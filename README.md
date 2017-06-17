@@ -17,13 +17,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "2.0.0"
+libraryDependencies += "com.outr" %% "reactify" % "2.0.2"
 ```
 
 or for Scala.js or cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "2.0.0"
+libraryDependencies += "com.outr" %%% "reactify" % "2.0.2"
 ```
 
 ## Concepts
@@ -275,6 +275,7 @@ We need implicits to be able to convert between the two, but now changes to one 
 * [X] Transaction system
 * [X] Val.dirty and Var.dirty for on-update re-validation of functional reactive properties for performance intensive functionality
 * [X] Better recursive integration
+* [X] Better cyclical detection
 
 ### Features for 1.6.0 (Released 2017.06.01)
 
