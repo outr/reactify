@@ -23,7 +23,7 @@ class Dep[T, V](variable: Var[V],
                (implicit connector: DepConnector[T, V]) extends StateChannel[T] {
   override def distinct: Boolean = true
 
-  override protected def value(): T = internal.get
+  override protected def value(): T = internal()
 
   private val internal = Val[T](connector.combine(variable, adjustment))
 

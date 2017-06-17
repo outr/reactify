@@ -74,15 +74,15 @@ trait TransformableChannel[T] extends Channel[T] {
 
   @tailrec
   final protected def fireTransformRecursive(value: T, observers: List[TransformingListener[T]]): Option[T] = {
-    if (observers.nonEmpty) {
-      val listener = observers.head
-      val updated: Option[T] = listener(TransformableValue(value)).value
-      updated match {
-        case None => None // Stop recursion
-        case Some(v) => fireTransformRecursive(v, observers.tail)
+    observers.headOption match {
+      case Some(listener) => {
+        val updated: Option[T] = listener(TransformableValue(value)).value
+        updated match {
+          case None => None // Stop recursion
+          case Some(v) => fireTransformRecursive(v, observers.tail)
+        }
       }
-    } else {
-      Some(value)
+      case None => Some(value)
     }
   }
 }

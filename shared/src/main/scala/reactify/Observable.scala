@@ -94,11 +94,11 @@ trait Observable[T] {
   }
 
   final protected def fireRecursive(value: T, invocation: Invocation, observers: List[Listener[T]]): Unit = {
-    if (observers.nonEmpty && !invocation.isStopped) {
-      val listener = observers.head
-      listener(value)
-
-      fireRecursive(value, invocation, observers.tail)
+    if (!invocation.isStopped) {
+      observers.headOption.foreach { listener =>
+        listener(value)
+        fireRecursive(value, invocation, observers.tail)
+      }
     }
   }
 
