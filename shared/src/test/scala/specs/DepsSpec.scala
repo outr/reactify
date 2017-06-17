@@ -97,7 +97,7 @@ class DepsSpec extends WordSpec with Matchers {
 
       checkChanges(leftChanges, 75.0 -> 50.0)
       checkChanges(centerChanges, 87.5 -> 100.0, 100.0 -> 75.0)
-      checkChanges(rightChanges)
+      checkChanges(rightChanges, 100.0 -> 125.0, 125.0 -> 100.0)
     }
     "set center and reflect properly in left and right" in {
       resetChanges()
@@ -122,8 +122,8 @@ class DepsSpec extends WordSpec with Matchers {
       right() should be(250.0)
 
       checkChanges(leftChanges, 175.0 -> 150.0)
-      checkChanges(centerChanges)
-      checkChanges(rightChanges, 225.0 -> 250.0)
+      checkChanges(centerChanges, 200.0 -> 225.0, 225.0 -> 200.0)
+      checkChanges(rightChanges, 225.0 -> 275.0, 275.0 -> 250.0)
     }
     "set left and verify center and right adjust" in {
       resetChanges()
@@ -198,12 +198,12 @@ class DepsSpec extends WordSpec with Matchers {
       }
 
       "verify initial observing state" in {
-        left.observing should be(Set(width, right))
+        left.observing should be(Set.empty)
       }
       "update center" in {
         center := 500.0
         verify(500.0, 500.0, 500.0, 0.0, 500.0)
-        left.observing should be(Set(width, center))
+        left.observing should be(Set(width))
       }
       "update width" in {
         width := 100.0

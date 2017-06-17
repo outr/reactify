@@ -14,6 +14,9 @@ class StateInstanceManager[T](state: State[T],
   private val threadLocal = new ThreadLocal[StateInstance[T]] {
     override def initialValue(): StateInstance[T] = StateInstance.uninitialized[T]
   }
+  private val updating = new ThreadLocal[Boolean] {
+    override def initialValue(): Boolean = false
+  }
   private val updateInstanceListener: Listener[Any] = (_: Any) => updateInstance()
 
   def isEmpty: Boolean = instance.isEmpty
@@ -48,52 +51,59 @@ class StateInstanceManager[T](state: State[T],
   }
 
   def updateInstance(force: Boolean = false): Unit = synchronized {
-    if (!force && transactional && Transaction.inTransaction) {
-      Transaction.update(this, None)
-    } else if (!force && onUpdate && !instance.isEmpty) {
-      val transaction = updateTransaction match {
-        case Some(t) => t
-        case None => {
-          val t = new Transaction()
-          updateTransaction = Some(t)
-          t
-        }
-      }
-      transaction.update(this, None)
-    } else {
-      // Reset cache
-      instance.reset()
-
-      var value: T = previousValue
-      val references = StateInstanceManager.withReferences {
-        value = get
-      }
-      val oldObservables = observables
-      observables = references.observables - state // Update new observables list and remove reference to this
-
-      if (oldObservables != observables) {
-        // Out with the old
-        oldObservables.foreach { ob =>
-          if (!observables.contains(ob)) {
-            ob.asInstanceOf[Observable[Any]].detach(updateInstanceListener)
+    if (!updating.get()) {
+      updating.set(true)
+      try {
+        if (!force && transactional && Transaction.inTransaction) {
+          Transaction.update(this, None)
+        } else if (!force && onUpdate && !instance.isEmpty) {
+          val transaction = updateTransaction match {
+            case Some(t) => t
+            case None => {
+              val t = new Transaction()
+              updateTransaction = Some(t)
+              t
+            }
           }
-        }
+          transaction.update(this, None)
+        } else {
+          // Reset cache
+          instance.reset()
 
-        // In with the new
-        observables.foreach { ob =>
-          if (!oldObservables.contains(ob)) {
-            ob.asInstanceOf[Observable[Any]].observe(updateInstanceListener)
+          var value: T = previousValue
+          val references = StateInstanceManager.withReferences {
+            value = get
           }
+          val oldObservables = observables
+          observables = references.observables - state // Update new observables list and remove reference to this
+
+          if (oldObservables != observables) {
+            // Out with the old
+            oldObservables.foreach { ob =>
+              if (!observables.contains(ob)) {
+                ob.asInstanceOf[Observable[Any]].detach(updateInstanceListener)
+              }
+            }
+
+            // In with the new
+            observables.foreach { ob =>
+              if (!oldObservables.contains(ob)) {
+                ob.asInstanceOf[Observable[Any]].observe(updateInstanceListener)
+              }
+            }
+          }
+
+          // Cleanup recursive
+          val cleaned = instance.cleanup(references)
+          instance = cleaned
+
+          val pv = previousValue
+          previousValue = value
+          state.changed(value, pv)
         }
+      } finally {
+        updating.set(false)
       }
-
-      // Cleanup recursive
-      val cleaned = instance.cleanup(references)
-      instance = cleaned
-
-      val pv = previousValue
-      previousValue = value
-      state.changed(value, pv)
     }
   }
 
