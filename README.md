@@ -8,7 +8,20 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/reactify_2.12)
 [![Latest version](https://index.scala-lang.org/outr/reactify/reactify/latest.svg)](https://index.scala-lang.org/outr/reactify)
 
-Functional Reactive Properties for observing changes and retaining values
+The first and only true Functional Reactive Programming framework for Scala.
+
+## Justification
+
+How can we say it's the first true FRP framework for Scala? Simple, because it is. In all other frameworks they add special
+framework-specific functions to do things like math (ex. adding two variables together), collection building (ex. a
+special implementation of `:::` to concatenate two variables containing lists), or similar mechanisms to Scala's built-in
+collection manipulation (ex. `map`). These are great and mostly fill in the gaps necessary to solve your problems. But
+the goal for Reactify was a bit loftier. We set out to create a system that actually allows you to use ANY Scala
+functionality just like you would normally without any special magic (like Scala.rx's special operations: https://github.com/lihaoyi/scala.rx#additional-operations).
+
+In Reactify you just write code like you normally would and as used `Var`s and `Val`s change the reactive properties they
+have been assigned to will update as well. If you need a bit more clarification on just what the heck we mean, jump ahead
+to the [More AdvancedExamples](https://github.com/outr/reactify#more-advanced-examples).
 
 ## Setup
 
