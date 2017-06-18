@@ -17,7 +17,8 @@ framework-specific functions to do things like math (ex. adding two variables to
 special implementation of `:::` to concatenate two variables containing lists), or similar mechanisms to Scala's built-in
 collection manipulation (ex. `map`). These are great and mostly fill in the gaps necessary to solve your problems. But
 the goal for Reactify was a bit loftier. We set out to create a system that actually allows you to use ANY Scala
-functionality just like you would normally without any special magic (like Scala.rx's special operations: https://github.com/lihaoyi/scala.rx#additional-operations).
+functionality just like you would normally without any special magic (like Scala.rx's special operations require:
+https://github.com/lihaoyi/scala.rx#additional-operations).
 
 In Reactify you just write code like you normally would and as used `Var`s and `Val`s change the reactive properties they
 have been assigned to will update as well. If you need a bit more clarification on just what the heck we mean, jump ahead
@@ -30,13 +31,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "2.0.2"
+libraryDependencies += "com.outr" %% "reactify" % "2.0.3"
 ```
 
-or for Scala.js or cross-building:
+or for Scala.js / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "2.0.2"
+libraryDependencies += "com.outr" %%% "reactify" % "2.0.3"
 ```
 
 ## Concepts
