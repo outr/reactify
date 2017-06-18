@@ -159,6 +159,19 @@ class BasicSpec extends WordSpec with Matchers {
       currentValue should be(10)
       v3.get should be(10)
     }
+    "distinguish between Direct and Derived InvocationTypes" in {
+      val v1 = Var[Int](1)
+      val v2 = Var[Int](v1)
+      var lastInvocation: Option[InvocationType] = None
+      v2.observe(new Listener[Int] {
+        override def apply(value: Int, `type`: InvocationType): Unit = lastInvocation = Some(`type`)
+      })
+      lastInvocation should be(None)
+      v1 := 2
+      lastInvocation should be(Some(InvocationType.Derived))
+      v2 := 3
+      lastInvocation should be(Some(InvocationType.Direct))
+    }
     "derive a value from itself and not explode" in {
       val v = Var(5)
       v := v + 5

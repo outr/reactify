@@ -89,15 +89,15 @@ trait Observable[T] {
     */
   def changes(listener: ChangeListener[T]): Listener[T] = attach(ChangeListener.createFunction(listener, None))
 
-  protected[reactify] def fire(value: T): Unit = Invocation().wrap {
-    fireRecursive(value, Invocation(), observers)
+  protected[reactify] def fire(value: T, `type`: InvocationType): Unit = Invocation().wrap {
+    fireRecursive(value, `type`, Invocation(), observers)
   }
 
-  final protected def fireRecursive(value: T, invocation: Invocation, observers: List[Listener[T]]): Unit = {
+  final protected def fireRecursive(value: T, `type`: InvocationType, invocation: Invocation, observers: List[Listener[T]]): Unit = {
     if (!invocation.isStopped) {
       observers.headOption.foreach { listener =>
-        listener(value)
-        fireRecursive(value, invocation, observers.tail)
+        listener(value, `type`)
+        fireRecursive(value, `type`, invocation, observers.tail)
       }
     }
   }
@@ -122,7 +122,7 @@ trait Observable[T] {
 object Observable {
   def wrap[T](observables: Observable[T]*): Observable[T] = new WrappedObservable[T](observables.toList)
   def apply[T](init: (T => Unit) => Unit): Observable[T] = new Observable[T] {
-    init(fire)
+    init(fire(_, InvocationType.Direct))
   }
   def apply[T](future: Future[T]): Observable[T] = apply(fire => future.foreach(fire))
 }

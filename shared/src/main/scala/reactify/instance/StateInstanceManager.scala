@@ -1,6 +1,6 @@
 package reactify.instance
 
-import reactify.{Listener, Observable, State, Transaction}
+import reactify.{InvocationType, Listener, Observable, State, Transaction}
 
 class StateInstanceManager[T](state: State[T],
                               cache: Boolean,
@@ -17,7 +17,7 @@ class StateInstanceManager[T](state: State[T],
   private val updating = new ThreadLocal[Boolean] {
     override def initialValue(): Boolean = false
   }
-  private val updateInstanceListener: Listener[Any] = (_: Any) => updateInstance()
+  private val updateInstanceListener: Listener[Any] = (_: Any) => updateInstance(InvocationType.Derived)
 
   def isEmpty: Boolean = instance.isEmpty
 
@@ -50,7 +50,7 @@ class StateInstanceManager[T](state: State[T],
     }
   }
 
-  def updateInstance(force: Boolean = false): Unit = synchronized {
+  def updateInstance(`type`: InvocationType, force: Boolean = false): Unit = synchronized {
     if (!updating.get()) {
       updating.set(true)
       try {
@@ -99,7 +99,7 @@ class StateInstanceManager[T](state: State[T],
 
           val pv = previousValue
           previousValue = value
-          state.changed(value, pv)
+          state.changed(value, pv, `type`)
         }
       } finally {
         updating.set(false)
@@ -134,7 +134,7 @@ class StateInstanceManager[T](state: State[T],
       } else {
         StateInstance.functional(f, previous)
       }
-      updateInstance(force)
+      updateInstance(InvocationType.Direct, force)
     }
   }
 }

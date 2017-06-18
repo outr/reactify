@@ -35,7 +35,7 @@ class Dep[T, V](variable: Var[V],
 
   override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
 
-  override protected[reactify] def fire(value: T): Unit = {}
+  override protected[reactify] def fire(value: T, `type`: InvocationType): Unit = {}
 
   override def set(value: => T): Unit = set(value, submissive)
 

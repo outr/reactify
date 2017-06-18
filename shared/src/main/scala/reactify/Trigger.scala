@@ -39,7 +39,7 @@ class Trigger {
   /**
     * Triggers this instance.
     */
-  def fire(): Unit = channel.fire(())
+  def fire(): Unit = channel.fire((), InvocationType.Direct)
 
   /**
     * Clears all attached listeners.
