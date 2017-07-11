@@ -49,6 +49,6 @@ class Transaction(private var map: Map[StateInstanceManager[_], TransactionAppli
 class TransactionApplier[T](manager: StateInstanceManager[T], val f: Option[() => T] = None) {
   def commit(): Unit = f match {
     case Some(function) => manager.replaceInstance(function, force = true)
-    case None => manager.updateInstance(force = true)
+    case None => manager.updateInstance(InvocationType.Direct, force = true)
   }
 }

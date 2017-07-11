@@ -64,13 +64,13 @@ trait TransformableChannel[T] extends Channel[T] {
     def apply(value: T, fireResult: Boolean = true): Option[T] = {
       val o = fireTransformRecursive(value, transformers)
       if (fireResult) {
-        o.foreach(TransformableChannel.super.fire)
+        o.foreach(TransformableChannel.super.fire(_, InvocationType.Direct))
       }
       o
     }
   }
 
-  override protected[reactify] def fire(value: T): Unit = transform(value)
+  override protected[reactify] def fire(value: T, `type`: InvocationType): Unit = transform(value)
 
   @tailrec
   final protected def fireTransformRecursive(value: T, observers: List[TransformingListener[T]]): Option[T] = {
@@ -92,6 +92,6 @@ object TransformableChannel {
     * Creates a new Transformable Channel.
     */
   def apply[T]: TransformableChannel[T] = new TransformableChannel[T] {
-    override def set(value: => T): Unit = fire(value)
+    override def set(value: => T): Unit = fire(value, InvocationType.Direct)
   }
 }

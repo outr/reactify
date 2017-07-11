@@ -1,7 +1,7 @@
 package reactify
 
 trait Listener[T] extends Ordered[Listener[T]] {
-  def apply(value: T): Unit
+  def apply(value: T, `type`: InvocationType): Unit
 
   def priority: Double = Listener.Priority.Normal
   override def compare(that: Listener[T]): Int = priority.compare(that.priority)
@@ -21,6 +21,6 @@ object Listener {
   }
 
   private class FunctionListener[T](f: T => Unit, override val priority: Double) extends Listener[T] {
-    override def apply(value: T): Unit = f(value)
+    override def apply(value: T, `type`: InvocationType): Unit = f(value)
   }
 }

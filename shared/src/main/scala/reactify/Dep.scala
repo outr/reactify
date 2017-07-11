@@ -25,7 +25,7 @@ class Dep[T, V](variable: Var[V],
 
   override protected def value(): T = internal()
 
-  private val internal = Val[T](connector.combine(variable, adjustment))
+  val internal: Val[T] = Val[T](connector.combine(variable, adjustment))
 
   override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
     internal.attach(f, priority)
@@ -35,7 +35,7 @@ class Dep[T, V](variable: Var[V],
 
   override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
 
-  override protected[reactify] def fire(value: T): Unit = {}
+  override protected[reactify] def fire(value: T, `type`: InvocationType): Unit = {}
 
   override def set(value: => T): Unit = set(value, submissive)
 

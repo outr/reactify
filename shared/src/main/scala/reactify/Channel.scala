@@ -21,6 +21,6 @@ object Channel {
     * Creates a new Channel.
     */
   def apply[T]: Channel[T] = new Channel[T] {
-    override def set(value: => T): Unit = fire(value)
+    override def set(value: => T): Unit = fire(value, InvocationType.Direct)
   }
 }

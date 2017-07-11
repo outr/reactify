@@ -19,7 +19,7 @@ trait State[T] extends Observable[T] {
 
   def attachAndFire(f: T => Unit): Listener[T] = {
     val listener = attach(f)
-    fire(get)
+    fire(get, InvocationType.Direct)
     listener
   }
 
@@ -27,7 +27,7 @@ trait State[T] extends Observable[T] {
     attach(ChangeListener.createFunction(listener, Some(get)))
   }
 
-  protected[reactify] def changed(value: T, previous: T): Unit = if (!distinct || value != previous) {
-    fire(value)
+  protected[reactify] def changed(value: T, previous: T, `type`: InvocationType): Unit = if (!distinct || value != previous) {
+    fire(value, `type`)
   }
 }
