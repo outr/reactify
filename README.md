@@ -276,11 +276,12 @@ We need implicits to be able to convert between the two, but now changes to one 
 
 ## Versions
 
-### Features for 2.1.0 (In-Progress)
+### Features for 2.1.0 (Released 2017.07.28)
 
-* [ ] Features for mapping from one Observable to another
+* [X] Features for mapping from one Observable to another
     * [X] map
     * [X] collect
+* [X] Cross-build with Scala 2.13.0
 
 ### Features for 2.0.0 (Released 2017.06.15)
 
