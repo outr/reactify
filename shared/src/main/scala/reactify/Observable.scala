@@ -89,6 +89,28 @@ trait Observable[T] {
     */
   def changes(listener: ChangeListener[T]): Listener[T] = attach(ChangeListener.createFunction(listener, None))
 
+  /**
+    * Maps the Observable to another type.
+    *
+    * @param f function to handle the mapping from T to R
+    * @tparam R the type of the new Observable
+    * @return Observable[R]
+    */
+  def map[R](f: T => R): Observable[R] = {
+    val channel = Channel[R]
+    attach(t => channel := f(t))
+    channel
+  }
+
+  def collect[R](f: PartialFunction[T, R]): Observable[R] = {
+    val channel = Channel[R]
+    val lifted = f.lift
+    attach { t =>
+      lifted(t).foreach(v => channel.set(v))
+    }
+    channel
+  }
+
   protected[reactify] def fire(value: T, `type`: InvocationType): Unit = Invocation().wrap {
     fireRecursive(value, `type`, Invocation(), observers)
   }

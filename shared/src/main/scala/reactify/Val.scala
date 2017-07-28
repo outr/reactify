@@ -18,6 +18,8 @@ class Val[T](function: () => T,
              onUpdate: Boolean = false) extends AbstractState[T](distinct, cache, recursion, transactional, onUpdate) {
   set(function())
 
+  override def map[R](f: (T) => R): Val[R] = Val(f(this()))
+
   override def toString: String = s"Val($get)"
 }
 

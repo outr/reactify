@@ -28,6 +28,32 @@ class BasicSpec extends WordSpec with Matchers {
       changes should be(2)
       lastChange should be(Some("Test 2"))
     }
+    "map a Channel to another typed Channel" in {
+      val c1 = Channel[String]
+      val c2 = c1.map(_.reverse)
+
+      var lastValue: Option[String] = None
+      c2.attach(v => lastValue = Some(v))
+
+      c1 := "Testing"
+      lastValue should be(Some("gnitseT"))
+    }
+    "collect a Channel to another typed Channel" in {
+      val IntRegex = """(\d+)""".r
+      val c1 = Channel[String]
+      val c2 = c1.collect {
+        case IntRegex(v) => v.toInt
+      }
+
+      var lastValue: Option[Int] = None
+      c2.attach(v => lastValue = Some(v))
+
+      c1 := "Testing"
+      lastValue should be(None)
+
+      c1 := "50"
+      lastValue should be(Some(50))
+    }
   }
   "Vals" should {
     "contain the proper value" in {
@@ -253,7 +279,7 @@ class BasicSpec extends WordSpec with Matchers {
       }
       users := List(adam, betty, chris, debby)
 
-      val fiveLetterNames = Val(users.collect {
+      val fiveLetterNames = Val(users().collect {
         case user if user.name.length == 5 => user.name()
       })
       fiveLetterNames() should be(List("Betty", "Chris", "Debby"))
@@ -383,7 +409,7 @@ class BasicSpec extends WordSpec with Matchers {
       }
       val complex: Var[Option[Complex]] = Var[Option[Complex]](None)
       var active = false
-      val enabled: Val[Boolean] = Val(complex.flatMap(_.screen.map(_.active())).getOrElse(false))
+      val enabled: Val[Boolean] = Val(complex.flatMap(_.screen().map(_.active())).getOrElse(false))
       enabled.attach(active = _)
       active should be(false)
       enabled() should be(false)

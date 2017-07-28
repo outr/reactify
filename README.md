@@ -276,6 +276,12 @@ We need implicits to be able to convert between the two, but now changes to one 
 
 ## Versions
 
+### Features for 2.1.0 (In-Progress)
+
+* [ ] Features for mapping from one Observable to another
+    * [X] map
+    * [X] collect
+
 ### Features for 2.0.0 (Released 2017.06.15)
 
 * [X] Complete re-write of internal and recursive state system for better modularity and stability

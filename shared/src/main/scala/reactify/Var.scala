@@ -19,6 +19,8 @@ class Var[T](function: () => T,
   override def set(value: => T): Unit = super.set(value)
   def asVal: Val[T] = this
 
+  override def map[R](f: (T) => R): Var[R] = Var(f(this()))
+
   override def toString: String = s"Var($get)"
 }
 

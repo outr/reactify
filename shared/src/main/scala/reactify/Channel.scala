@@ -14,6 +14,10 @@ trait Channel[T] extends Observable[T] {
     * @param value the value to apply
     */
   def set(value: => T): Unit
+
+  override def map[R](f: (T) => R): Channel[R] = super.map(f).asInstanceOf[Channel[R]]
+
+  override def collect[R](f: PartialFunction[T, R]): Channel[R] = super.collect(f).asInstanceOf[Channel[R]]
 }
 
 object Channel {
