@@ -21,24 +21,26 @@ class StateInstanceManager[T](state: State[T],
 
   def isEmpty: Boolean = instance.isEmpty
 
-  def get: T = useInstance(_.get)
-
-  def stateInstance: StateInstance[T] = instance
-
-  def useInstance[R](f: StateInstance[T] => R): R = {
+  def get: T = {
     val startingInstance = threadLocal.get()
-    val instance: StateInstance[T] = startingInstance match {
-      case i if i.isUninitialized => this.instance
-      case i if i.isEmpty => throw new RuntimeException("Reached top of StateInstance stack!")
-      case i => i
-    }
-    threadLocal.set(instance.previous)
-    try {
-      f(instance)
-    } finally {
-      threadLocal.set(startingInstance)
+    if (startingInstance.isEmpty) {
+      println(s"*** WARNING: Reached top of StateInstance stack! Previous value: $previousValue")
+      previousValue
+    } else {
+      val instance: StateInstance[T] = startingInstance match {
+        case i if i.isUninitialized => this.instance
+        case i => i
+      }
+      threadLocal.set(instance.previous)
+      try {
+        instance.get
+      } finally {
+        threadLocal.set(startingInstance)
+      }
     }
   }
+
+  def stateInstance: StateInstance[T] = instance
 
   def isDirty: Boolean = updateTransaction.nonEmpty
 
