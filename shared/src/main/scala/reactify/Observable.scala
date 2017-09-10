@@ -10,71 +10,76 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @tparam T the type of value this Observable will receive
   */
 trait Observable[T] {
-  private[reactify] var observers = List.empty[Listener[T]]
+  private[reactify] var _observers = List.empty[Observer[T]]
 
   /**
-    * Attaches a function to listen to values fired against this Observable.
+    * List of all the observers currently observing changes to this Observable.
+    */
+  def observers: List[Observer[T]] = _observers
+
+  /**
+    * Attaches a function to observe values fired against this Observable.
     *
-    * @param f function listener
+    * @param f function observer
     * @return the supplied function. This reference is useful for detaching the function later
     */
   def attach(f: T => Unit,
-             priority: Double = Listener.Priority.Normal): Listener[T] = {
-    observe(Listener[T](f, priority))
+             priority: Double = Observer.Priority.Normal): Observer[T] = {
+    observe(Observer[T](f, priority))
   }
 
   /**
-    * Direct attachment of a listener.
+    * Direct attachment of a observer.
     *
-    * @param listener the listener to attach
-    * @return the same listener supplied
+    * @param observer the observer to attach
+    * @return the same observer supplied
     */
-  def observe(listener: Listener[T]): Listener[T] = synchronized {
-    observers = (observers ::: List(listener)).sorted
-    listener
+  def observe(observer: Observer[T]): Observer[T] = synchronized {
+    _observers = (_observers ::: List(observer)).sorted
+    observer
   }
 
   /**
     * Works like `attach`, but doesn't receive the fired value.
     *
     * @param f function to invoke on fire
-    * @return listener
+    * @return observer
     */
-  def on(f: => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = attach(_ => f, priority)
+  def on(f: => Unit, priority: Double = Observer.Priority.Normal): Observer[T] = attach(_ => f, priority)
 
   /**
-    * Detaches a function from listening to this Observable.
+    * Detaches a function from observing this Observable.
     *
-    * @param listener function listener that was previously attached
+    * @param observer function observer that was previously attached
     */
-  def detach(listener: Listener[T]): Unit = synchronized {
-    observers = observers.filterNot(_ eq listener)
+  def detach(observer: Observer[T]): Unit = synchronized {
+    _observers = _observers.filterNot(_ eq observer)
   }
 
   /**
-    * Invokes the listener only one time and then detaches itself. If supplied, the condition filters the scenarios in
-    * which the listener will be invoked.
+    * Invokes the observer only one time and then detaches itself. If supplied, the condition filters the scenarios in
+    * which the observer will be invoked.
     *
-    * @param f the function listener
-    * @param condition the condition under which the listener will be invoked. Defaults to always return true.
+    * @param f the function observer
+    * @param condition the condition under which the observer will be invoked. Defaults to always return true.
     */
   def once(f: T => Unit,
            condition: T => Boolean = (_: T) => true,
-           priority: Double = Listener.Priority.Normal): Listener[T] = {
-    var listener: Listener[T] = null
-    listener = Listener[T]((value: T) => if (condition(value)) {
-      detach(listener)
+           priority: Double = Observer.Priority.Normal): Observer[T] = {
+    var observer: Observer[T] = null
+    observer = Observer[T]((value: T) => if (condition(value)) {
+      detach(observer)
       f(value)
     }, priority)
-    observe(listener)
+    observe(observer)
   }
 
   /**
     * Returns a Future[T] that represents the value of the next firing of this Observable.
     *
-    * @param condition the condition under which the listener will be invoked. Defaults to always return true.
+    * @param condition the condition under which the observer will be invoked. Defaults to always return true.
     */
-  def future(condition: T => Boolean = (t: T) => true): Future[T] = {
+  def future(condition: T => Boolean = (_: T) => true): Future[T] = {
     val promise = Promise[T]
     once(promise.success, condition)
     promise.future
@@ -84,10 +89,10 @@ trait Observable[T] {
     * Works similarly to `attach`, but also references the previous value that was fired. This is useful when you need
     * to handle changes, not just new values.
     *
-    * @param listener the ChangeListener
-    * @return the listener attached. This can be passed to `detach` to remove this listener
+    * @param observer the ChangeObserver
+    * @return the observer attached. This can be passed to `detach` to remove this observer
     */
-  def changes(listener: ChangeListener[T]): Listener[T] = attach(ChangeListener.createFunction(listener, None))
+  def changes(observer: ChangeObserver[T]): Observer[T] = attach(ChangeObserver.createFunction(observer, None))
 
   /**
     * Maps the Observable to another type.
@@ -112,13 +117,13 @@ trait Observable[T] {
   }
 
   protected[reactify] def fire(value: T, `type`: InvocationType): Unit = Invocation().wrap {
-    fireRecursive(value, `type`, Invocation(), observers)
+    fireRecursive(value, `type`, Invocation(), _observers)
   }
 
-  final protected def fireRecursive(value: T, `type`: InvocationType, invocation: Invocation, observers: List[Listener[T]]): Unit = {
+  final protected def fireRecursive(value: T, `type`: InvocationType, invocation: Invocation, observers: List[Observer[T]]): Unit = {
     if (!invocation.isStopped) {
-      observers.headOption.foreach { listener =>
-        listener(value, `type`)
+      observers.headOption.foreach { observer =>
+        observer(value, `type`)
         fireRecursive(value, `type`, invocation, observers.tail)
       }
     }
@@ -127,15 +132,15 @@ trait Observable[T] {
   /**
     * Clears all attached observers from this Observable.
     */
-  def clear(): Unit = synchronized {
-    observers = List.empty
+  def clearObservers(): Unit = synchronized {
+    _observers = List.empty
   }
 
   /**
     * Cleans up all cross references in preparation for releasing for GC.
     */
   def dispose(): Unit = {
-    clear()
+    clearObservers()
   }
 
   def and(that: Observable[T]): Observable[T] = Observable.wrap(this, that)

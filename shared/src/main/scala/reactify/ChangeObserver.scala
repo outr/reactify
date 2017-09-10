@@ -5,16 +5,16 @@ package reactify
   *
   * @tparam T the type of changes
   */
-trait ChangeListener[T] {
+trait ChangeObserver[T] {
   def change(oldValue: T, newValue: T): Unit
 }
 
-object ChangeListener {
-  def createFunction[T](listener: ChangeListener[T], initialValue: Option[T] = None): T => Unit = {
+object ChangeObserver {
+  def createFunction[T](observer: ChangeObserver[T], initialValue: Option[T] = None): T => Unit = {
     var previous: Option[T] = initialValue
 
     (t: T) => {
-      previous.foreach(listener.change(_, t))
+      previous.foreach(observer.change(_, t))
       previous = Some(t)
     }
   }

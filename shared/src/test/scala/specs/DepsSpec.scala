@@ -28,13 +28,13 @@ class DepsSpec extends WordSpec with Matchers {
     }
 
     "have the basic values" in {
-      left.changes(new ChangeListener[Double] {
+      left.changes(new ChangeObserver[Double] {
         override def change(oldValue: Double, newValue: Double) = leftChanges += oldValue -> newValue
       })
-      center.changes(new ChangeListener[Double] {
+      center.changes(new ChangeObserver[Double] {
         override def change(oldValue: Double, newValue: Double) = centerChanges += oldValue -> newValue
       })
-      right.changes(new ChangeListener[Double] {
+      right.changes(new ChangeObserver[Double] {
         override def change(oldValue: Double, newValue: Double) = rightChanges += oldValue -> newValue
       })
 

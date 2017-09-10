@@ -1,6 +1,6 @@
 package reactify.instance
 
-import reactify.{InvocationType, Listener, Observable, State, Transaction}
+import reactify.{InvocationType, Observer, Observable, State, Transaction}
 
 class StateInstanceManager[T](state: State[T],
                               cache: Boolean,
@@ -17,7 +17,7 @@ class StateInstanceManager[T](state: State[T],
   private val updating = new ThreadLocal[Boolean] {
     override def initialValue(): Boolean = false
   }
-  private val updateInstanceListener: Listener[Any] = (_: Any) => updateInstance(InvocationType.Derived)
+  private val updateInstanceObserver: Observer[Any] = (_: Any) => updateInstance(InvocationType.Derived)
 
   def isEmpty: Boolean = instance.isEmpty
 
@@ -83,14 +83,14 @@ class StateInstanceManager[T](state: State[T],
             // Out with the old
             oldObservables.foreach { ob =>
               if (!observables.contains(ob)) {
-                ob.asInstanceOf[Observable[Any]].detach(updateInstanceListener)
+                ob.asInstanceOf[Observable[Any]].detach(updateInstanceObserver)
               }
             }
 
             // In with the new
             observables.foreach { ob =>
               if (!oldObservables.contains(ob)) {
-                ob.asInstanceOf[Observable[Any]].observe(updateInstanceListener)
+                ob.asInstanceOf[Observable[Any]].observe(updateInstanceObserver)
               }
             }
           }

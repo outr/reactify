@@ -9,7 +9,7 @@ trait Channel[T] extends Observable[T] {
   def :=(value: => T): Unit = set(value)
 
   /**
-    * Fires the value to all attached listeners.
+    * Fires the value to all attached observers.
     *
     * @param value the value to apply
     */

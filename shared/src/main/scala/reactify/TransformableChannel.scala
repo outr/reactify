@@ -3,12 +3,12 @@ package reactify
 import scala.annotation.tailrec
 
 /**
-  * TransformableChannel extends from Channel to provide transforming capabilities before listeners are invoked.
+  * TransformableChannel extends from Channel to provide transforming capabilities before observers are invoked.
   *
   * @tparam T the channel's type
   */
 trait TransformableChannel[T] extends Channel[T] {
-  private[reactify] var transformers = List.empty[TransformingListener[T]]
+  private[reactify] var transformers = List.empty[TransformingObserver[T]]
 
   /**
     * Functionality for transformations
@@ -17,37 +17,37 @@ trait TransformableChannel[T] extends Channel[T] {
     /**
       * Attaches a simple functional transformation. Wraps `observe` as a convenience method.
       *
-      * @param f function that gets converted to a TransformingListener
+      * @param f function that gets converted to a TransformingObserver
       * @param priority the priority. Defaults to Normal.
-      * @return the created TransformingListener
+      * @return the created TransformingObserver
       */
     def attach(f: TransformableValue[T] => TransformResult[T],
-               priority: Double = Listener.Priority.Normal): TransformingListener[T] = {
-      observe(TransformingListener[T](f, priority))
+               priority: Double = Observer.Priority.Normal): TransformingObserver[T] = {
+      observe(TransformingObserver[T](f, priority))
     }
 
     /**
-      * Adds a TransformingListener to this channel that will be invoked before any listeners are called.
+      * Adds a TransformingObserver to this channel that will be invoked before any observers are called.
       *
-      * @param listener the listener to add
-      * @return the listener supplied
+      * @param observer the observer to add
+      * @return the observer supplied
       */
-    def observe(listener: TransformingListener[T]): TransformingListener[T] = synchronized {
-      transformers = (transformers ::: List(listener)).sorted
-      listener
+    def observe(observer: TransformingObserver[T]): TransformingObserver[T] = synchronized {
+      transformers = (transformers ::: List(observer)).sorted
+      observer
     }
 
     /**
-      * Detaches a TransformingListener from this TransformableChannel.
+      * Detaches a TransformingObserver from this TransformableChannel.
       *
-      * @param listener the listener to detach
+      * @param observer the observer to detach
       */
-    def detach(listener: TransformingListener[T]): Unit = synchronized {
-      transformers = transformers.filterNot(_ eq listener)
+    def detach(observer: TransformingObserver[T]): Unit = synchronized {
+      transformers = transformers.filterNot(_ eq observer)
     }
 
     /**
-      * Clears all added transforming listeners from this TransfomableChannel.
+      * Clears all added transforming observers from this TransformableChannel.
       */
     def clear(): Unit = synchronized {
       transformers = List.empty
@@ -73,10 +73,10 @@ trait TransformableChannel[T] extends Channel[T] {
   override protected[reactify] def fire(value: T, `type`: InvocationType): Unit = transform(value)
 
   @tailrec
-  final protected def fireTransformRecursive(value: T, observers: List[TransformingListener[T]]): Option[T] = {
+  final protected def fireTransformRecursive(value: T, observers: List[TransformingObserver[T]]): Option[T] = {
     observers.headOption match {
-      case Some(listener) => {
-        val updated: Option[T] = listener(TransformableValue(value)).value
+      case Some(observer) => {
+        val updated: Option[T] = observer(TransformableValue(value)).value
         updated match {
           case None => None // Stop recursion
           case Some(v) => fireTransformRecursive(v, observers.tail)

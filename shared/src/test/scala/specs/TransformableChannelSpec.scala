@@ -8,10 +8,10 @@ class TransformableChannelSpec extends WordSpec with Matchers {
     val simple = TransformableChannel[String]
     var currentValue: String = ""
 
-    "attach a listener to reference the value when it changes" in {
+    "attach an observer to reference the value when it changes" in {
       simple.attach(currentValue = _)
     }
-    "attach a transforming listener to reverse values" in {
+    "attach a transforming observer to reverse values" in {
       simple.transform.attach { value =>
         value.transform(value.value.reverse)
       }
@@ -24,7 +24,7 @@ class TransformableChannelSpec extends WordSpec with Matchers {
       simple.transform.clear()
       currentValue = ""
     }
-    "attach a transforming listener to cancel values shorter than four characters" in {
+    "attach a transforming observer to cancel values shorter than four characters" in {
       simple.transform.attach { value =>
         if (value.value.length >= 4) {
           value.continue

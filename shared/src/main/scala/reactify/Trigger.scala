@@ -3,7 +3,7 @@ package reactify
 import scala.concurrent.Future
 
 /**
-  * Trigger works very similar to `Channel` except it doesn't receive anything. Listeners are attached like on an
+  * Trigger works very similar to `Channel` except it doesn't receive anything. `Observers` are attached like on an
   * `Observable`, but they receive no arguments.
   */
 class Trigger {
@@ -12,22 +12,22 @@ class Trigger {
   /**
     * Attaches a function to listen for triggering.
     *
-    * @param f function listener
-    * @return the listener instance
+    * @param f function observer
+    * @return the observer instance
     */
-  def attach(f: => Unit): Listener[Unit] = channel.attach(_ => f)
+  def attach(f: => Unit): Observer[Unit] = channel.attach(_ => f)
 
   /**
-    * Detaches a listener from this Trigger.
+    * Detaches an observer from this Trigger.
     *
-    * @param f the listener to detach
+    * @param f the observer to detach
     */
-  def detach(f: Listener[Unit]): Unit = channel.detach(f)
+  def detach(f: Observer[Unit]): Unit = channel.detach(f)
 
   /**
-    * Attaches the listener but automatically detaches after being invoked once.
+    * Attaches the observer but automatically detaches after being invoked once.
     *
-    * @param f the listener
+    * @param f the observer
     */
   def once(f: => Unit): Unit = channel.once(_ => f)
 
@@ -42,9 +42,9 @@ class Trigger {
   def fire(): Unit = channel.fire((), InvocationType.Direct)
 
   /**
-    * Clears all attached listeners.
+    * Clears all attached observers.
     */
-  def clear(): Unit = channel.clear()
+  def clearObservers(): Unit = channel.clearObservers()
 
   /**
     * Cleans up all cross references in preparation for GC.

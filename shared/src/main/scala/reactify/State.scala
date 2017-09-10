@@ -17,14 +17,14 @@ trait State[T] extends Observable[T] {
   protected def set(value: => T): Unit
   protected def static(value: T): Unit = set(value)
 
-  def attachAndFire(f: T => Unit): Listener[T] = {
-    val listener = attach(f)
+  def attachAndFire(f: T => Unit): Observer[T] = {
+    val observer = attach(f)
     fire(get, InvocationType.Direct)
-    listener
+    observer
   }
 
-  override def changes(listener: ChangeListener[T]): Listener[T] = {
-    attach(ChangeListener.createFunction(listener, Some(get)))
+  override def changes(observer: ChangeObserver[T]): Observer[T] = {
+    attach(ChangeObserver.createFunction(observer, Some(get)))
   }
 
   protected[reactify] def changed(value: T, previous: T, `type`: InvocationType): Unit = if (!distinct || value != previous) {

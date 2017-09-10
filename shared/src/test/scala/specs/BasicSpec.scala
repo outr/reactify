@@ -149,12 +149,12 @@ class BasicSpec extends WordSpec with Matchers {
       }
       changed should be(1)
     }
-    "observe a change with a ChangeListener" in {
+    "observe a change with a ChangeObserver" in {
       val v = Var(5)
       var changes = 0
       var original = 0
       var current = 0
-      v.changes(new ChangeListener[Int] {
+      v.changes(new ChangeObserver[Int] {
         override def change(oldValue: Int, newValue: Int) = {
           original = oldValue
           current = newValue
@@ -189,7 +189,7 @@ class BasicSpec extends WordSpec with Matchers {
       val v1 = Var[Int](1)
       val v2 = Var[Int](v1)
       var lastInvocation: Option[InvocationType] = None
-      v2.observe(new Listener[Int] {
+      v2.observe(new Observer[Int] {
         override def apply(value: Int, `type`: InvocationType): Unit = lastInvocation = Some(`type`)
       })
       lastInvocation should be(None)
@@ -354,19 +354,19 @@ class BasicSpec extends WordSpec with Matchers {
       val order = ListBuffer.empty[String]
       v.on({
         order += "highest"
-      }, Listener.Priority.Highest)
+      }, Observer.Priority.Highest)
       v.on({
         order += "normal"
-      }, Listener.Priority.Normal)
+      }, Observer.Priority.Normal)
       v.on({
         order += "low"
-      }, Listener.Priority.Low)
+      }, Observer.Priority.Low)
       v.on({
         order += "high"
-      }, Listener.Priority.High)
+      }, Observer.Priority.High)
       v.on({
         order += "lowest"
-      }, Listener.Priority.Lowest)
+      }, Observer.Priority.Lowest)
       v := 1
 
       order.toList should be(List("lowest", "low", "normal", "high", "highest"))

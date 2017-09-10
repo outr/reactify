@@ -31,13 +31,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "2.1.1"
+libraryDependencies += "com.outr" %% "reactify" % "2.2.0"
 ```
 
 or for Scala.js / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "2.1.1"
+libraryDependencies += "com.outr" %%% "reactify" % "2.2.0"
 ```
 
 ## Concepts
@@ -45,7 +45,7 @@ libraryDependencies += "com.outr" %%% "reactify" % "2.1.1"
 This framework is intentionally meant to be a simplistic take on properties and functional reactive concepts. There are
 only four specific classes that really need be understood to take advantage of the framework:
 
-- Observable - As the name suggests it is a simple trait that fires values and may be observed by listeners.
+- Observable - As the name suggests it is a simple trait that fires values and may be observed by Observers.
 - Channel - The most simplistic representation of an Observable, simply provides a public `:=` to fire events. No state
 is maintained.
 - Val - Exactly as it is in Scala, this is a final variable. What is defined at construction is immutable. However, the
@@ -101,7 +101,7 @@ myVar := 10
 ```
 
 The above code modifies `myVar` to have the new value of `10`. This will also cause `myVal` to re-evaluate and have the
-new value of `15` (`myVar + 5`). As a result, the listener we attached above will output:
+new value of `15` (`myVar + 5`). As a result, the observer we attached above will output:
 
 ```
 myVal = 15
@@ -275,6 +275,11 @@ a bind b
 We need implicits to be able to convert between the two, but now changes to one will propagate to the other.
 
 ## Versions
+
+### Features for 2.2.0 (Released 2017.09.10)
+
+* [X] Refactoring of Listener to Observer for better naming convention (breaking changes)
+* [X] Code cleanup
 
 ### Features for 2.1.0 (Released 2017.07.28)
 

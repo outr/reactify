@@ -27,13 +27,13 @@ class Dep[T, V](variable: Var[V],
 
   val internal: Val[T] = Val[T](connector.combine(variable, adjustment))
 
-  override def attach(f: (T) => Unit, priority: Double = Listener.Priority.Normal): Listener[T] = {
+  override def attach(f: (T) => Unit, priority: Double = Observer.Priority.Normal): Observer[T] = {
     internal.attach(f, priority)
   }
 
-  override def detach(listener: Listener[T]): Unit = internal.detach(listener)
+  override def detach(observer: Observer[T]): Unit = internal.detach(observer)
 
-  override def changes(listener: ChangeListener[T]): Listener[T] = internal.changes(listener)
+  override def changes(observer: ChangeObserver[T]): Observer[T] = internal.changes(observer)
 
   override protected[reactify] def fire(value: T, `type`: InvocationType): Unit = {}
 
