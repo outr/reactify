@@ -26,7 +26,7 @@ to the [More AdvancedExamples](https://github.com/outr/reactify#more-advanced-ex
 
 ## Setup
 
-reactify is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js on 2.11, 2.12, and 2.13.
+reactify is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js on 2.11, 2.12, and 2.13 and Scala Native on 2.11.
 
 Configuring the dependency in SBT simply requires:
 
@@ -34,7 +34,7 @@ Configuring the dependency in SBT simply requires:
 libraryDependencies += "com.outr" %% "reactify" % "2.2.0"
 ```
 
-or for Scala.js / cross-building:
+or for Scala.js / Scala Native / cross-building:
 
 ```
 libraryDependencies += "com.outr" %%% "reactify" % "2.2.0"
