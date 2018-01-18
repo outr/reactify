@@ -31,13 +31,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "2.2.0"
+libraryDependencies += "com.outr" %% "reactify" % "2.3.0"
 ```
 
 or for Scala.js / Scala Native / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "2.2.0"
+libraryDependencies += "com.outr" %%% "reactify" % "2.3.0"
 ```
 
 ## Concepts
@@ -275,6 +275,10 @@ a bind b
 We need implicits to be able to convert between the two, but now changes to one will propagate to the other.
 
 ## Versions
+
+### Features for 2.3.0 (Released 2018.01.18)
+
+* [X] Cross-compile for Scala Native
 
 ### Features for 2.2.0 (Released 2017.09.10)
 

@@ -2,9 +2,15 @@ import sbtcrossproject.{crossProject, CrossType}
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.2.0"
+version in ThisBuild := "2.3.0-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.4"
 crossScalaVersions in ThisBuild := List("2.12.4", "2.11.12", "2.13.0-M2")
+
+publishTo in ThisBuild := sonatypePublishTo.value
+sonatypeProfileName in ThisBuild := "com.outr"
+publishMavenStyle in ThisBuild := true
+licenses in ThisBuild := Seq("MIT" -> url("https://github.com/outr/reactify/blob/master/LICENSE"))
+sonatypeProjectHosting in ThisBuild := Some(xerial.sbt.Sonatype.GithubHosting("outr", "reactify", "matt@outr.com"))
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -25,6 +31,7 @@ lazy val reactifyNative = reactify.native
 lazy val tests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure)
   .dependsOn(reactify)
   .settings(
+    name := "reactify-tests",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test,
     publish := {},
     publishLocal := {},
