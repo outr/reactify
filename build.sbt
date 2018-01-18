@@ -26,8 +26,8 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure)
   .dependsOn(reactify)
   .settings(
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test,
-    publish := (),
-    publishLocal := (),
+    publish := {},
+    publishLocal := {},
     publishArtifact := false
   )
 
