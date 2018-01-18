@@ -1,2 +1,5 @@
 .idea/
 target/
+.js/
+.jvm/
+.native/

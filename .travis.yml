@@ -1,11 +1,14 @@
-sudo: false
 language: scala
+sudo: required
+dist: trusty
 scala:
-  - 2.12.1
+  - 2.11.12
 jdk:
   - oraclejdk8
+before_script:
+  - curl https://raw.githubusercontent.com/scala-native/scala-native/master/bin/travis_setup.sh | bash -x
 script:
-  - sbt clean +test
+  - sbt clean test
   - sbt coverage reactifyJVM/test
   - sbt coverageReport
   - sbt coverageAggregate
