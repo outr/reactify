@@ -4,6 +4,8 @@ scala:
   - 2.11.12
 jdk:
   - oraclejdk8
+before_script:
+  - curl https://raw.githubusercontent.com/scala-native/scala-native/master/bin/travis_setup.sh | bash -x
 script:
   - sbt clean test
   - sbt coverage reactifyJVM/test
