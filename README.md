@@ -276,6 +276,10 @@ We need implicits to be able to convert between the two, but now changes to one 
 
 ## Versions
 
+### Features for 2.4.0 (In-Progress)
+
+* [X] Convenience support for assigning futures to channels (#18)
+
 ### Features for 2.3.0 (Released 2018.01.18)
 
 * [X] Cross-compile for Scala Native

@@ -2,7 +2,7 @@ import sbtcrossproject.{crossProject, CrossType}
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.3.0"
+version in ThisBuild := "2.4.0-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.4"
 crossScalaVersions in ThisBuild := List("2.12.4", "2.11.12", "2.13.0-M2")
 
