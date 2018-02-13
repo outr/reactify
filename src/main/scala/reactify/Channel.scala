@@ -1,6 +1,7 @@
 package reactify
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait Channel[T] extends Observable[T] {
   /**
