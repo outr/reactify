@@ -2,9 +2,9 @@ import sbtcrossproject.{crossProject, CrossType}
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.4.0-SNAPSHOT"
-scalaVersion in ThisBuild := "2.12.4"
-crossScalaVersions in ThisBuild := List("2.12.4", "2.11.12", "2.13.0-M2")
+version in ThisBuild := "3.0.0-SNAPSHOT"
+scalaVersion in ThisBuild := "2.12.6"
+crossScalaVersions in ThisBuild := List("2.12.6", "2.11.12", "2.13.0-M4")
 
 publishTo in ThisBuild := sonatypePublishTo.value
 sonatypeProfileName in ThisBuild := "com.outr"
@@ -37,16 +37,3 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 lazy val reactifyJS = reactify.js
 lazy val reactifyJVM = reactify.jvm
 lazy val reactifyNative = reactify.native
-
-lazy val tests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure)
-  .dependsOn(reactify)
-  .settings(
-    name := "reactify-tests",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test,
-    publish := {},
-    publishLocal := {},
-    publishArtifact := false
-  )
-
-lazy val testsJVM = tests.jvm
-lazy val testsJS = tests.js
