@@ -8,6 +8,8 @@ case class State[T](owner: Reactive[T], function: () => T) {
     override def apply(value: Any): Unit = update()
   }
 
+  update()
+
   def value: T = {
     StateCounter.referenced(this)
     _value
@@ -19,11 +21,13 @@ case class State[T](owner: Reactive[T], function: () => T) {
     val (value, references) = StateCounter.transaction {
       function()
     }
+    val modified = _value != value
     _value = value
     _references = references
+    if (modified) Reactive.fire(owner, value)
   }
 
-  private def clearReferences(): Unit = {
+  def clearReferences(): Unit = synchronized {
     references.foreach(_.owner.asInstanceOf[Reactive[Any]].reactions -= reaction)
   }
 }

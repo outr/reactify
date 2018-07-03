@@ -57,3 +57,7 @@ trait Reactive[T] {
     fire(value, reactions.tail)
   }
 }
+
+object Reactive {
+  def fire[T](reactive: Reactive[T], value: T): Unit = reactive.fire(value, reactive.reactions())
+}
