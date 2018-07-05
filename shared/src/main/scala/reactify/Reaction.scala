@@ -1,7 +1,7 @@
 package reactify
 
 trait Reaction[T] extends Ordered[Reaction[T]] {
-  def apply(value: T): Unit
+  def apply(value: T, previous: Option[T]): Unit
   def priority: Double = Priority.Normal
 
   override def compare(that: Reaction[T]): Int = this.priority.compare(that.priority)
@@ -9,4 +9,8 @@ trait Reaction[T] extends Ordered[Reaction[T]] {
 
 object Reaction {
   def apply[T](f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = FunctionReaction[T](f, priority)
+
+  def changes[T](f: (T, T) => Unit, priority: Double = Priority.Normal): Reaction[T] = {
+    ChangeFunctionReaction[T](f, priority)
+  }
 }

@@ -22,7 +22,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val scalatestVersion = "3.2.0-SNAP10"
+val scalatestVersion = "3.1.0-SNAP6"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .in(file("."))

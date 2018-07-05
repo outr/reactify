@@ -29,6 +29,10 @@ trait Reactive[T] {
     reactions += Reaction[T](f, priority)
   }
 
+  def changes(f: (T, T) => Unit, priority: Double = Priority.Normal): Reaction[T] = {
+    reactions += Reaction.changes[T](f, priority)
+  }
+
   def on(f: => Unit, priority: Double = Priority.Normal): Reaction[T] = {
     attach(_ => f, priority)
   }
@@ -51,13 +55,17 @@ trait Reactive[T] {
   }
 
   @tailrec
-  final protected def fire(value: T, reactions: List[Reaction[T]]): Unit = if (reactions.nonEmpty) {
+  final protected def fire(value: T,
+                           previous: Option[T],
+                           reactions: List[Reaction[T]]): Unit = if (reactions.nonEmpty) {
     val reaction = reactions.head
-    reaction(value)
-    fire(value, reactions.tail)
+    reaction(value, previous)
+    fire(value, previous, reactions.tail)
   }
 }
 
 object Reactive {
-  def fire[T](reactive: Reactive[T], value: T): Unit = reactive.fire(value, reactive.reactions())
+  def fire[T](reactive: Reactive[T], value: T, previous: Option[T]): Unit = {
+    reactive.fire(value, previous, reactive.reactions())
+  }
 }

@@ -13,6 +13,6 @@ trait Channel[T] extends Reactive[T] {
 
 object Channel {
   def apply[T]: Channel[T] = new Channel[T] {
-    override def set(value: => T): Unit = fire(value, reactions())
+    override def set(value: => T): Unit = fire(value, None, reactions())
   }
 }
