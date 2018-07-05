@@ -10,7 +10,7 @@ trait Reactive[T] {
     def apply(): List[Reaction[T]] = _reactions
 
     def +=(reaction: Reaction[T]): Reaction[T] = synchronized {
-      _reactions = (_reactions ::: List(reaction)).sorted
+      _reactions = (_reactions ::: List(reaction)).sorted.distinct
       reaction
     }
 

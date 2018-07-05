@@ -27,6 +27,7 @@ class BasicVarSpec extends WordSpec with Matchers {
       v1.reactions().size should be(1)
       v2.reactions().size should be(0)
       v2.state.references.size should be(1)
+      v2.state.references should be(List(v1.state))
       v2.on(changed += 1)
       v2.reactions().size should be(1)
       v2() should be("Hello, Matt")
