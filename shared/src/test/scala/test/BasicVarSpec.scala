@@ -5,7 +5,7 @@ import reactify._
 
 class BasicVarSpec extends WordSpec with Matchers {
   "Vars" should {
-    "contain the proper value" in {
+    /*"contain the proper value" in {
       val v = Var("Hello")
       v.get should be("Hello")
     }
@@ -121,13 +121,28 @@ class BasicVarSpec extends WordSpec with Matchers {
       changed should be(1)
       currentValue should be(10)
       v3.get should be(10)
-    }
+    }*/
     "derive a value from itself and not explode" in {
-      val v = Var(5)
-      v := v + 5
-      v() should be(10)
-      v := v + 5
-      v() should be(15)
+      val v = Var(1)
+      v() should be(1)
+      println("***************************************")
+      v := {
+        val previous = v()
+        println(s"Previous: $previous")
+        previous + 2
+      }
+      v() should be(3)
+//      v := v * 4
+//      v() should be(12)
     }
+    /*"derive a value from itself depending on another value" in {
+      val v1 = Var(1)
+      val v2 = Var(v1 + 1)
+      v2() should be(2)
+      v2 := v2 * 2
+      v2() should be(4)
+      v1 := 2
+      v2() should be(6)
+    }*/
   }
 }
