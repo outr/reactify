@@ -170,14 +170,19 @@ class BasicVarSpec extends WordSpec with Matchers {
       v2State2.nextState should be(None)
 
       v2() should be(6)
+    }
+    "create a variable that builds upon itself multiple times" in {
+      val v = Var(1)
+      v := v + v + v
+      v() should be(3)
     }*/
     "create a list that is dependent on vars" in {
-      val s1 = Var("One")
-      val s2 = Var("Two")
-      val list = Var(List.empty[String])
+      val s1 = Var("One", Some("s1"))
+      val s2 = Var("Two", Some("s2"))
+      val list = Var(List.empty[String], Some("list"))
       list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
-      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
+      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get, list.state))
       s2 := "Three"
       list() should be(List("One", "Three"))
 //      s1 := "Two"

@@ -6,8 +6,10 @@ trait Var[T] extends Val[T] with Channel[T] {
     fire(get, Some(get), reactions())
     reaction
   }
+
+  override def toString: String = name.getOrElse("Var")
 }
 
 object Var {
-  def apply[T](value: => T): Var[T] = new StandardVar[T](value)
+  def apply[T](value: => T, name: Option[String] = None): Var[T] = new StandardVar[T](value, name)
 }

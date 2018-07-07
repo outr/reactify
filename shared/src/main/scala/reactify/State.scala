@@ -1,6 +1,6 @@
 package reactify
 
-case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any] {
+case class State[T](owner: Reactive[T], index: Long, function: () => T) extends Reaction[Any] {
   private var _previousState: Option[State[T]] = None
   private var _nextState: Option[State[T]] = None
   private var _value: T = _
@@ -86,5 +86,5 @@ case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any]
     references.foreach(removeReference)
   }
 
-  override def toString: String = s"State(owner: $owner, value: ${_value}, active: $active, previous: $previousState, hasNext: ${nextState.nonEmpty})"
+  override def toString: String = s"State(owner: $owner, index: $index, value: ${_value}, active: $active, hasPrevious: ${previousState.nonEmpty}, hasNext: ${nextState.nonEmpty})"
 }

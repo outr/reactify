@@ -1,7 +1,11 @@
 package reactify
 
-class StandardVar[T](f: => T) extends Var[T] {
-  private var _state: State[T] = new State[T](this, () => f)
+import java.util.concurrent.atomic.AtomicLong
+
+class StandardVar[T](f: => T, val name: Option[String]) extends Var[T] {
+  private lazy val counter = new AtomicLong(0L)
+
+  private var _state: State[T] = new State[T](this, counter.incrementAndGet(), () => f)
 
   _state.update(None)
 
@@ -9,7 +13,7 @@ class StandardVar[T](f: => T) extends Var[T] {
 
   override def set(value: => T): Unit = synchronized {
     val previous = _state
-    _state = new State[T](this, () => value)
+    _state = new State[T](this, counter.incrementAndGet(), () => value)
     _state.update(Some(previous))
   }
 }

@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 
 trait Reactive[T] {
+  def name: Option[String]
   private[reactify] var _reactions = List.empty[Reaction[T]]
 
   object reactions {
