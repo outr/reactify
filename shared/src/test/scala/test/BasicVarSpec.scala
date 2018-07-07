@@ -171,5 +171,39 @@ class BasicVarSpec extends WordSpec with Matchers {
 
       v2() should be(6)
     }
+    "simple list" in {
+      val list = Var(List.empty[String])
+      list.state.function should not be null
+      list.state.function() should be(Nil)
+      list := {
+        println("EVALUATING!")
+        try {
+          val l = list()
+          println(s"LIST: $l")
+          "One" :: l
+        } catch {
+          case t: Throwable => {
+            t.printStackTrace()
+            throw t
+          }
+        }
+      }
+      list() should be(List("One"))
+    }
+    /*"create a list that is dependent on vars" in {
+      val s1 = Var("One")
+      val s2 = Var("Two")
+      val list = Var(List.empty[String])
+      list := s1() :: s2() :: list()
+      list() should be(List("One", "Two"))
+      s2 := "Three"
+      list() should be(List("One", "Three"))
+      s1 := "Two"
+      list() should be(List("Two", "Three"))
+      list := "One" :: list()
+      list() should be(List("One", "Two", "Three"))
+      s2 := "Four"
+      list() should be(List("One", "Two", "Four"))
+    }*/
   }
 }
