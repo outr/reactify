@@ -2,6 +2,7 @@ package reactify
 
 case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any] {
   private var _previousState: Option[State[T]] = None
+  private var _nextState: Option[State[T]] = None
   private var _value: T = _
   private var _references: List[State[_]] = Nil
   private var _active: Boolean = true
@@ -13,6 +14,8 @@ case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any]
   override def apply(value: Any, previous: Option[Any]): Unit = update(_previousState)
 
   def previousState: Option[State[T]] = _previousState
+
+  def nextState: Option[State[T]] = _nextState
 
   def active: Boolean = _active
 
@@ -59,7 +62,19 @@ case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any]
     }
     if (previous.isEmpty) this._previousState = None
     _references = references
-    if (modified && active) Reactive.fire(owner, value, Some(previousValue))
+    if (modified && active) {
+      previous.foreach { p =>
+        if (p ne this) {
+          p._nextState = Some(this)
+        }
+      }
+      Reactive.fire(owner, value, Some(previousValue))
+    } else {
+      _nextState.foreach { n =>
+        println("*** UPDATING NEXT STATE!")
+        n.update(None)
+      }
+    }
   }
 
   private def addReference(state: State[_]): Unit = {
@@ -78,5 +93,5 @@ case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any]
     _active = false
   }
 
-  override def toString: String = s"State(owner: $owner, value: ${_value}, active: $active, previous: $previousState)"
+  override def toString: String = s"State(owner: $owner, value: ${_value}, active: $active, previous: $previousState, hasNext: ${nextState.nonEmpty})"
 }
