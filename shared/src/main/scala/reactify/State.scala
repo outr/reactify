@@ -19,6 +19,7 @@ case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any]
   def active: Boolean = nextState.isEmpty
 
   def value: T = {
+    println(s"Requesting value for $this (${hashCode()})")
     StateCounter.referenced(this)
     previousState match {
       case Some(ps) if updating.get() => {
@@ -31,8 +32,9 @@ case class State[T](owner: Reactive[T], function: () => T) extends Reaction[Any]
 
   def references: List[State[_]] = _references
 
-  def update(previous: Option[State[T]]): Unit = synchronized {
+  def update(previous: Option[State[T]] = _previousState): Unit = synchronized {
     clearReferences()
+    _previousState = previous
     val (value, references) = StateCounter.transaction {
       updating.set(true)
       try {

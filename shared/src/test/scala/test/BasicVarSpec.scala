@@ -5,7 +5,7 @@ import reactify._
 
 class BasicVarSpec extends WordSpec with Matchers {
   "Vars" should {
-    "contain the proper value" in {
+    /*"contain the proper value" in {
       val v = Var("Hello")
       v.get should be("Hello")
     }
@@ -170,40 +170,22 @@ class BasicVarSpec extends WordSpec with Matchers {
       v2State2.nextState should be(None)
 
       v2() should be(6)
-    }
-    "simple list" in {
-      val list = Var(List.empty[String])
-      list.state.function should not be null
-      list.state.function() should be(Nil)
-      list := {
-        println("EVALUATING!")
-        try {
-          val l = list()
-          println(s"LIST: $l")
-          "One" :: l
-        } catch {
-          case t: Throwable => {
-            t.printStackTrace()
-            throw t
-          }
-        }
-      }
-      list() should be(List("One"))
-    }
-    /*"create a list that is dependent on vars" in {
+    }*/
+    "create a list that is dependent on vars" in {
       val s1 = Var("One")
       val s2 = Var("Two")
       val list = Var(List.empty[String])
       list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
+      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
       s2 := "Three"
       list() should be(List("One", "Three"))
-      s1 := "Two"
-      list() should be(List("Two", "Three"))
-      list := "One" :: list()
-      list() should be(List("One", "Two", "Three"))
-      s2 := "Four"
-      list() should be(List("One", "Two", "Four"))
-    }*/
+//      s1 := "Two"
+//      list() should be(List("Two", "Three"))
+//      list := "One" :: list()
+//      list() should be(List("One", "Two", "Three"))
+//      s2 := "Four"
+//      list() should be(List("One", "Two", "Four"))
+    }
   }
 }
