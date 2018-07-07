@@ -5,7 +5,7 @@ import reactify._
 
 class BasicVarSpec extends WordSpec with Matchers {
   "Vars" should {
-    /*"contain the proper value" in {
+    "contain the proper value" in {
       val v = Var("Hello")
       v.get should be("Hello")
     }
@@ -129,17 +129,46 @@ class BasicVarSpec extends WordSpec with Matchers {
       v() should be(3)
       v := v * 4
       v() should be(12)
-    }*/
+    }
     "derive a value from itself depending on another value" in {
       val v1 = Var(1)
       val v2 = Var(v1 + 1)
+
+      v1.reactions() should be(List(v2.state))
+      v2.reactions() should be(Nil)
+
+      val v1State1 = v1.state
+      val v2State1 = v2.state
+
+      v1State1.value should be(1)
+      v1State1.previousState should be(None)
+      v2State1.value should be(2)
+      v2State1.previousState should be(None)
+
       v2() should be(2)
-      println("*** 1 ***")
       v2 := v2 * 2
-      println("*** 2 ***")
+
+      val v2State2 = v2.state
+      v2State1 should not be v2State2
+      v1.state.value should be(1)
+      v2State2.previousState should be(Some(v2State1))
+      v2State1.previousState should be(None)
+      v2State1.nextState should be(Some(v2.state))
+
       v2() should be(4)
       v1 := 2
-      println("*** 3 ***")
+
+      val v1State2 = v1.state
+
+      // Disconnected because no recurrent reference found
+      v1State2.previousState should be(None)
+      v1State1.previousState should be(None)
+
+      v2State2.previousState should be(Some(v2State1))
+      v2State1.previousState should be(None)
+      v2State1.nextState should be(Some(v2State2))
+      v2State2.nextState should be(None)
+
       v2() should be(6)
     }
   }
