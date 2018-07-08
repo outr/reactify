@@ -7,7 +7,7 @@ class StandardVar[T](f: => T, val name: Option[String]) extends Var[T] {
 
   private var _state: State[T] = new State[T](this, counter.incrementAndGet(), () => f)
 
-  _state.update(None)
+  _state.update()
 
   override def state: State[T] = _state
 

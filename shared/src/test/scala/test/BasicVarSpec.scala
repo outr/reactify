@@ -182,15 +182,19 @@ class BasicVarSpec extends WordSpec with Matchers {
       val list = Var(List.empty[String], Some("list"))
       list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
-      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get, list.state))
+      list.state.index should be(2)
+      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
+      s2.reactions() should contain(list.state)
+      println("*********** SETTING TO THREE!")
       s2 := "Three"
+      list.state.index should be(2)
       list() should be(List("One", "Three"))
-//      s1 := "Two"
-//      list() should be(List("Two", "Three"))
-//      list := "One" :: list()
-//      list() should be(List("One", "Two", "Three"))
-//      s2 := "Four"
-//      list() should be(List("One", "Two", "Four"))
+      s1 := "Two"
+      list() should be(List("Two", "Three"))
+      list := "One" :: list()
+      list() should be(List("One", "Two", "Three"))
+      s2 := "Four"
+      list() should be(List("One", "Two", "Four"))
     }
   }
 }
