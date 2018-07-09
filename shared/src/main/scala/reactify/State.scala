@@ -11,71 +11,85 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
     override def initialValue(): Boolean = false
   }
 
-  override def apply(value: Any, previous: Option[Any]): Unit = {
-    println(s"Propagating! ${_previousState}")
-    update()
-  }
+  override def apply(value: Any, previous: Option[Any]): Unit = update()
 
   def previousState: Option[State[T]] = _previousState
 
   def nextState: Option[State[T]] = _nextState
 
   def active: Boolean = nextState.isEmpty
+  def activeState: State[T] = nextState match {
+    case Some(next) => next.activeState
+    case None => this
+  }
+
+  def cached: Option[T] = _value
 
   def value: T = {
     StateCounter.referenced(this)
-    previousState match {
-      case Some(ps) if updating.get() => {
+    updatingState match {
+      case Some(ps) => {
         val previous = ps.value
         previous
       }
-      case _ => _value.getOrElse(throw new RuntimeException("State.value has not been set yet!"))
+      case None => _value.getOrElse(throw new RuntimeException("State.value has not been set yet!"))
     }
+  }
+
+  private def updatingState: Option[State[T]] = if (updating.get()) {
+    if (previousState.isEmpty) {
+      throw new RuntimeException(s"Invalid reference to recursive state with no previous value for ${_value}. This should only happen if the function doesn't always expose a reference to itself.")
+    }
+    previousState
+  } else {
+    previousState.flatMap(_.updatingState)
   }
 
   def references: List[State[_]] = _references
 
   def update(previous: Option[State[T]] = _previousState): Unit = synchronized {
-    new RuntimeException(s"**** UPDATING $owner:$index, previous: ${previous.map(_._value)}").printStackTrace()
-    clearReferences()
-    _previousState = previous
-    val (value, allReferences) = StateCounter.transaction {
-      updating.set(true)
-      try {
-        function()
-      } finally {
-        updating.set(false)
-      }
-    }
-    val references = allReferences.filterNot(_ == this)
-    val previousValue = _value.orElse(previous.map(_.value)).getOrElse(default)
-    val modified = previousValue != value
-    println(s"Value changed from $previousValue to $value, modified? $modified")
-    _value = Some(value)
-    val removed = _references.diff(references)
-    val added = references.diff(_references)
-    removed.foreach(removeReference)
-    added.foreach(addReference)
-    previous.foreach { previousState =>
-      if (allReferences.contains(this)) {
-        this._previousState = Some(previousState)
-      } else {
-        previousState.clearReferences()
-        this._previousState = None
-      }
-    }
-    if (previous.isEmpty) this._previousState = None
-    _references = references
-    if (modified && active) {
-      previous.foreach { p =>
-        if (p ne this) {
-          p._nextState = Some(this)
+    if (!updating.get()) {
+      //    new RuntimeException(s"**** UPDATING $owner:$index, previous: ${previous.map(_._value)}").printStackTrace()
+      clearReferences()
+      if (previousState.nonEmpty && previous.isEmpty) throw new RuntimeException(s"Cannot remove previous state if set already!")
+      _previousState = previous
+      val (value, allReferences) = StateCounter.transaction {
+        updating.set(true)
+        try {
+          function()
+        } finally {
+          updating.set(false)
         }
       }
-      Reactive.fire(owner, value, Some(previousValue))
-    } else {
-      _nextState.foreach { n =>
-        n.update()
+      val references = allReferences.filterNot(_ == activeState)
+      val previousValue = _value.orElse(previous.map(_.value)).getOrElse(default)
+      val modified = previousValue != value
+      //    println(s"Value changed from $previousValue to $value, modified? $modified, $this")
+      _value = Some(value)
+      val removed = _references.diff(references)
+      val added = references.diff(_references)
+      removed.foreach(removeReference)
+      added.foreach(addReference)
+      previous.foreach { previousState =>
+        if (allReferences.contains(activeState)) {
+          this._previousState = Some(previousState)
+        } else {
+          previousState.clearReferences()
+          this._previousState = None
+        }
+      }
+      _references = references
+      if (modified && active) {
+        previous.foreach { p =>
+          if (p ne this) {
+            p._nextState = Some(this)
+          }
+        }
+        Reactive.fire(owner, value, Some(previousValue))
+      } else {
+        _nextState.foreach { n =>
+          n.update()
+        }
       }
     }
   }

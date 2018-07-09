@@ -5,7 +5,7 @@ import reactify._
 
 class BasicVarSpec extends WordSpec with Matchers {
   "Vars" should {
-    /*"contain the proper value" in {
+    "contain the proper value" in {
       val v = Var("Hello")
       v.get should be("Hello")
     }
@@ -175,7 +175,7 @@ class BasicVarSpec extends WordSpec with Matchers {
       val v = Var(1)
       v := v + v + v
       v() should be(3)
-    }*/
+    }
     "create a list that is dependent on vars" in {
       val s1 = Var("One", Some("s1"))
       val s2 = Var("Two", Some("s2"))
@@ -185,7 +185,6 @@ class BasicVarSpec extends WordSpec with Matchers {
       list.state.index should be(2)
       list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
       s2.reactions() should contain(list.state)
-      println("*********** SETTING TO THREE!")
       s2 := "Three"
       list.state.index should be(2)
       list() should be(List("One", "Three"))
