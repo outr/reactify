@@ -1,13 +1,13 @@
 package reactify
 
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
+import reactify.standard.StandardReactions
 
 import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 
 trait Reactive[T] {
   def name: Option[String]
-  private[reactify] var _reactions = List.empty[Reaction[T]]
   private lazy val _status = new ThreadLocal[Option[ReactionStatus]]
 
   def status: Option[ReactionStatus] = _status.get()
@@ -18,7 +18,7 @@ trait Reactive[T] {
 
   def stopPropagation(): Unit = status = ReactionStatus.Stop
 
-  lazy val reactions = new Reactions[T](this)
+  lazy val reactions: Reactions[T] = new StandardReactions[T]
 
   def attach(f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = {
     reactions += Reaction[T](f, priority)

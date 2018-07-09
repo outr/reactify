@@ -1,8 +1,9 @@
 package reactify.reaction
 
 import reactify.group.VarGroup
+import reactify.standard.StandardReactions
 
-class GroupReactions[T](group: VarGroup[T]) extends Reactions[T](group) {
+class GroupReactions[T](group: VarGroup[T]) extends StandardReactions[T] {
   override def +=(reaction: Reaction[T]): Reaction[T] = {
     group.vars.foreach(_.reactions += reaction)
     super.+=(reaction)
@@ -14,7 +15,7 @@ class GroupReactions[T](group: VarGroup[T]) extends Reactions[T](group) {
   }
 
   override def clear(): Unit = {
-    group._reactions.foreach { r =>
+    apply().foreach { r =>
       group.vars.foreach(_.reactions -= r)
     }
     super.clear()
