@@ -1,4 +1,4 @@
-package reactify
+package reactify.reaction
 
 trait ReactionStatus
 

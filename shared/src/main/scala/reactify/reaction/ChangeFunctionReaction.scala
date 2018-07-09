@@ -1,4 +1,4 @@
-package reactify
+package reactify.reaction
 
 case class ChangeFunctionReaction[T](f: (T, T) => Unit, override val priority: Double) extends Reaction[T] {
   private var previous: Option[T] = None

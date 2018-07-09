@@ -1,4 +1,6 @@
-package reactify
+package reactify.reaction
+
+import reactify.Priority
 
 trait Reaction[T] extends Ordered[Reaction[T]] {
   def apply(value: T, previous: Option[T]): ReactionStatus

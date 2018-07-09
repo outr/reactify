@@ -1,5 +1,7 @@
 package reactify
 
+import reactify.standard.StandardVal
+
 trait Val[T] extends Reactive[T] {
   def state: State[T]
 

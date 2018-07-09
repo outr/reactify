@@ -1,5 +1,9 @@
 package reactify
 
+import reactify.group.VarGroup
+import reactify.reaction.Reaction
+import reactify.standard.StandardVar
+
 trait Var[T] extends Val[T] with Channel[T] {
   def attachAndFire(f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = {
     val reaction = attach(f, priority)

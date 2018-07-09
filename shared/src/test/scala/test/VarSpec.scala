@@ -2,10 +2,11 @@ package test
 
 import org.scalatest.{Matchers, WordSpec}
 import reactify._
+import reactify.group.VarGroup
 
 import scala.collection.mutable.ListBuffer
 
-class BasicVarSpec extends WordSpec with Matchers {
+class VarSpec extends WordSpec with Matchers {
   lazy val lazyDouble: Var[Double] = Var(0.0)
 
   "Vars" should {

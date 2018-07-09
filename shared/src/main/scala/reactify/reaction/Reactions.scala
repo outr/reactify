@@ -1,4 +1,6 @@
-package reactify
+package reactify.reaction
+
+import reactify.Reactive
 
 class Reactions[T](reactive: Reactive[T]) {
   def apply(): List[Reaction[T]] = reactive._reactions

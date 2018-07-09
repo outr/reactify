@@ -1,5 +1,7 @@
 package reactify
 
+import reactify.reaction.{Reaction, ReactionStatus, Reactions}
+
 import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 

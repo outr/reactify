@@ -1,6 +1,8 @@
-package reactify
+package reactify.standard
 
 import java.util.concurrent.atomic.AtomicLong
+
+import reactify.{State, Var}
 
 class StandardVar[T](f: => T, val name: Option[String]) extends Var[T] {
   private lazy val counter = new AtomicLong(0L)

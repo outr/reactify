@@ -1,4 +1,7 @@
-package reactify
+package reactify.group
+
+import reactify.reaction.{GroupReactions, Reactions}
+import reactify.{State, Var}
 
 case class VarGroup[T](name: Option[String], vars: List[Var[T]]) extends Var[T] {
   override lazy val reactions: Reactions[T] = new GroupReactions[T](this)

@@ -1,5 +1,7 @@
 package reactify
 
+import reactify.reaction.{Reaction, ReactionStatus}
+
 case class State[T](owner: Reactive[T], index: Long, function: () => T) extends Reaction[Any] {
   private var _previousState: Option[State[T]] = None
   private var _nextState: Option[State[T]] = None
