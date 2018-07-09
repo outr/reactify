@@ -1,7 +1,7 @@
 package reactify
 
 trait Reaction[T] extends Ordered[Reaction[T]] {
-  def apply(value: T, previous: Option[T]): Unit
+  def apply(value: T, previous: Option[T]): ReactionStatus
   def priority: Double = Priority.Normal
 
   override def compare(that: Reaction[T]): Int = this.priority.compare(that.priority)

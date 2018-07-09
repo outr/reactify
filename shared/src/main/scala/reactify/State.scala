@@ -11,7 +11,10 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
     override def initialValue(): Boolean = false
   }
 
-  override def apply(value: Any, previous: Option[Any]): Unit = update()
+  override def apply(value: Any, previous: Option[Any]): ReactionStatus = {
+    update()
+    ReactionStatus.Continue
+  }
 
   def previousState: Option[State[T]] = _previousState
 

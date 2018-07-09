@@ -7,6 +7,8 @@ trait Var[T] extends Val[T] with Channel[T] {
     reaction
   }
 
+  def and(that: Var[T]): Var[T] = VarGroup[T](None, List(this, that))
+
   override def toString: String = name.getOrElse("Var")
 }
 

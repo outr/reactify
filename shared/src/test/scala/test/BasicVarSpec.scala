@@ -317,18 +317,19 @@ class BasicVarSpec extends WordSpec with Matchers {
       v := 2
       f.value.get.get should be(1)
     }
-    /*"test stopping propagation" in {
+    "test stopping propagation" in {
       val v = Var(0)
       var invoked = false
-      v.on {
-        Invocation().stopPropagation()
+      val first = v.on {
+        v.stopPropagation()
       }
-      v.on {
+      val second = v.on {
         invoked = true
       }
+      v.reactions() should be(List(first, second))
       v := 1
       invoked should be(false)
-    }*/
+    }
     "test prioritization" in {
       val v = Var(0)
       val order = ListBuffer.empty[String]
@@ -351,14 +352,14 @@ class BasicVarSpec extends WordSpec with Matchers {
 
       order.toList should be(List("lowest", "low", "normal", "high", "highest"))
     }
-    /*"test simple wrapping" in {
+    "test simple wrapping" in {
       val v1 = Var(1)
       val v2 = Var(2)
       val v3 = Var(3)
 
       val modified = ListBuffer.empty[Int]
 
-      Observable.wrap(v1, v2, v3).attach { i =>
+      VarGroup(None, List(v1, v2, v3)).attach { i =>
         modified += i
       }
 
@@ -366,8 +367,8 @@ class BasicVarSpec extends WordSpec with Matchers {
       v3 := 33
       v1 := 11
       modified.toList should be(List(22, 33, 11))
-    }*/
-    /*"test dsl wrapping" in {
+    }
+    "test dsl wrapping" in {
       val v1 = Var(1)
       val v2 = Var(2)
       val v3 = Var(3)
@@ -382,7 +383,7 @@ class BasicVarSpec extends WordSpec with Matchers {
       v3 := 33
       v1 := 11
       modified.toList should be(List(22, 33, 11))
-    }*/
+    }
     "validate complex hierarchical nesting" in {
       class Complex {
         val screen: Var[Option[Screen]] = Var[Option[Screen]](None)
