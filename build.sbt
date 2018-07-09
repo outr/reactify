@@ -34,6 +34,7 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     )
   )
   .nativeSettings(
+    test := {},                             // TODO: remove when ScalaNative works with ScalaTest
     scalaVersion := "2.11.12",
     crossScalaVersions := Seq("2.11.12")
   )
