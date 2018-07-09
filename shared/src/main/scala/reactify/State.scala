@@ -54,7 +54,6 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
 
   def update(previous: Option[State[T]] = _previousState): Unit = synchronized {
     if (!updating.get()) {
-      //    new RuntimeException(s"**** UPDATING $owner:$index, previous: ${previous.map(_._value)}").printStackTrace()
       clearReferences()
       if (previousState.nonEmpty && previous.isEmpty) throw new RuntimeException(s"Cannot remove previous state if set already!")
       _previousState = previous
@@ -69,7 +68,6 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
       val references = allReferences.filterNot(_ == activeState)
       val previousValue = _value.orElse(previous.map(_.value)).getOrElse(default)
       val modified = previousValue != value
-      //    println(s"Value changed from $previousValue to $value, modified? $modified, $this")
       _value = Some(value)
       val removed = _references.diff(references)
       val added = references.diff(_references)
