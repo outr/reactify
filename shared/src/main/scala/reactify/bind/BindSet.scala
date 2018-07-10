@@ -1,4 +1,4 @@
-package reactify
+package reactify.bind
 
 sealed trait BindSet
 

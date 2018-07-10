@@ -2,6 +2,7 @@ package reactify
 
 import java.util.concurrent.atomic.AtomicBoolean
 
+import reactify.bind.{BindSet, Binding}
 import reactify.group.VarGroup
 import reactify.reaction.Reaction
 import reactify.standard.StandardVar

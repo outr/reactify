@@ -2,6 +2,7 @@ package test
 
 import org.scalatest.{Matchers, WordSpec}
 import reactify._
+import reactify.bind.Binding
 
 class BindingSpec extends WordSpec with Matchers {
   "Bindings" when {

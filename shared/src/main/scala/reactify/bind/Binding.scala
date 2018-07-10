@@ -1,5 +1,6 @@
-package reactify
+package reactify.bind
 
+import reactify.Var
 import reactify.reaction.Reaction
 
 class Binding[L, R](left: Var[L], right: Var[R], leftToRight: Reaction[L], rightToLeft: Reaction[R]) {
