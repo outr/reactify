@@ -1,5 +1,6 @@
 package reactify
 
+import reactify.group.ValGroup
 import reactify.standard.StandardVal
 
 trait Val[T] extends Reactive[T] {
@@ -7,6 +8,10 @@ trait Val[T] extends Reactive[T] {
 
   def get: T = state.value
   def apply(): T = get
+
+  def and(that: Val[T]): Val[T] = ValGroup[T](None, List(this, that))
+
+  def map[R](f: T => R): Val[R] = Val[R](f(get))
 
   override def toString: String = name.getOrElse("Val")
 }

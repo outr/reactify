@@ -13,6 +13,12 @@ trait Var[T] extends Val[T] with Channel[T] {
 
   def and(that: Var[T]): Var[T] = VarGroup[T](None, List(this, that))
 
+  override def map[R](f: T => R): Var[R] = {
+    val v = Var[R](f(get))
+    attach(v := f(_))
+    v
+  }
+
   override def toString: String = name.getOrElse("Var")
 }
 
