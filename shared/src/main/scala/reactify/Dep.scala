@@ -16,7 +16,9 @@ trait Dep[T, R] extends Var[T] with Reaction[R] {
   override def set(value: => T): Unit = owner := t2R(value)
 
   override def apply(value: R, previous: Option[R]): ReactionStatus = {
-    state.update()
+    if (!state.cached.contains(value)) {
+      state.update()
+    }
     ReactionStatus.Continue
   }
 }
