@@ -2,10 +2,8 @@
 
 * [X] Should we include Triggers?
 * [ ] Support for DirtyState?
-* [ ] Transactions with state retention
-* [ ] Save / Load state from previous?
+* [X] Transactions with state retention
 * [X] Dep support
 * [X] Fix Dep recursive test
-* [ ] Support for TransformableChannel?
 * [ ] Document classes
 * [ ] Update README

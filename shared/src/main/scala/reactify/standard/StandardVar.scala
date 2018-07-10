@@ -2,6 +2,7 @@ package reactify.standard
 
 import java.util.concurrent.atomic.AtomicLong
 
+import reactify.transaction.Transaction
 import reactify.{State, Var}
 
 class StandardVar[T](f: => T, val name: Option[String]) extends Var[T] {
@@ -17,5 +18,6 @@ class StandardVar[T](f: => T, val name: Option[String]) extends Var[T] {
     val previous = _state
     _state = new State[T](this, counter.incrementAndGet(), () => value)
     _state.update(Some(previous))
+    Transaction.change(this, previous.function, _state.function)
   }
 }

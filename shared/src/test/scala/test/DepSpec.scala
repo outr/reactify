@@ -18,22 +18,13 @@ class DepSpec extends WordSpec with Matchers {
     val rightChanges = ListBuffer.empty[(Double, Double)]
 
     left.changes {
-      case (oldValue, newValue) => {
-        println(s"Left from $oldValue to $newValue")
-        leftChanges += oldValue -> newValue
-      }
+      case (oldValue, newValue) => leftChanges += oldValue -> newValue
     }
     center.changes {
-      case (oldValue, newValue) => {
-        println(s"Center from $oldValue to $newValue")
-        centerChanges += oldValue -> newValue
-      }
+      case (oldValue, newValue) => centerChanges += oldValue -> newValue
     }
     right.changes {
-      case (oldValue, newValue) => {
-        println(s"Right from $oldValue to $newValue")
-        rightChanges += oldValue -> newValue
-      }
+      case (oldValue, newValue) => rightChanges += oldValue -> newValue
     }
 
     def resetChanges(): Unit = {
