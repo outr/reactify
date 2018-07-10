@@ -8,20 +8,16 @@ trait Dep[T, R] extends Var[T] with Reaction[R] {
   def t2R(t: T): R
   def r2T(r: R): T
 
-  // TODO: Create DepState for reference internalization
+  override val state: State[T] = new State[T](this, 1L, () => r2T(owner()))
 
+  state.update(None)
   owner.reactions += this
 
   override def set(value: => T): Unit = owner := t2R(value)
 
-  override def get: T = r2T(owner())
-
-  override def state: State[T] = ???
-
   override def apply(value: R, previous: Option[R]): ReactionStatus = {
-    val c = r2T(value)
-    val p = previous.map(r2T)
-    fire(c, p)
+    state.update()
+    ReactionStatus.Continue
   }
 }
 
