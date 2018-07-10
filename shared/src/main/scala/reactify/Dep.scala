@@ -27,8 +27,8 @@ trait Dep[T, R] extends Var[T] with Reaction[R] {
 
 object Dep {
   def apply[T, R](owner: Var[R])
-                 (implicit t2R: T => R, r2T: R => T): Dep[T, R] = new StandardDep[T, R](None, owner, t2R, r2T)
+                 (implicit r2T: R => T, t2R: T => R): Dep[T, R] = new StandardDep[T, R](None, owner, r2T, t2R)
   def apply[T, R](owner: Var[R],
                   name: String)
-                 (implicit t2R: T => R, r2T: R => T): Dep[T, R] = new StandardDep[T, R](Option(name), owner, t2R, r2T)
+                 (implicit r2T: R => T, t2R: T => R): Dep[T, R] = new StandardDep[T, R](Option(name), owner, r2T, t2R)
 }

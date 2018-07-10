@@ -10,7 +10,7 @@ class DepSpec extends WordSpec with Matchers {
     val width: Var[Double] = Var(0.0)
 
     val left: Var[Double] = Var(0.0)
-    val center: Dep[Double, Double] = Dep(left)(_ + width / 2.0, _ - width / 2.0)
+    val center: Dep[Double, Double] = Dep(left)(_ + (width / 2.0), _ - (width / 2.0))
     val right: Dep[Double, Double] = Dep(left)(_ + width, _ - width)
 
     var leftChanges = ListBuffer.empty[(Double, Double)]
@@ -64,10 +64,7 @@ class DepSpec extends WordSpec with Matchers {
       resetChanges()
 
       width := 25.0
-      left() should be(50.0)
-      width() should be(25.0)
-      center() should be(62.5)
-      right() should be(75.0)
+      List(left(), center(), right(), width()) should be(List(50.0, 62.5, 75.0, 25.0))
 
       checkChanges(leftChanges)
       checkChanges(centerChanges, 50.0 -> 62.5)
