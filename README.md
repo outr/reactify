@@ -31,13 +31,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "2.3.0"
+libraryDependencies += "com.outr" %% "reactify" % "3.0.0"
 ```
 
 or for Scala.js / Scala Native / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "2.3.0"
+libraryDependencies += "com.outr" %%% "reactify" % "3.0.0"
 ```
 
 ## Concepts
@@ -45,15 +45,15 @@ libraryDependencies += "com.outr" %%% "reactify" % "2.3.0"
 This framework is intentionally meant to be a simplistic take on properties and functional reactive concepts. There are
 only four specific classes that really need be understood to take advantage of the framework:
 
-- Observable - As the name suggests it is a simple trait that fires values and may be observed by Observers.
-- Channel - The most simplistic representation of an Observable, simply provides a public `:=` to fire events. No state
+- Reactive - As the name suggests it is a simple trait that fires values that may be reacted to by `Reaction`s.
+- Channel - The most simplistic representation of a `Reactive`, simply provides a public `:=` to fire events. No state
 is maintained.
 - Val - Exactly as it is in Scala, this is a final variable. What is defined at construction is immutable. However, the
-contents of the value, if they are `Observable` may change the ultimate value of this, so it is is `Observable` itself
+contents of the value, if they are `Reactive` may change the ultimate value of this, so it is is `Reactive` itself
 and holds state.
 - Var - Similar to `Val` except it is mutable as it mixes in `Channel` to allow setting of the current value.
 
-`Val` and `Var` may hold formulas with `Observables`. These `Observables` are listened to when assigned so the wrapping
+`Val` and `Var` may hold formulas with `Reactive`s. These `Reactive`s are listened to when assigned so the wrapping
 `Val` or `Var` will also fire an appropriate event. This allows complex values to be built off of other variables.
 
 ## Using
@@ -67,10 +67,10 @@ in the package, everything can be had with a single import:
 import reactify._
 ```
 
-### Creating Props
+### Creating
 
-As discussed in the concepts there are only four major classes in Props (`Observable`, `Channel`, `Val`, and `Var`). Of
-those classes, unless you are creating a custom `Observable` you will probably only deal with the latter three.
+As discussed in the concepts there are only four major classes in Props (`Reactive`, `Channel`, `Val`, and `Var`). Of
+those classes, unless you are creating a custom `Reactive` you will probably only deal with the latter three.
 
 Creating instances is incredibly simple:
 
@@ -147,7 +147,7 @@ val complex = Val[String] {
 
 Any changes to `v1`, `v2`, or `v3` will fire a change on `complex` and the entire inlined function will be re-evaluated.
 
-#### Multi-Level Observation
+#### Multi-Level Reactive
 
 A much more advanced scenario is when you have a `Var` that contains a `class` that has a `Var` and you want to keep track
 of the resulting value no matter what the first `Var`'s instance is currently set to.
@@ -229,8 +229,8 @@ edge. We can simplify things by leveraging a `Dep` instance to represent it:
 val width: Var[Double] = Var(0.0)
 
 val left: Var[Double] = Var(0.0)
-val center: Dep[Double, Double] = Dep(left, width / 2.0)
-val right: Dep[Double, Double] = Dep(left, width)
+val center: Dep[Double, Double] = Dep(left)(_ + (width / 2.0), _ - (widht / 2.0))
+val right: Dep[Double, Double] = Dep(left)(_ + width, _ - width)
 ```
 
 Notice we've even added a `center` representation. These are dependent on `left` but their value is derived from a
@@ -239,8 +239,7 @@ formula based on `left` and `width`. Of course, if representing the value alone 
 have it properly reflect in `left`. Any changes made to `Dep` will properly update the variable it depends on `left` in
 this case. See `DepsSpec` for more detailed examples.
 
-`Dep` also supports conversions between different types as well, but must have an implicit `DepConnector` available to
-handle the conversions.
+`Dep` also supports conversions between different types as well.
 
 ### Binding
 
