@@ -3,24 +3,10 @@ package reactify
 import reactify.reaction.{Reaction, ReactionStatus}
 import reactify.standard.StandardDep
 
-trait Dep[T, R] extends Var[T] with Reaction[R] {
+trait Dep[T, R] extends Var[T] {
   def owner: Var[R]
   def t2R(t: T): R
   def r2T(r: R): T
-
-  override val state: State[T] = new State[T](this, 1L, () => r2T(owner()))
-
-  state.update(None)
-  owner.reactions += this
-
-  override def set(value: => T): Unit = owner := t2R(value)
-
-  override def apply(value: R, previous: Option[R]): ReactionStatus = {
-    if (!state.cached.contains(value)) {
-      state.update()
-    }
-    ReactionStatus.Continue
-  }
 }
 
 object Dep {
