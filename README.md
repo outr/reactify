@@ -31,13 +31,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "2.3.0"
+libraryDependencies += "com.outr" %% "reactify" % "3.0.0"
 ```
 
 or for Scala.js / Scala Native / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "2.3.0"
+libraryDependencies += "com.outr" %%% "reactify" % "3.0.0"
 ```
 
 ## Concepts
@@ -45,15 +45,15 @@ libraryDependencies += "com.outr" %%% "reactify" % "2.3.0"
 This framework is intentionally meant to be a simplistic take on properties and functional reactive concepts. There are
 only four specific classes that really need be understood to take advantage of the framework:
 
-- Observable - As the name suggests it is a simple trait that fires values and may be observed by Observers.
-- Channel - The most simplistic representation of an Observable, simply provides a public `:=` to fire events. No state
+- Reactive - As the name suggests it is a simple trait that fires values that may be reacted to by `Reaction`s.
+- Channel - The most simplistic representation of a `Reactive`, simply provides a public `:=` to fire events. No state
 is maintained.
 - Val - Exactly as it is in Scala, this is a final variable. What is defined at construction is immutable. However, the
-contents of the value, if they are `Observable` may change the ultimate value of this, so it is is `Observable` itself
+contents of the value, if they are `Reactive` may change the ultimate value of this, so it is is `Reactive` itself
 and holds state.
 - Var - Similar to `Val` except it is mutable as it mixes in `Channel` to allow setting of the current value.
 
-`Val` and `Var` may hold formulas with `Observables`. These `Observables` are listened to when assigned so the wrapping
+`Val` and `Var` may hold formulas with `Reactive`s. These `Reactive`s are listened to when assigned so the wrapping
 `Val` or `Var` will also fire an appropriate event. This allows complex values to be built off of other variables.
 
 ## Using
@@ -67,10 +67,10 @@ in the package, everything can be had with a single import:
 import reactify._
 ```
 
-### Creating Props
+### Creating
 
-As discussed in the concepts there are only four major classes in Props (`Observable`, `Channel`, `Val`, and `Var`). Of
-those classes, unless you are creating a custom `Observable` you will probably only deal with the latter three.
+As discussed in the concepts there are only four major classes in Props (`Reactive`, `Channel`, `Val`, and `Var`). Of
+those classes, unless you are creating a custom `Reactive` you will probably only deal with the latter three.
 
 Creating instances is incredibly simple:
 
@@ -147,7 +147,7 @@ val complex = Val[String] {
 
 Any changes to `v1`, `v2`, or `v3` will fire a change on `complex` and the entire inlined function will be re-evaluated.
 
-#### Multi-Level Observation
+#### Multi-Level Reactive
 
 A much more advanced scenario is when you have a `Var` that contains a `class` that has a `Var` and you want to keep track
 of the resulting value no matter what the first `Var`'s instance is currently set to.
@@ -229,8 +229,8 @@ edge. We can simplify things by leveraging a `Dep` instance to represent it:
 val width: Var[Double] = Var(0.0)
 
 val left: Var[Double] = Var(0.0)
-val center: Dep[Double, Double] = Dep(left, width / 2.0)
-val right: Dep[Double, Double] = Dep(left, width)
+val center: Dep[Double, Double] = Dep(left)(_ + (width / 2.0), _ - (widht / 2.0))
+val right: Dep[Double, Double] = Dep(left)(_ + width, _ - width)
 ```
 
 Notice we've even added a `center` representation. These are dependent on `left` but their value is derived from a
@@ -239,8 +239,7 @@ formula based on `left` and `width`. Of course, if representing the value alone 
 have it properly reflect in `left`. Any changes made to `Dep` will properly update the variable it depends on `left` in
 this case. See `DepsSpec` for more detailed examples.
 
-`Dep` also supports conversions between different types as well, but must have an implicit `DepConnector` available to
-handle the conversions.
+`Dep` also supports conversions between different types as well.
 
 ### Binding
 
@@ -276,78 +275,9 @@ We need implicits to be able to convert between the two, but now changes to one 
 
 ## Versions
 
-### Features for 2.4.0 (In-Progress)
+### Features for 3.0.0 (In-Progress)
 
-* [X] Convenience support for assigning futures to channels (#18)
-
-### Features for 2.3.0 (Released 2018.01.18)
-
-* [X] Cross-compile for Scala Native
-
-### Features for 2.2.0 (Released 2017.09.10)
-
-* [X] Refactoring of Listener to Observer for better naming convention (breaking changes)
-* [X] Code cleanup
-
-### Features for 2.1.0 (Released 2017.07.28)
-
-* [X] Features for mapping from one Observable to another
-    * [X] map
-    * [X] collect
-* [X] Cross-build with Scala 2.13.0
-
-### Features for 2.0.0 (Released 2017.06.15)
-
-* [X] Complete re-write of internal and recursive state system for better modularity and stability
-* [X] Observable builder
-* [X] Observable from Future
-* [X] RecursionMode to better clarify how hierarchical recursion should work
-    * [X] Static mode for function-less properties
-    * [X] None mode for functional but non-recursive
-    * [X] RetainPreviousValue for single-level recursion (new default for performance)
-    * [X] Full for complete multi-level recursion
-* [X] Transaction system
-* [X] Val.dirty and Var.dirty for on-update re-validation of functional reactive properties for performance intensive functionality
-* [X] Better recursive integration
-* [X] Better cyclical detection
-
-### Features for 1.6.0 (Released 2017.06.01)
-
-* [X] Binding support
-    * [X] Different type binding
-
-### Features for 1.5.0 (Released 2017.04.12)
-
-* [X] Stop Propagation feature
-* [X] Listener
-* [X] Prioritization support
-* [X] Support for chaining Observables to a single listener
-
-### Features for 1.4.0 (Released 2017.02.26)
-
-* [X] Complete reworking of internals to support more advanced usage
-* [X] Removal of Macros as they were creating serious limitations
-* [X] Simplified package naming
-* [X] Introduced ultra light-weight `Prop` as a simpler bare minimum alternative to `Val`
-* [X] Better cleanup and re-introduction of `StateChannel`, `State`, and `Channel` as better interface representations.
-
-### Features for 1.3.0 (Released 2017.01.09)
-
-* [X] Utilization of Macros instead of runtime Observable detection
-
-### Features for 1.2.0 (Released 2016.12.27)
-
-* [X] Syntactic sugar for dealing with collections in a `StateChannel`.
-* [X] `Observable.changes` to conveniently see old and new values on change.
-* [X] Convenience mutation `mod` method in `StateChannel`.
-
-### Features for 1.1.0 (Released 2016.12.18)
-
-* [X] Dep for dependency representation
-
-### Features for 1.0.0 (Released 2016.11.15)
-
-* [X] Channel, Val, and Var functionality
-* [X] Observable functionality
-* [X] Convenience implicits to convert from `Val` and `Var` to the value
-* [X] Support for value-defined Observable dependencies (Observable State classes used in the makeup of variables are monitored for changes)
+* Complete rewrite of library to simplify and clarify objectives
+* Convenience support for assigning futures to channels (#18)
+* Full Transaction support
+* Full testability in JVM, JS, and Native
