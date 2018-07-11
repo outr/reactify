@@ -272,12 +272,3 @@ a bind b
 ```
 
 We need implicits to be able to convert between the two, but now changes to one will propagate to the other.
-
-## Versions
-
-### Features for 3.0.0 (In-Progress)
-
-* Complete rewrite of library to simplify and clarify objectives
-* Convenience support for assigning futures to channels (#18)
-* Full Transaction support
-* Full testability in JVM, JS, and Native
