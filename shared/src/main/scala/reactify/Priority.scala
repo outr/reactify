@@ -1,5 +1,8 @@
 package reactify
 
+/**
+  * Convenience values for Priorities
+  */
 object Priority {
   val Lowest: Double = Double.MinValue
   val Low: Double = -100.0

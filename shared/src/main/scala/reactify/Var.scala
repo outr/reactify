@@ -7,21 +7,53 @@ import reactify.group.VarGroup
 import reactify.reaction.Reaction
 import reactify.standard.StandardVar
 
+/**
+  * Var represents the combination of `Val` and `Channel` into a stateful and mutable underlying value.
+  *
+  * @tparam T the type of value this Reactive receives
+  */
 trait Var[T] extends Val[T] with Channel[T] {
+  /**
+    * Convenience functionality to attach a Reaction and immediately fire the current state on the Reaction.
+    *
+    * @param f the function reaction
+    * @param priority the priority in comparison to other reactions (Defaults to Priority.Normal)
+    * @return Reaction[T]
+    */
   def attachAndFire(f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = {
     val reaction = attach(f, priority)
-    fire(get, Some(get), reactions())
+    fire(get, Some(get), List(reaction))
     reaction
   }
 
+  /**
+    * Group multiple Vars together
+    */
   def and(that: Var[T]): Var[T] = VarGroup[T](None, List(this, that))
 
+  /**
+    * Functional mapping of this Var into another Var.
+    *
+    * @param f conversion function
+    * @tparam R the type of the new Var
+    * @return Var[R]
+    */
   override def map[R](f: T => R): Var[R] = {
     val v = Var[R](f(get))
     attach(v := f(_))
     v
   }
 
+  /**
+    * Convenience method to create a binding between two `Var`s
+    *
+    * @param that the second `Var` to bind between
+    * @param setNow the `BindSet` value (Defaults to LeftToRight)
+    * @param t2v implicit function conversion from T to V
+    * @param v2t implicit function conversion from V to T
+    * @tparam V the type of the second `Var`
+    * @return Binding[T, V]
+    */
   def bind[V](that: Var[V], setNow: BindSet = BindSet.LeftToRight)
              (implicit t2v: T => V, v2t: V => T): Binding[T, V] = {
     setNow match {
