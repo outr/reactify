@@ -275,78 +275,9 @@ We need implicits to be able to convert between the two, but now changes to one 
 
 ## Versions
 
-### Features for 2.4.0 (In-Progress)
+### Features for 3.0.0 (In-Progress)
 
-* [X] Convenience support for assigning futures to channels (#18)
-
-### Features for 2.3.0 (Released 2018.01.18)
-
-* [X] Cross-compile for Scala Native
-
-### Features for 2.2.0 (Released 2017.09.10)
-
-* [X] Refactoring of Listener to Observer for better naming convention (breaking changes)
-* [X] Code cleanup
-
-### Features for 2.1.0 (Released 2017.07.28)
-
-* [X] Features for mapping from one Observable to another
-    * [X] map
-    * [X] collect
-* [X] Cross-build with Scala 2.13.0
-
-### Features for 2.0.0 (Released 2017.06.15)
-
-* [X] Complete re-write of internal and recursive state system for better modularity and stability
-* [X] Observable builder
-* [X] Observable from Future
-* [X] RecursionMode to better clarify how hierarchical recursion should work
-    * [X] Static mode for function-less properties
-    * [X] None mode for functional but non-recursive
-    * [X] RetainPreviousValue for single-level recursion (new default for performance)
-    * [X] Full for complete multi-level recursion
-* [X] Transaction system
-* [X] Val.dirty and Var.dirty for on-update re-validation of functional reactive properties for performance intensive functionality
-* [X] Better recursive integration
-* [X] Better cyclical detection
-
-### Features for 1.6.0 (Released 2017.06.01)
-
-* [X] Binding support
-    * [X] Different type binding
-
-### Features for 1.5.0 (Released 2017.04.12)
-
-* [X] Stop Propagation feature
-* [X] Listener
-* [X] Prioritization support
-* [X] Support for chaining Observables to a single listener
-
-### Features for 1.4.0 (Released 2017.02.26)
-
-* [X] Complete reworking of internals to support more advanced usage
-* [X] Removal of Macros as they were creating serious limitations
-* [X] Simplified package naming
-* [X] Introduced ultra light-weight `Prop` as a simpler bare minimum alternative to `Val`
-* [X] Better cleanup and re-introduction of `StateChannel`, `State`, and `Channel` as better interface representations.
-
-### Features for 1.3.0 (Released 2017.01.09)
-
-* [X] Utilization of Macros instead of runtime Observable detection
-
-### Features for 1.2.0 (Released 2016.12.27)
-
-* [X] Syntactic sugar for dealing with collections in a `StateChannel`.
-* [X] `Observable.changes` to conveniently see old and new values on change.
-* [X] Convenience mutation `mod` method in `StateChannel`.
-
-### Features for 1.1.0 (Released 2016.12.18)
-
-* [X] Dep for dependency representation
-
-### Features for 1.0.0 (Released 2016.11.15)
-
-* [X] Channel, Val, and Var functionality
-* [X] Observable functionality
-* [X] Convenience implicits to convert from `Val` and `Var` to the value
-* [X] Support for value-defined Observable dependencies (Observable State classes used in the makeup of variables are monitored for changes)
+* Complete rewrite of library to simplify and clarify objectives
+* Convenience support for assigning futures to channels (#18)
+* Full Transaction support
+* Full testability in JVM, JS, and Native
