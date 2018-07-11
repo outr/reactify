@@ -28,6 +28,9 @@ object StateCounter {
     }
   }
 
+  /**
+    * Called by a State when it is referenced to get the value
+    */
   def referenced(state: State[_]): Unit = {
     instance.get().foreach { counter =>
       counter.references = state :: counter.references

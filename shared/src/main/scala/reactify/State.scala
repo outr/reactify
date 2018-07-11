@@ -21,18 +21,37 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
     ReactionStatus.Continue
   }
 
+  /**
+    * The previous state before this one
+    */
   def previousState: Option[State[T]] = _previousState
 
+  /**
+    * The next state after this one if this is not active
+    */
   def nextState: Option[State[T]] = _nextState
 
+  /**
+    * True if it is the currently active state
+    */
   def active: Boolean = nextState.isEmpty
+
+  /**
+    * The currently active state
+    */
   def activeState: State[T] = nextState match {
     case Some(next) => next.activeState
     case None => this
   }
 
+  /**
+    * Currently cached value derived from state function
+    */
   def cached: Option[T] = _value
 
+  /**
+    * Current value of this state
+    */
   def value: T = {
     StateCounter.referenced(this)
     updatingState match {
@@ -53,8 +72,14 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
     previousState.flatMap(_.updatingState)
   }
 
+  /**
+    * All states referenced in the function deriving this state's value
+    */
   def references: List[State[_]] = _references
 
+  /**
+    * Updates the derived value of this state
+    */
   def update(previous: Option[State[T]] = _previousState): Unit = synchronized {
     if (!updating.get()) {
       clearReferences()
@@ -108,6 +133,9 @@ case class State[T](owner: Reactive[T], index: Long, function: () => T) extends 
     state.owner.asInstanceOf[Reactive[Any]].reactions -= this
   }
 
+  /**
+    * Clears all references to other states from this state
+    */
   def clearReferences(): Unit = synchronized {
     references.foreach(removeReference)
     _references = Nil
