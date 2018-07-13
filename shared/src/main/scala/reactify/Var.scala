@@ -14,17 +14,16 @@ import reactify.standard.StandardVar
   */
 trait Var[T] extends Val[T] with Channel[T] {
   /**
-    * Convenience functionality to attach a Reaction and immediately fire the current state on the Reaction.
+    * Statically sets a value without monitoring effects
     *
-    * @param f the function reaction
-    * @param priority the priority in comparison to other reactions (Defaults to Priority.Normal)
-    * @return Reaction[T]
+    * @param value the value to assign
     */
-  def attachAndFire(f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = {
-    val reaction = attach(f, priority)
-    fire(get, Some(get), List(reaction))
-    reaction
-  }
+  def static(value: T): Unit = set(value)
+
+  /**
+    * Group multiple Vars together
+    */
+  def &(that: Var[T]): Var[T] = and(that)
 
   /**
     * Group multiple Vars together

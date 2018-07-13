@@ -37,6 +37,11 @@ trait Channel[T] extends Reactive[T] {
   /**
     * Group multiple channels together
     */
+  def &(that: Channel[T]): Channel[T] = and(that)
+
+  /**
+    * Group multiple channels together
+    */
   def and(that: Channel[T]): Channel[T] = ChannelGroup(None, List(this, that))
 
   /**

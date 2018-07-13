@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong
 import reactify.transaction.Transaction
 import reactify.{State, Var}
 
-class StandardVar[T](f: => T, val name: Option[String]) extends Var[T] {
+class StandardVar[T](f: => T, override val name: Option[String]) extends Var[T] {
   private lazy val counter = new AtomicLong(0L)
 
   private var _state: State[T] = new State[T](this, counter.incrementAndGet(), () => f)

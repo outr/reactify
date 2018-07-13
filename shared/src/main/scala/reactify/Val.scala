@@ -1,6 +1,7 @@
 package reactify
 
 import reactify.group.ValGroup
+import reactify.reaction.Reaction
 import reactify.standard.StandardVal
 
 /**
@@ -24,6 +25,24 @@ trait Val[T] extends Reactive[T] {
     * Convenience wrapper around `get`
     */
   def apply(): T = get
+
+  /**
+    * Convenience functionality to attach a Reaction and immediately fire the current state on the Reaction.
+    *
+    * @param f the function reaction
+    * @param priority the priority in comparison to other reactions (Defaults to Priority.Normal)
+    * @return Reaction[T]
+    */
+  def attachAndFire(f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = {
+    val reaction = attach(f, priority)
+    fire(get, Some(get), List(reaction))
+    reaction
+  }
+
+  /**
+    * Group multiple Vals together
+    */
+  def &(that: Val[T]): Val[T] = and(that)
 
   /**
     * Group multiple Vals together

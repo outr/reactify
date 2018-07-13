@@ -16,7 +16,7 @@ trait Reactive[T] {
   /**
     * An optional name associated. This is primarily used for distinguishing between instances as well as logging.
     */
-  def name: Option[String]
+  def name: Option[String] = None
 
   private lazy val _status = new ThreadLocal[Option[ReactionStatus]]
 
