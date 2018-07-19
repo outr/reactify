@@ -182,9 +182,9 @@ class VarSpec extends WordSpec with Matchers {
       v() should be(3)
     }
     "create a list that is dependent on vars" in {
-      val s1 = Var("One", Some("s1"))
-      val s2 = Var("Two", Some("s2"))
-      val list = Var(List.empty[String], Some("list"))
+      val s1 = Var("One", name = Some("s1"))
+      val s2 = Var("Two", name = Some("s2"))
+      val list = Var(List.empty[String], name = Some("list"))
       list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
       list.state.index should be(2)

@@ -8,6 +8,8 @@ class StandardDep[T, R](override val name: Option[String],
                         override val owner: Var[R],
                         r2TFunction: R => T,
                         t2RFunction: T => R) extends Dep[T, R] {
+  override def mode: Var.Mode = Var.Mode.Normal
+
   private lazy val counter = new AtomicLong(0L)
 
   private var _state: State[T] = new State[T](this, counter.incrementAndGet(), () => r2T(owner()))

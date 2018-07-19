@@ -4,7 +4,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import reactify.bind.{BindSet, Binding}
 import reactify.group.VarGroup
-import reactify.reaction.Reaction
 import reactify.standard.StandardVar
 
 /**
@@ -13,6 +12,11 @@ import reactify.standard.StandardVar
   * @tparam T the type of value this Reactive receives
   */
 trait Var[T] extends Val[T] with Channel[T] {
+  /**
+    * Operating mode of this Var. Defaults to `Normal`
+    */
+  def mode: Var.Mode
+
   /**
     * Statically sets a value without monitoring effects
     *
@@ -86,5 +90,14 @@ trait Var[T] extends Val[T] with Channel[T] {
 }
 
 object Var {
-  def apply[T](value: => T, name: Option[String] = None): Var[T] = new StandardVar[T](value, name)
+  def apply[T](value: => T,
+               mode: Mode = Mode.Normal,
+               name: Option[String] = None): Var[T] = new StandardVar[T](value, mode, name)
+
+  sealed trait Mode
+
+  object Mode {
+    case object Normal extends Mode
+    case object Static extends Mode
+  }
 }

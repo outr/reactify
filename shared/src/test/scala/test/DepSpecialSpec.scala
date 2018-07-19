@@ -1,7 +1,7 @@
 package test
 
 import org.scalatest.{Matchers, WordSpec}
-import reactify.{Dep, Var}
+import reactify._
 
 class DepSpecialSpec extends WordSpec with Matchers {
   "Deps Special Use-Cases" when {
@@ -32,8 +32,8 @@ class DepSpecialSpec extends WordSpec with Matchers {
       }
     }
     "validating derived observables" should {
-      val left = Var(0.0, Some("left"))
-      val width = Var(0.0, Some("width"))
+      val left = Var(0.0, name = Some("left"))
+      val width = Var(0.0, name = Some("width"))
       val center = Dep[Double, Double](left, "center")(_ + width / 2.0, _ - width / 2.0)
       val right = Dep[Double, Double](left, "right")(_ + width, _ - width)
 
@@ -57,6 +57,25 @@ class DepSpecialSpec extends WordSpec with Matchers {
 //        center := center() + 10.0
 //        verify(460.0, 510.0, 560.0, 100.0, 460.0)
 //      }
+    }
+    "propagation of values" should {
+      val left = Var(0.0, name = Some("left"))
+      val width = Var(0.0, name = Some("width"))
+      val center = Dep[Double, Double](left, "center")(_ + width / 2.0, _ - width / 2.0)
+      val right = Dep[Double, Double](left, "right")(_ + width, _ - width)
+
+      val arbitrary = Var(0.0, name = Some("arbitrary"))
+
+      "set the right to an arbitrary value" in {
+        right := arbitrary
+        arbitrary := 100.0
+
+        width := 50.0
+
+        right() should be(100.0)
+        left() should be(50.0)
+        center() should be(75.0)
+      }
     }
   }
 }
