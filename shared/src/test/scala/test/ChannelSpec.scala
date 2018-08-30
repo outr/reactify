@@ -48,5 +48,20 @@ class ChannelSpec extends WordSpec with Matchers {
       c1 := "50"
       lastValue should be(Some(50))
     }
+    "use channel grouping" in {
+      val c1 = Channel[String]
+      val c2 = Channel[String]
+
+      var latest = ""
+      c1.and(c2).attach { value =>
+        latest = value
+      }
+
+      latest should be("")
+      c1 := "one"
+      latest should be("one")
+      c2 := "two"
+      latest should be("two")
+    }
   }
 }
