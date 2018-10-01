@@ -84,5 +84,44 @@ class BindingSpec extends WordSpec with Matchers {
         b() should be(200)
       }
     }
+    "unbinding should work properly" in {
+      var v1Fired = 0
+      var v2Fired = 0
+
+      val v1 = Var("Hello")
+      val v2 = Var("World")
+      val binding = v1 bind v2
+      v1.attach(_ => v1Fired += 1)
+      v2.attach(_ => v2Fired += 1)
+
+      v1Fired should be(0)
+      v2Fired should be(0)
+
+      v1 := "Hi"
+
+      v1Fired should be(1)
+      v2Fired should be(1)
+      v2() should be("Hi")
+
+      v2 := "Universe"
+
+      v2Fired should be(2)
+      v1Fired should be(2)
+      v1() should be("Universe")
+
+      binding.detach()
+
+      v1 := "Goodbye"
+
+      v1Fired should be(3)
+      v2Fired should be(2)
+      v2() should be("Universe")
+
+      v2 := "Internet"
+
+      v2Fired should be(3)
+      v1Fired should be(3)
+      v1() should be("Goodbye")
+    }
   }
 }
