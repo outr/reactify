@@ -21,5 +21,18 @@ class ValSpec extends WordSpec with Matchers {
       v1 := 10
       v2() should be(15)
     }
+    "handle special case of list modification" in {
+      var modified = 0
+
+      val v = Var(2)
+      val list = Val(List(1, v()))
+      list.attach(_ => modified += 1)
+
+      modified should be(0)
+
+      v := 3
+      list() should be(List(1, 3))
+      modified should be(1)
+    }
   }
 }
