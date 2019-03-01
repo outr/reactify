@@ -1,10 +1,10 @@
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
 version in ThisBuild := "3.0.4-SNAPSHOT"
-scalaVersion in ThisBuild := "2.12.6"
-crossScalaVersions in ThisBuild := List("2.12.6", "2.11.12")
+scalaVersion in ThisBuild := "2.12.8"
+crossScalaVersions in ThisBuild := List("2.12.8", "2.11.12")
 
 publishTo in ThisBuild := sonatypePublishTo.value
 sonatypeProfileName in ThisBuild := "com.outr"
@@ -22,12 +22,10 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val scalatestVersion = "3.2.0-SNAP10"
-val scalacheckVersion = "1.14.0"
-val testInterfaceVersion = "0.3.7"
+val scalatestVersion = "3.1.0-SNAP7"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .in(file("."))
+  .crossType(CrossType.Pure)
   .settings(
     name := "reactify",
     publishArtifact in Test := false,
@@ -35,20 +33,8 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.scalatest" %%% "scalatest" % scalatestVersion % "test"
     )
   )
-  .jvmSettings(
-    libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % scalacheckVersion % "test"
-    )
-  )
   .nativeSettings(
     nativeLinkStubs := true,
-    libraryDependencies ++= Seq(
-      "org.scala-native" %%% "test-interface" % testInterfaceVersion
-    ),
     scalaVersion := "2.11.12",
     crossScalaVersions := Seq("2.11.12")
   )
-
-lazy val reactifyJS = reactify.js
-lazy val reactifyJVM = reactify.jvm
-lazy val reactifyNative = reactify.native
