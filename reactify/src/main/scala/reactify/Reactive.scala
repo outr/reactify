@@ -18,7 +18,9 @@ trait Reactive[T] {
     */
   def name: Option[String] = None
 
-  private lazy val _status = new ThreadLocal[Option[ReactionStatus]]
+  private lazy val _status = new ThreadLocal[Option[ReactionStatus]] {
+    override def initialValue(): Option[ReactionStatus] = None
+  }
 
   /**
     * If the current thread is reacting to a value currently, status represents the status of the reaction. This can be
