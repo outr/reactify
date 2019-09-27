@@ -28,6 +28,14 @@ trait Channel[T] extends Reactive[T] {
   def :=(value: => T): Unit = set(value)
 
   /**
+    * Convenience method for static (non-functional) invocation.
+    *
+    * @see #set
+    * @param value the value
+    */
+  def @=(value: T): Unit = set(value)
+
+  /**
     * Convenience functionality to assign the result of a future (upon completion) to this Channel
     */
   def !(future: Future[T]): Future[Unit] = future.map { value =>
