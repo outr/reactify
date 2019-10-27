@@ -10,6 +10,8 @@ class StandardDep[T, R](override val name: Option[String],
 
   override def set(value: => T): Unit = owner := t2R(value)
 
+  override def set(value: => T, mode: Var.Mode): Unit = owner.set(t2R(value), mode)
+
   override def t2R(t: T): R = t2RFunction(t)
 
   override def r2T(r: R): T = r2TFunction(r)

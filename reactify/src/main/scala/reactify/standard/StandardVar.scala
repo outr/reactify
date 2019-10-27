@@ -14,7 +14,9 @@ class StandardVar[T](f: => T, override val mode: Var.Mode, override val name: Op
 
   override def state: State[T] = _state
 
-  override def set(value: => T): Unit = synchronized {
+  override def set(value: => T): Unit = set(value, mode)
+
+  override def set(value: => T, mode: Var.Mode): Unit = synchronized {
     val previous = _state
     mode match {
       case Var.Mode.Normal => {

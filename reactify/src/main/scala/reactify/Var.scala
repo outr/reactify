@@ -22,12 +22,16 @@ trait Var[T] extends Val[T] with Channel[T] {
     *
     * @param value the value to assign
     */
-  def static(value: T): Unit = set(value)
+  def static(value: T): Unit = set(value, Var.Mode.Static)
+
+  override def @=(value: T): Unit = set(value, Var.Mode.Static)
 
   /**
     * Group multiple Vars together
     */
   def &(that: Var[T]): Var[T] = and(that)
+
+  def set(value: => T, mode: Var.Mode): Unit
 
   /**
     * Group multiple Vars together

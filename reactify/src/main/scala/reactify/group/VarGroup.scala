@@ -10,6 +10,8 @@ case class VarGroup[T](override val name: Option[String], items: List[Var[T]]) e
 
   override def set(value: => T): Unit = items.foreach(_.set(value))
 
+  override def set(value: => T, mode: Var.Mode): Unit = items.foreach(_.set(value, mode))
+
   override def state: State[T] = ???
 
   override def and(that: Var[T]): Var[T] = VarGroup(name, items ::: List(that))
