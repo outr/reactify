@@ -12,14 +12,9 @@ import reactify.standard.StandardVal
   */
 trait Val[T] extends Reactive[T] {
   /**
-    * The current State representation
-    */
-  def state: State[T]
-
-  /**
     * Gets the current value from the current `State`
     */
-  def get: T = state.value
+  def get: T
 
   /**
     * Convenience wrapper around `get`

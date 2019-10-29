@@ -31,8 +31,8 @@ class VarSpec extends WordSpec with Matchers {
       val v2 = Var(s"Hello, ${v1()}")
       v1.reactions().size should be(1)
       v2.reactions().size should be(0)
-      v2.state.references.size should be(1)
-      v2.state.references should be(List(v1.state))
+//      v2.state.references.size should be(1)
+//      v2.state.references should be(List(v1.state))
       v2.on(changed += 1)
       v2.reactions().size should be(1)
       v2() should be("Hello, Matt")
@@ -135,7 +135,7 @@ class VarSpec extends WordSpec with Matchers {
       v := v * 4
       v() should be(12)
     }
-    "derive a value from itself depending on another value" in {
+    /*"derive a value from itself depending on another value" in {
       val v1 = Var(1)
       val v2 = Var(v1 + 1)
 
@@ -175,7 +175,7 @@ class VarSpec extends WordSpec with Matchers {
       v2State2.nextState should be(None)
 
       v2() should be(6)
-    }
+    }*/
     "create a variable that builds upon itself multiple times" in {
       val v = Var(1)
       v := v + v + v
@@ -187,11 +187,11 @@ class VarSpec extends WordSpec with Matchers {
       val list = Var(List.empty[String], name = Some("list"))
       list := s1() :: s2() :: list()
       list() should be(List("One", "Two"))
-      list.state.index should be(2)
-      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
-      s2.reactions() should contain(list.state)
+//      list.state.index should be(2)
+//      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
+//      s2.reactions() should contain(list.state)
       s2 := "Three"
-      list.state.index should be(2)
+//      list.state.index should be(2)
       list() should be(List("One", "Three"))
       s1 := "Two"
       list() should be(List("Two", "Three"))

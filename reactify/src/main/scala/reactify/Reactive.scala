@@ -139,7 +139,28 @@ trait Reactive[T] {
 }
 
 object Reactive {
+  private val references: ThreadLocal[Option[Set[Val[_]]]] = new ThreadLocal[Option[Set[Val[_]]]] {
+    override def initialValue(): Option[Set[Val[_]]] = None
+  }
+
   private[reactify] def fire[T](reactive: Reactive[T], value: T, previous: Option[T]): Unit = {
     reactive.fire(value, previous, reactive.reactions())
   }
+
+  private[reactify] def processing[T](f: => T, mode: Var.Mode): FunctionResult[T] = {
+    val previous = references.get()
+    references.set(Some(Set.empty))
+    try {
+      val value: T = f
+      new FunctionResult[T](() => f, mode, value, references.get().getOrElse(Set.empty))
+    } finally {
+      references.set(previous)
+    }
+  }
+
+  private[reactify] def getting[T](v: Val[T]): Unit = references.get().foreach { set =>
+    references.set(Some(set + v))
+  }
 }
+
+class FunctionResult[T](val function: () => T, val mode: Var.Mode, val value: T, val referenced: Set[Val[_]])

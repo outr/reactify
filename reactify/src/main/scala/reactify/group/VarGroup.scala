@@ -1,7 +1,7 @@
 package reactify.group
 
 import reactify.reaction.{GroupReactions, Reactions}
-import reactify.{State, Var}
+import reactify.Var
 
 case class VarGroup[T](override val name: Option[String], items: List[Var[T]]) extends Var[T] with Group[T, Var[T]] {
   override def mode: Var.Mode = items.head.mode
@@ -12,7 +12,7 @@ case class VarGroup[T](override val name: Option[String], items: List[Var[T]]) e
 
   override def set(value: => T, mode: Var.Mode): Unit = items.foreach(_.set(value, mode))
 
-  override def state: State[T] = ???
-
   override def and(that: Var[T]): Var[T] = VarGroup(name, items ::: List(that))
+
+  override def get: T = items.head.get
 }
