@@ -139,28 +139,39 @@ trait Reactive[T] {
 }
 
 object Reactive {
-  private val references: ThreadLocal[Option[Set[Val[_]]]] = new ThreadLocal[Option[Set[Val[_]]]] {
-    override def initialValue(): Option[Set[Val[_]]] = None
+  private val referenced: ThreadLocal[Option[FunctionReferenced]] = new ThreadLocal[Option[FunctionReferenced]] {
+    override def initialValue(): Option[FunctionReferenced] = None
   }
 
   private[reactify] def fire[T](reactive: Reactive[T], value: T, previous: Option[T]): Unit = {
     reactive.fire(value, previous, reactive.reactions())
   }
 
-  private[reactify] def processing[T](f: => T, mode: Var.Mode): FunctionResult[T] = {
-    val previous = references.get()
-    references.set(Some(Set.empty))
+  private[reactify] def processing[T](v: Val[T], f: => T, mode: Var.Mode, previous: T): FunctionResult[T] = {
+    val p = referenced.get()
+    referenced.set(Some(new FunctionReferenced(previous, v, Set.empty)))
     try {
       val value: T = f
-      new FunctionResult[T](() => f, mode, value, references.get().getOrElse(Set.empty))
+      val references = referenced.get().map(_.referenced).getOrElse(Set.empty)
+      new FunctionResult[T](() => f, mode, value, previous, references)
     } finally {
-      references.set(previous)
+      referenced.set(p)
     }
   }
 
-  private[reactify] def getting[T](v: Val[T]): Unit = references.get().foreach { set =>
-    references.set(Some(set + v))
+  private[reactify] def getting[T](v: Val[T]): Option[T] = referenced.get().flatMap { r =>
+    println("GETTING!")
+    if (r.processing ne v) {
+      referenced.set(Some(r.withReference(v)))
+      None
+    } else {
+      Some(r.previous.asInstanceOf[T])
+    }
   }
 }
 
-class FunctionResult[T](val function: () => T, val mode: Var.Mode, val value: T, val referenced: Set[Val[_]])
+class FunctionReferenced(val previous: Any, val processing: Val[_], val referenced: Set[Val[_]]) {
+  def withReference(v: Val[_]): FunctionReferenced = new FunctionReferenced(previous, processing, referenced + v)
+}
+
+class FunctionResult[T](val function: () => T, val mode: Var.Mode, val value: T, val previous: T, val referenced: Set[Val[_]])
