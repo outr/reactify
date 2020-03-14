@@ -1,9 +1,10 @@
 package test
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify.Trigger
 
-class TriggerSpec extends WordSpec with Matchers {
+class TriggerSpec extends AnyWordSpec with Matchers {
   "Triggers" should {
     "handle simple invocations" in {
       val t = Trigger()

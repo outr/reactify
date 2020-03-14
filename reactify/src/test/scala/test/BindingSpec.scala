@@ -1,10 +1,11 @@
 package test
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 import reactify.bind.Binding
 
-class BindingSpec extends WordSpec with Matchers {
+class BindingSpec extends AnyWordSpec with Matchers {
   "Bindings" when {
     "dealing with a simple binding" should {
       val a = Var[String]("a")

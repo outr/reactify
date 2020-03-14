@@ -1,12 +1,13 @@
 package test
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 import reactify.group.VarGroup
 
 import scala.collection.mutable.ListBuffer
 
-class VarSpec extends WordSpec with Matchers {
+class VarSpec extends AnyWordSpec with Matchers {
   lazy val lazyDouble: Var[Double] = Var(0.0)
 
   "Vars" should {

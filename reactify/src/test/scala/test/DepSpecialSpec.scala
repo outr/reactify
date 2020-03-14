@@ -1,9 +1,10 @@
 package test
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
-class DepSpecialSpec extends WordSpec with Matchers {
+class DepSpecialSpec extends AnyWordSpec with Matchers {
   "Deps Special Use-Cases" when {
     "combining Ints" should {
       "do simple addition" in {

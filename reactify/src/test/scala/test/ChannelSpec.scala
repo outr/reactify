@@ -1,9 +1,10 @@
 package test
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify.Channel
 
-class ChannelSpec extends WordSpec with Matchers {
+class ChannelSpec extends AnyWordSpec with Matchers {
   "Channels" should {
     "notify when changed" in {
       var changes = 0
