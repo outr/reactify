@@ -2,7 +2,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "3.1.0-SNAPSHOT"
+version in ThisBuild := "4.0.0-SNAPSHOT"
 scalaVersion in ThisBuild := "2.13.1"
 crossScalaVersions in ThisBuild := List("2.13.1", "2.12.8", "2.11.12")
 
@@ -22,7 +22,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val scalatestVersion = "3.1.0-SNAP13"
+val scalatestVersion = "3.2.0-M3"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)

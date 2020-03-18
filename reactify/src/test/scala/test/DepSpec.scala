@@ -1,11 +1,12 @@
 package test
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
 import scala.collection.mutable.ListBuffer
 
-class DepSpec extends WordSpec with Matchers {
+class DepSpec extends AnyWordSpec with Matchers {
   "Deps" should {
     val width: Var[Double] = Var(0.0)
 
