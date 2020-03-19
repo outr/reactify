@@ -2,6 +2,11 @@ package reactify
 
 import reactify.group.ChannelGroup
 
+/**
+  * Channel is a stateless Reactive implementation exposing a public method to fire values.
+  *
+  * @tparam T the type of value this Reactive receives
+  */
 class Channel[T] extends Reactive[T] with Mutable[T] {
   override def set(f: => T): Unit = fire(f, None, reactions())
 

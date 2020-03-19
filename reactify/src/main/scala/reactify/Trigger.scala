@@ -5,6 +5,9 @@ package reactify
   * just the reactions themselves.
   */
 class Trigger extends Channel[Unit] {
+  /**
+    * Fires an event on this trigger
+    */
   def trigger(): Unit = fire((), None)
 }
 

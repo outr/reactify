@@ -4,7 +4,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import reactify.bind.{BindSet, Binding}
 import reactify.group.VarGroup
+import reactify.transaction.Transaction
 
+/**
+  * Var represents the combination of `Val` and `Channel` into a stateful and mutable underlying value.
+  *
+  * @tparam T the type of value this Reactive receives
+  */
 class Var[T] protected() extends Val[T]() with Mutable[T] {
   def this(f: => T) = {
     this()
@@ -12,8 +18,22 @@ class Var[T] protected() extends Val[T]() with Mutable[T] {
     set(f)
   }
 
-  override def set(value: => T): Unit = super.set(value)
-  override def static(f: T): Unit = super.static(f)
+  /**
+    * Sets a new functional value to this var
+    *
+    * @param value the functional value to assign
+    */
+  override def set(value: => T): Unit = {
+    Transaction.change(this, this.function, () => value)
+    super.set(value)
+  }
+
+  /**
+    * Statically sets a value without monitoring effects
+    *
+    * @param value the value to assign
+    */
+  override def static(value: T): Unit = super.static(value)
 
   /**
     * Group multiple Vars together

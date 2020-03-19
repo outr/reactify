@@ -5,7 +5,7 @@ import reactify.reaction.Reaction
 
 trait Stateful[T] extends Reactive[T] {
   /**
-    * Gets the current value from the current `State`
+    * Gets the current value
     */
   def get: T
 
@@ -28,12 +28,12 @@ trait Stateful[T] extends Reactive[T] {
   }
 
   /**
-    * Group multiple Vals together
+    * Group multiple Statefuls together
     */
   def &(that: Stateful[T]): Stateful[T] = and(that)
 
   /**
-    * Group multiple Vals together
+    * Group multiple Statefuls together
     */
   def and(that: Stateful[T]): Stateful[T] = StatefulGroup[T](List(this, that))
 }

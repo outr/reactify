@@ -68,13 +68,13 @@ object Val {
   }
 
   def evaluate[T](v: Val[T], updating: Boolean): Unit = {
-    assert(evaluating.get().isEmpty, s"Expected empty evaluating, but found: ${evaluating.get()}")
+    val original = evaluating.get()
     val e = new Evaluating(v, updating)
     evaluating.set(Some(e))
     val evaluated = try {
       v.function()
     } finally {
-      evaluating.set(None)
+      evaluating.set(original)
     }
 
     val previousReferences = v._references

@@ -1,4 +1,3 @@
-/*
 package test
 
 import org.scalatest.matchers.should.Matchers
@@ -30,4 +29,3 @@ class TransactionSpec extends AnyWordSpec with Matchers {
     }
   }
 }
-*/
