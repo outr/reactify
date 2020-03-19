@@ -4,52 +4,26 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import reactify.bind.{BindSet, Binding}
 import reactify.group.VarGroup
-import reactify.standard.StandardVar
 
-/**
-  * Var represents the combination of `Val` and `Channel` into a stateful and mutable underlying value.
-  *
-  * @tparam T the type of value this Reactive receives
-  */
-trait Var[T] extends Val[T] with Channel[T] {
-  /**
-    * Operating mode of this Var. Defaults to `Normal`
-    */
-  def mode: Var.Mode
+class Var[T] protected() extends Val[T]() with Mutable[T] {
+  def this(f: => T) = {
+    this()
 
-  /**
-    * Statically sets a value without monitoring effects
-    *
-    * @param value the value to assign
-    */
-  def static(value: T): Unit = set(value, Var.Mode.Static)
+    set(f)
+  }
 
-  override def @=(value: T): Unit = set(value, Var.Mode.Static)
+  override def set(value: => T): Unit = super.set(value)
+  override def static(f: T): Unit = super.static(f)
 
   /**
     * Group multiple Vars together
     */
   def &(that: Var[T]): Var[T] = and(that)
 
-  def set(value: => T, mode: Var.Mode): Unit
-
   /**
     * Group multiple Vars together
     */
-  def and(that: Var[T]): Var[T] = VarGroup[T](None, List(this, that))
-
-  /**
-    * Functional mapping of this Var into another Var.
-    *
-    * @param f conversion function
-    * @tparam R the type of the new Var
-    * @return Var[R]
-    */
-  override def map[R](f: T => R): Var[R] = {
-    val v = Var[R](f(get))
-    attach(v := f(_))
-    v
-  }
+  def and(that: Var[T]): Var[T] = VarGroup[T](List(this, that))
 
   /**
     * Convenience method to create a binding between two `Var`s
@@ -89,19 +63,12 @@ trait Var[T] extends Val[T] with Channel[T] {
     }
     new Binding(this, that, leftToRight, rightToLeft)
   }
-
-  override def toString: String = name.getOrElse("Var")
 }
 
 object Var {
-  def apply[T](value: => T,
-               mode: Mode = Mode.Normal,
-               name: Option[String] = None): Var[T] = new StandardVar[T](value, mode, name)
-
-  sealed trait Mode
-
-  object Mode {
-    case object Normal extends Mode
-    case object Static extends Mode
+  def apply[T](f: => T): Var[T] = {
+    val v = new Var[T]
+    v.set(f)
+    v
   }
 }

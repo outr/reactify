@@ -1,6 +1,6 @@
 package reactify
 
-import reactify.standard.StandardDep
+import reactify.reaction.{Reaction, ReactionStatus}
 
 /**
   * Dep allows creation of a dependent `Var` on another `Var` allowing conversion between the two. This can be useful for
@@ -21,16 +21,22 @@ import reactify.standard.StandardDep
   * @tparam T the type of value this Reactive receives
   * @tparam R the type that this Dep receives
   */
-trait Dep[T, R] extends Var[T] {
-  def owner: Var[R]
-  def t2R(t: T): R
-  def r2T(r: R): T
+class Dep[T, R] protected(val owner: Var[R], t2R: T => R, r2T: R => T) extends Reactive[T] with Stateful[T] with Mutable[T] {
+  private val v: Val[T] = Val(r2T(owner))
+
+  v.reactions += new Reaction[T] {
+    override def apply(value: T, previous: Option[T]): ReactionStatus = {
+      fire(value, previous, reactions())
+      ReactionStatus.Continue
+    }
+  }
+
+  override def get: T = v.get
+
+  override def set(f: => T): Unit = owner := t2R(f)
 }
 
 object Dep {
   def apply[T, R](owner: Var[R])
-                 (implicit r2T: R => T, t2R: T => R): Dep[T, R] = new StandardDep[T, R](None, owner, r2T, t2R)
-  def apply[T, R](owner: Var[R],
-                  name: String)
-                 (implicit r2T: R => T, t2R: T => R): Dep[T, R] = new StandardDep[T, R](Option(name), owner, r2T, t2R)
+                 (implicit r2T: R => T, t2R: T => R): Dep[T, R] = new Dep[T, R](owner, t2R, r2T)
 }

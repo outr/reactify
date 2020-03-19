@@ -33,10 +33,10 @@ class DepSpecialSpec extends AnyWordSpec with Matchers {
       }
     }
     "validating derived observables" should {
-      val left = Var(0.0, name = Some("left"))
-      val width = Var(0.0, name = Some("width"))
-      val center = Dep[Double, Double](left, "center")(_ + width / 2.0, _ - width / 2.0)
-      val right = Dep[Double, Double](left, "right")(_ + width, _ - width)
+      val left = Var(0.0)
+      val width = Var(0.0)
+      val center = Dep[Double, Double](left)(_ + width / 2.0, _ - width / 2.0)
+      val right = Dep[Double, Double](left)(_ + width, _ - width)
 
       var leftValue = left()
       left.attach(d => leftValue = d)
@@ -60,22 +60,22 @@ class DepSpecialSpec extends AnyWordSpec with Matchers {
 //      }
     }
     "propagation of values" should {
-      val left = Var(0.0, name = Some("left"))
-      val width = Var(0.0, name = Some("width"))
-      val center = Dep[Double, Double](left, "center")(_ + width / 2.0, _ - width / 2.0)
-      val right = Dep[Double, Double](left, "right")(_ + width, _ - width)
+      val left = Var(0.0)
+      val width = Var(0.0)
+      val center = Dep[Double, Double](left)(_ + width / 2.0, _ - width / 2.0)
+      val right = Dep[Double, Double](left)(_ + width, _ - width)
 
-      val arbitrary = Var(0.0, name = Some("arbitrary"))
+      val arbitrary = Var(0.0)
 
       "set the right to an arbitrary value" in {
         right := arbitrary
         arbitrary := 100.0
 
+        List(left(), center(), right()) should be(List(100.0, 100.0, 100.0))
+
         width := 50.0
 
-        right() should be(100.0)
-        left() should be(50.0)
-        center() should be(75.0)
+        List(left(), center(), right()) should be(List(50.0, 75.0, 100.0))
       }
     }
   }

@@ -1,23 +1,17 @@
 package reactify
 
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
-import reactify.standard.StandardReactions
 
 import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 
 /**
   * Reactive is the core trait for Reactify. The basic premise is that a Reactive represents an instance that can attach
-  * Reactions and fire instances of `T` that are received by those Reactions.
+  * Reactions and fire `T` and are received by those Reactions.
   *
   * @tparam T the type of value this Reactive receives
   */
 trait Reactive[T] {
-  /**
-    * An optional name associated. This is primarily used for distinguishing between instances as well as logging.
-    */
-  def name: Option[String] = None
-
   private lazy val _status = new ThreadLocal[Option[ReactionStatus]] {
     override def initialValue(): Option[ReactionStatus] = None
   }
@@ -40,7 +34,7 @@ trait Reactive[T] {
   /**
     * Reactions currently associated with this Reactive
     */
-  lazy val reactions: Reactions[T] = new StandardReactions[T]
+  lazy val reactions: Reactions[T] = new Reactions[T]
 
   /**
     * Convenience method to create a Reaction to attach to this Reactive
@@ -138,40 +132,3 @@ trait Reactive[T] {
   }
 }
 
-object Reactive {
-  private val referenced: ThreadLocal[Option[FunctionReferenced]] = new ThreadLocal[Option[FunctionReferenced]] {
-    override def initialValue(): Option[FunctionReferenced] = None
-  }
-
-  private[reactify] def fire[T](reactive: Reactive[T], value: T, previous: Option[T]): Unit = {
-    reactive.fire(value, previous, reactive.reactions())
-  }
-
-  private[reactify] def processing[T](v: Val[T], f: => T, mode: Var.Mode, previous: T): FunctionResult[T] = {
-    val p = referenced.get()
-    referenced.set(Some(new FunctionReferenced(previous, v, Set.empty)))
-    try {
-      val value: T = f
-      val references = referenced.get().map(_.referenced).getOrElse(Set.empty)
-      new FunctionResult[T](() => f, mode, value, previous, references)
-    } finally {
-      referenced.set(p)
-    }
-  }
-
-  private[reactify] def getting[T](v: Val[T]): Option[T] = referenced.get().flatMap { r =>
-    println("GETTING!")
-    if (r.processing ne v) {
-      referenced.set(Some(r.withReference(v)))
-      None
-    } else {
-      Some(r.previous.asInstanceOf[T])
-    }
-  }
-}
-
-class FunctionReferenced(val previous: Any, val processing: Val[_], val referenced: Set[Val[_]]) {
-  def withReference(v: Val[_]): FunctionReferenced = new FunctionReferenced(previous, processing, referenced + v)
-}
-
-class FunctionResult[T](val function: () => T, val mode: Var.Mode, val value: T, val previous: T, val referenced: Set[Val[_]])
