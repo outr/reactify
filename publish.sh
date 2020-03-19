@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-sbt +clean +compile
-sbt +test
+set -e
+
+sbt +clean
+sbt test
 sbt +reactifyJVM/publishSigned +reactifyJS/publishSigned ++2.11.12 reactifyNative/publishSigned sonatypeRelease
