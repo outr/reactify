@@ -1,23 +1,17 @@
 package reactify
 
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
-import reactify.standard.StandardReactions
 
 import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 
 /**
   * Reactive is the core trait for Reactify. The basic premise is that a Reactive represents an instance that can attach
-  * Reactions and fire instances of `T` that are received by those Reactions.
+  * Reactions and fire `T` and are received by those Reactions.
   *
   * @tparam T the type of value this Reactive receives
   */
 trait Reactive[T] {
-  /**
-    * An optional name associated. This is primarily used for distinguishing between instances as well as logging.
-    */
-  def name: Option[String] = None
-
   private lazy val _status = new ThreadLocal[Option[ReactionStatus]] {
     override def initialValue(): Option[ReactionStatus] = None
   }
@@ -40,7 +34,7 @@ trait Reactive[T] {
   /**
     * Reactions currently associated with this Reactive
     */
-  lazy val reactions: Reactions[T] = new StandardReactions[T]
+  lazy val reactions: Reactions[T] = new Reactions[T]
 
   /**
     * Convenience method to create a Reaction to attach to this Reactive
@@ -138,8 +132,3 @@ trait Reactive[T] {
   }
 }
 
-object Reactive {
-  private[reactify] def fire[T](reactive: Reactive[T], value: T, previous: Option[T]): Unit = {
-    reactive.fire(value, previous, reactive.reactions())
-  }
-}

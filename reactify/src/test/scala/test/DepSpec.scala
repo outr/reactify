@@ -101,8 +101,8 @@ class DepSpec extends AnyWordSpec with Matchers {
 
       changes() should be(List(
         List(75.0 -> 50.0),
-        List(87.5 -> 75.0),
-        Nil
+        List(87.5 -> 100.0, 100.0 -> 75.0),
+        List(100.0 -> 125.0, 125.0 -> 100.0)
       ))
     }
     "set center and reflect properly in left and right" in {
@@ -131,8 +131,8 @@ class DepSpec extends AnyWordSpec with Matchers {
 
       changes() should be(List(
         List(175.0 -> 150.0),
-        Nil,
-        List(225.0 -> 250.0)
+        List(200.0 -> 225.0, 225.0 -> 200.0),
+        List(225.0 -> 275.0, 275.0 -> 250.0)
       ))
     }
     "set left and verify center and right adjust" in {

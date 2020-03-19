@@ -9,6 +9,6 @@ case class ChangeFunctionReaction[T](f: (T, T) => Unit, override val priority: D
     }
     ReactionStatus.Continue
   } finally {
-    this.previous = Some(value)
+    this.previous = Option(value)
   }
 }

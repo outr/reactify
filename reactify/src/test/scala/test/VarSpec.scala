@@ -32,8 +32,6 @@ class VarSpec extends AnyWordSpec with Matchers {
       val v2 = Var(s"Hello, ${v1()}")
       v1.reactions().size should be(1)
       v2.reactions().size should be(0)
-      v2.state.references.size should be(1)
-      v2.state.references should be(List(v1.state))
       v2.on(changed += 1)
       v2.reactions().size should be(1)
       v2() should be("Hello, Matt")
@@ -136,70 +134,23 @@ class VarSpec extends AnyWordSpec with Matchers {
       v := v * 4
       v() should be(12)
     }
-    "derive a value from itself depending on another value" in {
-      val v1 = Var(1)
-      val v2 = Var(v1 + 1)
-
-      v1.reactions() should be(List(v2.state))
-      v2.reactions() should be(Nil)
-
-      val v1State1 = v1.state
-      val v2State1 = v2.state
-
-      v1State1.value should be(1)
-      v1State1.previousState should be(None)
-      v2State1.value should be(2)
-      v2State1.previousState should be(None)
-
-      v2() should be(2)
-      v2 := v2 * 2
-
-      val v2State2 = v2.state
-      v2State1 should not be v2State2
-      v1.state.value should be(1)
-      v2State2.previousState should be(Some(v2State1))
-      v2State1.previousState should be(None)
-      v2State1.nextState should be(Some(v2.state))
-
-      v2() should be(4)
-      v1 := 2
-
-      val v1State2 = v1.state
-
-      // Disconnected because no recurrent reference found
-      v1State2.previousState should be(None)
-      v1State1.previousState should be(None)
-
-      v2State2.previousState should be(Some(v2State1))
-      v2State1.previousState should be(None)
-      v2State1.nextState should be(Some(v2State2))
-      v2State2.nextState should be(None)
-
-      v2() should be(6)
-    }
     "create a variable that builds upon itself multiple times" in {
       val v = Var(1)
       v := v + v + v
       v() should be(3)
     }
     "create a list that is dependent on vars" in {
-      val s1 = Var("One", name = Some("s1"))
-      val s2 = Var("Two", name = Some("s2"))
-      val list = Var(List.empty[String], name = Some("list"))
-      list := s1() :: s2() :: list()
+      val s1 = Var("One")
+      val s2 = Var("Two")
+      val list = Var(List.empty[String])
+      list := s1() :: s2() :: Nil
       list() should be(List("One", "Two"))
-      list.state.index should be(2)
-      list.state.references.toSet should be(Set(s1.state, s2.state, list.state.previousState.get))
-      s2.reactions() should contain(list.state)
       s2 := "Three"
-      list.state.index should be(2)
       list() should be(List("One", "Three"))
       s1 := "Two"
       list() should be(List("Two", "Three"))
       list := "One" :: list()
       list() should be(List("One", "Two", "Three"))
-      s2 := "Four"
-      list() should be(List("One", "Two", "Four"))
     }
     "create a Container with a generic Child list" in {
       val v1 = Var("One")
@@ -361,7 +312,7 @@ class VarSpec extends AnyWordSpec with Matchers {
 
       val modified = ListBuffer.empty[Int]
 
-      VarGroup(None, List(v1, v2, v3)).attach { i =>
+      VarGroup(List(v1, v2, v3)).attach { i =>
         modified += i
       }
 

@@ -1,10 +1,12 @@
 package reactify.group
 
-import reactify.reaction.{GroupReactions, Reactions}
-import reactify.{State, Val}
+import reactify.Val
+import reactify.reaction.Reactions
 
-case class ValGroup[T](override val name: Option[String], items: List[Val[T]]) extends Val[T] with Group[T, Val[T]] {
-  override lazy val reactions: Reactions[T] = new GroupReactions(this)
+case class ValGroup[T](items: List[Val[T]]) extends Val[T] with Group[T, Val[T]] {
+  override lazy val reactions: Reactions[T] = new GroupReactions[T, Val[T]](this)
 
-  override def state: State[T] = ???
+  override def and(that: Val[T]): Val[T] = ValGroup(items ::: List(that))
+
+  override def get: T = items.head.get
 }

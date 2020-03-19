@@ -1,46 +1,14 @@
 package reactify
 
 import reactify.group.ChannelGroup
-import reactify.standard.StandardChannel
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Channel is a stateless Reactive implementation exposing a public method to fire values.
   *
   * @tparam T the type of value this Reactive receives
   */
-trait Channel[T] extends Reactive[T] {
-  /**
-    * Public method to fire a value against the Reactions attached to this Channel
-    *
-    * @param value the function value
-    */
-  def set(value: => T): Unit
-
-  /**
-    * Convenience method to fire a value
-    *
-    * @see #set
-    * @param value the function value
-    */
-  def :=(value: => T): Unit = set(value)
-
-  /**
-    * Convenience method for static (non-functional) invocation.
-    *
-    * @see #set
-    * @param value the value
-    */
-  def @=(value: T): Unit = set(value)
-
-  /**
-    * Convenience functionality to assign the result of a future (upon completion) to this Channel
-    */
-  def !(future: Future[T]): Future[Unit] = future.map { value =>
-    set(value)
-  }
+class Channel[T] extends Reactive[T] with Mutable[T] {
+  override def set(f: => T): Unit = fire(f, None, reactions())
 
   /**
     * Group multiple channels together
@@ -50,7 +18,7 @@ trait Channel[T] extends Reactive[T] {
   /**
     * Group multiple channels together
     */
-  def and(that: Channel[T]): Channel[T] = ChannelGroup(None, List(this, that))
+  def and(that: Channel[T]): Channel[T] = ChannelGroup(List(this, that))
 
   /**
     * Functional mapping of this Channel into another Channel. All values received by this Channel will be mapped and
@@ -82,11 +50,8 @@ trait Channel[T] extends Reactive[T] {
     }
     channel
   }
-
-  override def toString: String = name.getOrElse("Channel")
 }
 
 object Channel {
-  def apply[T]: Channel[T] = new StandardChannel[T](None)
-  def apply[T](name: Option[String]): Channel[T] = new StandardChannel[T](name)
+  def apply[T]: Channel[T] = new Channel[T]
 }

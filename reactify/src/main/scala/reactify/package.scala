@@ -1,7 +1,7 @@
 import scala.language.implicitConversions
 
 package object reactify {
-  implicit def val2Value[T](v: Val[T]): T = v()
+  implicit def stateful2Value[T](v: Stateful[T]): T = v()
 
   /**
     * Syntactic sugar for mutating collections in a `Var`

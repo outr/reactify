@@ -3,8 +3,8 @@ package reactify.reaction
 import reactify.Priority
 
 /**
-  * Reaction may be thought of similar to `Observer` or `Listener` in other libraries. A Reaction may be added to a
-  * Reactive in order react when a value is fired upon it.
+  * Reaction may be considered similar to `Observer` or `Listener` in other libraries. A Reaction may be added to a
+  * Reactive in order to react when a value is fired upon it.
   *
   * @tparam T the type received by this Reaction
   */

@@ -150,7 +150,19 @@ object Transaction {
   /**
     * Called when the value of a Var changes
     */
-  def change[T](owner: Var[T], oldFunction: () => T, newFunction: () => T): Unit = {
-    threadLocal.get().foreach(_.change(owner, oldFunction, newFunction))
+  def change[T](owner: Var[T], oldFunction: () => T, newFunction: () => T): Boolean = threadLocal.get() match {
+    case Some(t) => {
+      t.change(owner, oldFunction, newFunction)
+      true
+    }
+    case None => false
   }
 }
+
+/**
+  * TransactionChange represents the transactional changes for a single `Var` in a `Transaction`
+  *
+  * @param unapply reverts the changes applied during the transaction
+  * @param apply applies the changes applied during the transaction
+  */
+case class TransactionChange(unapply: () => Unit, apply: () => Unit)
