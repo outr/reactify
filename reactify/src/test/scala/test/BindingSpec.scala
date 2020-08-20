@@ -5,6 +5,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 import reactify.bind.Binding
 
+import scala.language.implicitConversions
+
 class BindingSpec extends AnyWordSpec with Matchers {
   "Bindings" when {
     "dealing with a simple binding" should {
@@ -80,7 +82,7 @@ class BindingSpec extends AnyWordSpec with Matchers {
         b() should be(50)
       }
       "verify b -> a no longer propagates" in {
-        b := "200"
+        b := 200
         a() should be("100")
         b() should be(200)
       }

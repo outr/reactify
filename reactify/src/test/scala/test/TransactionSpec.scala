@@ -4,6 +4,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import reactify.Var
 import reactify.transaction.Transaction
+import scala.language.implicitConversions
 
 class TransactionSpec extends AnyWordSpec with Matchers {
   "Transactions" should {

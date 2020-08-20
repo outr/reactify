@@ -4,6 +4,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
+import scala.language.implicitConversions
+
 class ValSpec extends AnyWordSpec with Matchers {
   "Vals" should {
     "contain the proper value" in {

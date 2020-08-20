@@ -1,6 +1,7 @@
 package reactify
 
 import reactify.reaction.{Reaction, ReactionStatus}
+import scala.language.implicitConversions
 
 /**
   * Dep allows creation of a dependent `Var` on another `Var` allowing conversion between the two. This can be useful for

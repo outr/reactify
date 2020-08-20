@@ -2,9 +2,9 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "4.0.0"
-scalaVersion in ThisBuild := "2.13.1"
-crossScalaVersions in ThisBuild := List("2.13.1", "2.12.8", "2.11.12")
+version in ThisBuild := "4.0.1-SNAPSHOT"
+scalaVersion in ThisBuild := "2.13.3"
+crossScalaVersions in ThisBuild := List("2.13.3", "2.12.12", "2.11.12")
 
 publishTo in ThisBuild := sonatypePublishTo.value
 sonatypeProfileName in ThisBuild := "com.outr"
@@ -22,7 +22,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val scalatestVersion = "3.2.0-M3"
+val scalatestVersion = "3.2.2-M2"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -36,5 +36,8 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .nativeSettings(
     nativeLinkStubs := true,
     scalaVersion := "2.11.12",
-    crossScalaVersions := Seq("2.11.12")
+    crossScalaVersions := List("2.11.12")
+  )
+  .jvmSettings(
+    crossScalaVersions := List("2.13.3", "0.26.0-RC1", "2.12.12", "2.11.12")
   )

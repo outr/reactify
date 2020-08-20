@@ -4,6 +4,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import reactify.Channel
 
+import scala.language.implicitConversions
+
 class ChannelSpec extends AnyWordSpec with Matchers {
   "Channels" should {
     "notify when changed" in {

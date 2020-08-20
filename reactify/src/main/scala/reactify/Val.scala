@@ -24,10 +24,7 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
     }
   }
 
-  protected def set(value: => T): Unit = {
-    function = () => value
-    Val.evaluate(this, updating = false)
-  }
+  protected def set(value: => T): Unit = Val.set(this, value)
 
   def static(value: T): Unit = {
     function = () => value
@@ -61,6 +58,11 @@ object Val {
     override def initialValue(): Option[Evaluating] = None
   }
 
+  def set[T](v: Val[T], value: => T): Unit = {
+    v.function = () => value
+    evaluate(v, updating = false)
+  }
+
   def apply[T](value: => T): Val[T] = {
     val v = new Val[T]
     v.set(value)
@@ -86,7 +88,7 @@ object Val {
       v.previous = Option(v.evaluated)
       v.evaluated = evaluated
 
-      v.fire(evaluated, v.previous, v.reactions())
+      Reactive.fire(v, evaluated, v.previous, v.reactions())
     }
   }
 

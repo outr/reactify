@@ -6,6 +6,8 @@ import reactify.bind.{BindSet, Binding}
 import reactify.group.VarGroup
 import reactify.transaction.Transaction
 
+import scala.language.implicitConversions
+
 /**
   * Var represents the combination of `Val` and `Channel` into a stateful and mutable underlying value.
   *
@@ -25,7 +27,7 @@ class Var[T] protected() extends Val[T]() with Mutable[T] {
     */
   override def set(value: => T): Unit = {
     Transaction.change(this, this.function, () => value)
-    super.set(value)
+    Val.set(this, value)
   }
 
   /**

@@ -2,7 +2,7 @@ language: scala
 sudo: required
 dist: trusty
 scala:
-  - 2.13.1
+  - 2.13.3
 jdk:
   - oraclejdk8
 before_script:

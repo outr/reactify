@@ -132,3 +132,8 @@ trait Reactive[T] {
   }
 }
 
+object Reactive {
+  def fire[T](reactive: Reactive[T], value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
+    reactive.fire(value, previous, reactions)
+  }
+}

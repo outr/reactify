@@ -4,6 +4,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
+import scala.language.implicitConversions
+
 class DepSpecialSpec extends AnyWordSpec with Matchers {
   "Deps Special Use-Cases" when {
     "combining Ints" should {

@@ -7,6 +7,8 @@ import reactify.group.VarGroup
 
 import scala.collection.mutable.ListBuffer
 
+import scala.language.implicitConversions
+
 class VarSpec extends AnyWordSpec with Matchers {
   lazy val lazyDouble: Var[Double] = Var(0.0)
 

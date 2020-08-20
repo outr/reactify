@@ -5,6 +5,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
 import scala.collection.mutable.ListBuffer
+import scala.language.implicitConversions
 
 class DepSpec extends AnyWordSpec with Matchers {
   "Deps" should {
