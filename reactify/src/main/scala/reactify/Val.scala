@@ -3,6 +3,8 @@ package reactify
 import reactify.group.ValGroup
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
 
+import scala.util.{Failure, Success, Try}
+
 class Val[T] protected() extends Reactive[T] with Stateful[T] {
   protected def this(f: => T) = {
     this()
@@ -11,7 +13,7 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
   }
 
   protected var function: () => T = _
-  protected var evaluated: T = _
+  protected var state: Try[T] = _
   protected var previous: Option[T] = None
   protected var _references: Set[Val[_]] = Set.empty
 
@@ -26,10 +28,13 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 
   protected def set(value: => T): Unit = Val.set(this, value)
 
+  def option: Option[T] = Option(state).flatMap(_.toOption)
+  def toTry: Try[T] = state
+
   def static(value: T): Unit = {
     function = () => value
-    previous = Option(evaluated)
-    evaluated = value
+    previous = option
+    state = Success(value)
     _references = Set.empty
   }
 
@@ -50,7 +55,7 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 
   def equality(t1: T, t2: T): Boolean = t1 == t2
 
-  override def toString: String = s"Var($evaluated)"
+  override def toString: String = s"Var($state)"
 }
 
 object Val {
@@ -69,7 +74,7 @@ object Val {
     v
   }
 
-  def evaluate[T](v: Val[T], updating: Boolean): Unit = {
+  def evaluate[T](v: Val[T], updating: Boolean): Unit = try {
     val original = evaluating.get()
     val e = new Evaluating(v, updating)
     evaluating.set(Some(e))
@@ -84,11 +89,18 @@ object Val {
     val added = e.references.diff(previousReferences)
     removed.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
     added.foreach(_.reactions.asInstanceOf[Reactions[Any]] += v.reaction)
-    if (evaluated != v.evaluated) {
-      v.previous = Option(v.evaluated)
-      v.evaluated = evaluated
-
-      Reactive.fire(v, evaluated, v.previous, v.reactions())
+    v.state match {
+      case Success(p) if evaluated == p => // Same value, ignore
+      case s => {
+        v.previous = v.option
+        v.state = Success(evaluated)
+        Reactive.fire(v, evaluated, v.previous, v.reactions())
+      }
+    }
+  } catch {
+    case t: Throwable => {
+      v.previous = v.option
+      v.state = Failure(t)
     }
   }
 
@@ -98,15 +110,24 @@ object Val {
         if (e.updating) {
           v.previous.getOrElse(throw new RuntimeException("Attempting to get previous on None!"))
         } else {
-          v.evaluated
+          v.state match {
+            case Success(t) => t
+            case Failure(t) => throw t
+          }
         }
       }
       case Some(e) => {
         e.references += v
 
-        v.evaluated
+        v.state match {
+          case Success(t) => t
+          case Failure(t) => throw t
+        }
       }
-      case None => v.evaluated
+      case None => v.state match {
+        case Success(t) => t
+        case Failure(t) => throw t
+      }
     }
   }
 

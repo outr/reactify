@@ -26,6 +26,9 @@ class VarSpec extends AnyWordSpec with Matchers {
       v := "Goodbye"
       v() should be("Goodbye")
       changed should be(1)
+      v() = "Assignment"
+      v() should be("Assignment")
+      changed should be(2)
     }
     "automatically fire a change when a dependency changes" in {
       var changed = 0
