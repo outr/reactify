@@ -55,6 +55,11 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 
   def equality(t1: T, t2: T): Boolean = t1 == t2
 
+  /**
+    * Maps this Val to another type.
+    */
+  def map[R](f: T => R): Val[R] = Val(f(get))
+
   override def toString: String = s"Var($state)"
 }
 

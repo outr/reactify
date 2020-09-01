@@ -48,6 +48,13 @@ class Var[T] protected() extends Val[T]() with Mutable[T] {
   def and(that: Var[T]): Var[T] = VarGroup[T](List(this, that))
 
   /**
+    * Maps this Var to another type.
+    *
+    * Note: this mapping loses all meaning if the new Var gets set explicitly with a new value
+    */
+  override def map[R](f: T => R): Var[R] = Var(f(get))
+
+  /**
     * Convenience method to create a binding between two `Var`s
     *
     * @param that the second `Var` to bind between

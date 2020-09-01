@@ -41,3 +41,17 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jvmSettings(
     crossScalaVersions := List("2.13.3", "0.26.0-RC1", "2.12.12", "2.11.12")
   )
+
+lazy val reactifyJVM = reactify.jvm
+lazy val reactifyJS = reactify.js
+lazy val reactifyNative = reactify.native
+
+lazy val benchmark = project
+  .in(file("benchmark"))
+  .settings(
+    name := "reactify-benchmark",
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "scalarx" % "0.4.3"
+    )
+  )
+  .dependsOn(reactifyJVM)
