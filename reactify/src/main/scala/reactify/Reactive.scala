@@ -1,9 +1,12 @@
 package reactify
 
+import java.util.{Timer, TimerTask}
+
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
 
 import scala.annotation.tailrec
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{Future, Promise, TimeoutException}
 
 /**
   * Reactive is the core trait for Reactify. The basic premise is that a Reactive represents an instance that can attach
@@ -94,11 +97,21 @@ trait Reactive[T] {
     * condition.
     *
     * @param condition optional condition that must be true for this to fire (Defaults to accept anything)
+    * @param timeout if specified, will timeout the Future after the specified duration if it hasn't completed
     * @return Future[T]
     */
-  def future(condition: T => Boolean = _ => true): Future[T] = {
+  def future(condition: T => Boolean = _ => true, timeout: FiniteDuration = null): Future[T] = {
     val promise = Promise[T]
-    once(promise.success, condition)
+    val reaction = once(promise.success, condition)
+    if (timeout != null) {
+      val task = new TimerTask {
+        override def run(): Unit = if (!promise.isCompleted) {
+          reactions -= reaction
+          promise.tryFailure(new TimeoutException)
+        }
+      }
+      Reactive.timer.schedule(task, timeout.toMillis)
+    }
     promise.future
   }
 
@@ -133,6 +146,8 @@ trait Reactive[T] {
 }
 
 object Reactive {
+  lazy val timer: Timer = new Timer(true)
+
   def fire[T](reactive: Reactive[T], value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
     reactive.fire(value, previous, reactions)
   }
