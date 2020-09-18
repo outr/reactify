@@ -97,21 +97,11 @@ trait Reactive[T] {
     * condition.
     *
     * @param condition optional condition that must be true for this to fire (Defaults to accept anything)
-    * @param timeout if specified, will timeout the Future after the specified duration if it hasn't completed
     * @return Future[T]
     */
-  def future(condition: T => Boolean = _ => true, timeout: FiniteDuration = null): Future[T] = {
+  def future(condition: T => Boolean = _ => true): Future[T] = {
     val promise = Promise[T]
-    val reaction = once(promise.success, condition)
-    if (timeout != null) {
-      val task = new TimerTask {
-        override def run(): Unit = if (!promise.isCompleted) {
-          reactions -= reaction
-          promise.tryFailure(new TimeoutException)
-        }
-      }
-      Reactive.timer.schedule(task, timeout.toMillis)
-    }
+    once(promise.success, condition)
     promise.future
   }
 
@@ -146,8 +136,6 @@ trait Reactive[T] {
 }
 
 object Reactive {
-  lazy val timer: Timer = new Timer(true)
-
   def fire[T](reactive: Reactive[T], value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
     reactive.fire(value, previous, reactions)
   }

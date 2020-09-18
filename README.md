@@ -34,13 +34,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting:
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "4.0.1"
+libraryDependencies += "com.outr" %% "reactify" % "4.0.2"
 ```
 
 or, for Scala.js / Scala Native / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "4.0.1"
+libraryDependencies += "com.outr" %%% "reactify" % "4.0.2"
 ```
 
 ## Concepts
