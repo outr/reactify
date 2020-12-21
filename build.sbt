@@ -11,7 +11,7 @@ val nativeScalaVersions = List(scala211)
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "4.0.3-SNAPSHOT"
+version in ThisBuild := "4.0.3"
 scalaVersion in ThisBuild := "2.13.4"
 crossScalaVersions in ThisBuild := allScalaVersions
 
