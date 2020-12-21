@@ -1,10 +1,19 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
+// Scala versions
+val scala213 = "2.13.4"
+val scala212 = "2.12.12"
+val scala211 = "2.11.12"
+val scala3 = "3.0.0-M3"
+val allScalaVersions = List(scala213, scala212, scala211, scala3)
+val scala2Versions = List(scala213, scala212, scala211)
+val nativeScalaVersions = List(scala211)
+
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "4.0.2"
-scalaVersion in ThisBuild := "2.13.3"
-crossScalaVersions in ThisBuild := List("2.13.3", "2.12.12", "2.11.12")
+version in ThisBuild := "4.0.3-SNAPSHOT"
+scalaVersion in ThisBuild := "2.13.4"
+crossScalaVersions in ThisBuild := allScalaVersions
 
 publishTo in ThisBuild := sonatypePublishTo.value
 sonatypeProfileName in ThisBuild := "com.outr"
@@ -22,36 +31,51 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val scalatestVersion = "3.2.2-M2"
+val scalatestVersion = "3.2.3"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "reactify",
-    publishArtifact in Test := false,
-    libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % scalatestVersion % "test"
-    )
+    publishArtifact in Test := false
   )
   .nativeSettings(
     nativeLinkStubs := true,
     scalaVersion := "2.11.12",
-    crossScalaVersions := List("2.11.12")
+    crossScalaVersions := nativeScalaVersions,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % scalatestVersion % "test"
+    )
   )
   .jvmSettings(
-    crossScalaVersions := List("2.13.3", "0.26.0-RC1", "2.12.12", "2.11.12")
+    crossScalaVersions := allScalaVersions,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % scalatestVersion % "test"
+    )
+  )
+  .jsSettings(
+    crossScalaVersions := allScalaVersions,
+    test in Test := {},         // Temporary work-around for ScalaTest not working with Scala.js on Dotty
+    libraryDependencies ++= (
+      if (isDotty.value) {      // Temporary work-around for ScalaTest not working with Scala.js on Dotty
+        Nil
+      } else {
+        List("org.scalatest" %%% "scalatest" % scalatestVersion % "test")
+      }
+    )
   )
 
 lazy val reactifyJVM = reactify.jvm
 lazy val reactifyJS = reactify.js
 lazy val reactifyNative = reactify.native
 
-lazy val benchmark = project
-  .in(file("benchmark"))
-  .settings(
-    name := "reactify-benchmark",
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "scalarx" % "0.4.3"
-    )
-  )
-  .dependsOn(reactifyJVM)
+//lazy val benchmark = project
+//  .in(file("benchmark"))
+//  .settings(
+//    name := "reactify-benchmark",
+//    libraryDependencies ++= Seq(
+//      "com.lihaoyi" %% "scalarx" % "0.4.3"
+//    ),
+//    crossScalaVersions := List(scala213)
+//  )
+//  .dependsOn(reactifyJVM)
