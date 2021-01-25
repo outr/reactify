@@ -1,22 +1,17 @@
+os: linux
+dist: bionic
 language: scala
-sudo: required
-dist: trusty
-scala:
-  - 2.13.3
 jdk:
-  - oraclejdk8
-before_script:
-  - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
+  - openjdk8
 script:
-  - sbt +clean +reactifyJVM/test +reactifyJS/test ++2.11.12 reactifyNative/test
+  - sbt +clean +reactifyJVM/test +reactifyJS/test +reactifyNative/test
   - sbt coverage reactifyJVM/test
-  - sbt coverageReport
   - sbt coverageAggregate
-  - sbt codacyCoverage
+  - bash <(curl -Ls https://coverage.codacy.com/get.sh) report --skip
 cache:
   directories:
-    - $HOME/.ivy2/cache
+    - $HOME/.cache/coursier/v1
+    - $HOME/.cache/coverage
     - $HOME/.sbt/boot
 before_cache:
-  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
