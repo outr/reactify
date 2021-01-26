@@ -4,4 +4,4 @@ set -e
 
 sbt +clean
 sbt test
-sbt +reactifyJVM/publishSigned +reactifyJS/publishSigned ++2.11.12 reactifyNative/publishSigned sonatypeRelease
+sbt +reactifyJVM/publishSigned +reactifyJS/publishSigned +reactifyNative/publishSigned sonatypeRelease

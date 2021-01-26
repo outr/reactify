@@ -10,7 +10,7 @@ val scala2Versions = List(scala213, scala212, scala211)
 
 name in ThisBuild := "reactify"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "4.0.3"
+version in ThisBuild := "4.0.4"
 scalaVersion in ThisBuild := "2.13.4"
 crossScalaVersions in ThisBuild := allScalaVersions
 
