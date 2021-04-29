@@ -1,7 +1,7 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 // Scala versions
-val scala213 = "2.13.4"
+val scala213 = "2.13.5"
 val scala212 = "2.12.13"
 val scala211 = "2.11.12"
 val scala3 = List("3.0.0-RC2", "3.0.0-RC3")
@@ -10,7 +10,7 @@ val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.0.5-SNAPSHOT"
+ThisBuild / version := "4.0.5"
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / crossScalaVersions := allScalaVersions
 
