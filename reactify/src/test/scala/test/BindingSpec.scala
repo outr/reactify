@@ -1,13 +1,12 @@
 package test
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import testy._
 import reactify._
 import reactify.bind.Binding
 
 import scala.language.implicitConversions
 
-class BindingSpec extends AnyWordSpec with Matchers {
+class BindingSpec extends Spec {
   "Bindings" when {
     "dealing with a simple binding" should {
       val a = Var[String]("a")

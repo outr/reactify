@@ -1,12 +1,11 @@
 package test
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import testy._
 import reactify.Trigger
 
 import scala.language.implicitConversions
 
-class TriggerSpec extends AnyWordSpec with Matchers {
+class TriggerSpec extends Spec {
   "Triggers" should {
     "handle simple invocations" in {
       val t = Trigger()

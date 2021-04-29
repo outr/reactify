@@ -1,7 +1,6 @@
 package test
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import testy._
 import reactify._
 import reactify.group.VarGroup
 
@@ -9,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 import scala.language.implicitConversions
 
-class VarSpec extends AnyWordSpec with Matchers {
+class VarSpec extends Spec {
   lazy val lazyDouble: Var[Double] = Var(0.0)
 
   "Vars" should {

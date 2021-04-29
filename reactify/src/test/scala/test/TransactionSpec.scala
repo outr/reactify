@@ -1,12 +1,11 @@
 package test
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import testy._
 import reactify.Var
 import reactify.transaction.Transaction
 import scala.language.implicitConversions
 
-class TransactionSpec extends AnyWordSpec with Matchers {
+class TransactionSpec extends Spec {
   "Transactions" should {
     "support undoing" in {
       val v = Var("One")

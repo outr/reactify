@@ -1,17 +1,21 @@
-os: linux
-dist: bionic
+version: ~> 1.0
+import: scala/scala-dev:travis/default.yml
 language: scala
-jdk:
-  - openjdk8
+scala:
+  - 2.13.5
+env:
+  - ADOPTOPENJDK=8     SCALAJS_VERSION=1.5.0  CACHE_WORKAROUND=see-PR-335
+install:
+  - . $HOME/.nvm/nvm.sh
+  - nvm install 14
+  - nvm use 14
+  - git fetch --tags
 script:
-  - sbt +clean +reactifyJVM/test +reactifyJS/test +reactifyNative/test
-  - sbt coverage reactifyJVM/test
+  - sbt clean test
+  - sbt coverage coreJVM/test fileModuleJVM/test slf4j/test slf4j18/test
+  - sbt coverageReport
   - sbt coverageAggregate
   - bash <(curl -Ls https://coverage.codacy.com/get.sh) report --skip
-cache:
-  directories:
-    - $HOME/.cache/coursier/v1
-    - $HOME/.cache/codacy
-    - $HOME/.sbt/boot
-before_cache:
-  - find $HOME/.sbt -name "*.lock" -delete
+notifications:
+  email:
+    - matt@matthicks.com

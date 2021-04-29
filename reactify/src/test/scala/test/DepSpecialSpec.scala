@@ -1,12 +1,11 @@
 package test
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import testy._
 import reactify._
 
 import scala.language.implicitConversions
 
-class DepSpecialSpec extends AnyWordSpec with Matchers {
+class DepSpecialSpec extends Spec {
   "Deps Special Use-Cases" when {
     "combining Ints" should {
       "do simple addition" in {
