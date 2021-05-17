@@ -11,11 +11,7 @@ install:
   - nvm use 14
   - git fetch --tags
 script:
-  - sbt clean test
-  - sbt coverage coreJVM/test fileModuleJVM/test slf4j/test slf4j18/test
-  - sbt coverageReport
-  - sbt coverageAggregate
-  - bash <(curl -Ls https://coverage.codacy.com/get.sh) report --skip
+  - sbt clean +test
 notifications:
   email:
     - matt@matthicks.com

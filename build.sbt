@@ -10,7 +10,7 @@ val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.0.6-SNAPSHOT"
+ThisBuild / version := "4.0.6"
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / crossScalaVersions := allScalaVersions
 
