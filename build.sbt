@@ -30,7 +30,7 @@ ThisBuild / developers := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val testyVersion: String = "1.0.6"
+val testyVersion: String = "1.0.7"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
