@@ -1,17 +1,17 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 // Scala versions
-val scala213 = "2.13.5"
-val scala212 = "2.12.13"
+val scala213 = "2.13.8"
+val scala212 = "2.12.15"
 val scala211 = "2.11.12"
-val scala3 = List("3.0.0")
+val scala3 = List("3.1.0")
 val scala2 = List(scala213, scala212, scala211)
 val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.0.6"
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / version := "4.0.7-SNAPSHOT"
+ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := allScalaVersions
 
 ThisBuild / publishTo := sonatypePublishTo.value
@@ -30,7 +30,7 @@ ThisBuild / developers := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
 )
 
-val testyVersion: String = "1.0.6"
+val scalaTestVersion: String = "3.2.10"
 
 lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -39,7 +39,7 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     test / publishArtifact := false,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++= Seq(
-      "com.outr" %%% "testy" % testyVersion % Test
+      "org.scalatest" %%% "scalatest" % "3.2.10" % "test"
     )
   )
   .jsSettings(
