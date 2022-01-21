@@ -10,10 +10,12 @@ val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.0.7-SNAPSHOT"
+ThisBuild / version := "4.0.7"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := allScalaVersions
 
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 ThisBuild / publishTo := sonatypePublishTo.value
 ThisBuild / sonatypeProfileName := "com.outr"
 ThisBuild / publishMavenStyle := true
@@ -27,7 +29,7 @@ ThisBuild / scmInfo := Some(
   )
 )
 ThisBuild / developers := List(
-  Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.", url=url("http://matthicks.com"))
+  Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
 val scalaTestVersion: String = "3.2.10"

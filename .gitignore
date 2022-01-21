@@ -3,3 +3,4 @@ target/
 .js/
 .jvm/
 .native/
+.bsp/
