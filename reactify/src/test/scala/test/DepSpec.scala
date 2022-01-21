@@ -1,12 +1,13 @@
 package test
 
-import testy._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
 import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
 
-class DepSpec extends Spec {
+class DepSpec extends AnyWordSpec with Matchers {
   "Deps" should {
     val width: Var[Double] = Var(0.0)
 

@@ -1,11 +1,12 @@
 package test
 
-import testy._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify.Channel
 
 import scala.language.implicitConversions
 
-class ChannelSpec extends Spec {
+class ChannelSpec extends AnyWordSpec with Matchers {
   "Channels" should {
     "notify when changed" in {
       var changes = 0

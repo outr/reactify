@@ -1,11 +1,12 @@
 package test
 
-import testy._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import reactify._
 
 import scala.language.implicitConversions
 
-class ValSpec extends Spec {
+class ValSpec extends AnyWordSpec with Matchers {
   "Vals" should {
     "contain the proper value" in {
       val v = Val(5)
