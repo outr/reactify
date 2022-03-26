@@ -4,7 +4,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 val scala213 = "2.13.8"
 val scala212 = "2.12.15"
 val scala211 = "2.11.12"
-val scala3 = List("3.1.0")
+val scala3 = List("3.1.1")
 val scala2 = List(scala213, scala212, scala211)
 val allScalaVersions = scala2 ::: scala3
 
@@ -41,7 +41,7 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     test / publishArtifact := false,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.2.10" % "test"
+      "org.scalatest" %%% "scalatest" % "3.2.11" % "test"
     )
   )
   .jsSettings(
