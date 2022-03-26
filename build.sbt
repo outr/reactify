@@ -10,7 +10,7 @@ val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.0.7"
+ThisBuild / version := "4.0.8"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := allScalaVersions
 
@@ -39,20 +39,10 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     name := "reactify",
     test / publishArtifact := false,
-    testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.2.11" % "test"
-    )
-  )
-  .jsSettings(
-    crossScalaVersions := allScalaVersions,
-    Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
-  .jvmSettings(
+      "org.scalatest" %% "scalatest" % "3.2.11" % "test"
+    ),
     crossScalaVersions := allScalaVersions
-  )
-  .nativeSettings(
-    crossScalaVersions := scala2,
   )
 
 //lazy val benchmark = project

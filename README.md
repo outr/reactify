@@ -25,20 +25,18 @@ to the [More AdvancedExamples](https://github.com/outr/reactify#more-advanced-ex
 ## Setup
 
 reactify is published to Sonatype OSS and Maven Central currently supporting:
-- Scala and Scala.js (2.11, 2.12, and 2.13)
-- Scala Native (2.11)
-- Scala 3 / Dotty (0.26)
+- Scala, Scala.js, and Scala Native (2.11, 2.12, 2.13, 3.x)
 
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "4.0.7"
+libraryDependencies += "com.outr" %% "reactify" % "4.0.8"
 ```
 
 or, for Scala.js / Scala Native / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "4.0.7"
+libraryDependencies += "com.outr" %%% "reactify" % "4.0.8"
 ```
 
 ## Concepts
