@@ -41,7 +41,7 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     test / publishArtifact := false,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.2.10" % "test"
+      "org.scalatest" %%% "scalatest" % "3.2.11" % "test"
     )
   )
   .jsSettings(
