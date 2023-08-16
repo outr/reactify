@@ -44,7 +44,7 @@ lazy val reactify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     name := "reactify",
     test / publishArtifact := false,
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.11" % "test"
+      "org.scalatest" %% "scalatest" % "3.2.16" % "test"
     ),
     crossScalaVersions := allScalaVersions
   )
