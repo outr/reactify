@@ -5,16 +5,14 @@ val scala213 = "2.13.11"
 
 val scala212 = "2.12.18"
 
-val scala211 = "2.11.12"
+val scala3 = List("3.3.0")
 
-val scala3 = List("3.1.1")
-
-val scala2 = List(scala213, scala212, scala211)
+val scala2 = List(scala213, scala212)
 val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.0.8"
+ThisBuild / version := "4.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := allScalaVersions
 
@@ -33,7 +31,7 @@ ThisBuild / scmInfo := Some(
   )
 )
 ThisBuild / developers := List(
-  Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
+  Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("https://matthicks.com"))
 )
 
 val scalaTestVersion: String = "3.2.10"
