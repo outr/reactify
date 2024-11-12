@@ -10,8 +10,8 @@ The first and only true Functional Reactive Programming framework for Scala.
 
 ## Justification
 
-How can we say it's the first true FRP framework for Scala? Simple, because it is. In all other frameworks they add special
-framework-specific functions to do things like math (ex. adding two variables together), collection building (ex. a
+How can we say it's the first true FRP framework for Scala? In all other frameworks they add special framework-specific
+functions to do things like math (ex. adding two variables together with a special `+` method), collection building (ex. a
 special implementation of `:::` to concatenate two variables containing lists), or similar mechanisms to Scala's built-in
 collection manipulation (ex. `map`). These are great and mostly fill in the gaps necessary to solve your problems. But
 the goal for Reactify was a bit loftier. We set out to create a system that actually allows you to use ANY Scala
@@ -30,13 +30,13 @@ reactify is published to Sonatype OSS and Maven Central currently supporting:
 Configuring the dependency in SBT simply requires:
 
 ```
-libraryDependencies += "com.outr" %% "reactify" % "4.0.8"
+libraryDependencies += "com.outr" %% "reactify" % "4.1.3"
 ```
 
 or, for Scala.js / Scala Native / cross-building:
 
 ```
-libraryDependencies += "com.outr" %%% "reactify" % "4.0.8"
+libraryDependencies += "com.outr" %%% "reactify" % "4.1.3"
 ```
 
 ## Concepts
@@ -228,7 +228,7 @@ edge. We can simplify things by leveraging a `Dep` instance to represent it:
 val width: Var[Double] = Var(0.0)
 
 val left: Var[Double] = Var(0.0)
-val center: Dep[Double, Double] = Dep(left)(_ + (width / 2.0), _ - (widht / 2.0))
+val center: Dep[Double, Double] = Dep(left)(_ + (width / 2.0), _ - (width / 2.0))
 val right: Dep[Double, Double] = Dep(left)(_ + width, _ - width)
 ```
 
@@ -250,7 +250,7 @@ val b = Var[String]("World")
 val binding = a bind b
 ```
 
-By default this will assign the value of `a` to `b` and then changes to either will propagate to the other. If you want
+By default, this will assign the value of `a` to `b` and then changes to either will propagate to the other. If you want
 to detach the binding:
 
 ```scala
