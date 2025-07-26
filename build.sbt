@@ -5,20 +5,20 @@ val scala213 = "2.13.16"
 
 val scala212 = "2.12.20"
 
-val scala3 = List("3.3.6")
+val scala3 = List("3.7.1")
 
 val scala2 = List(scala213, scala212)
 val allScalaVersions = scala2 ::: scala3
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.1.3"
+ThisBuild / version := "4.1.4"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := allScalaVersions
 
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
-ThisBuild / publishTo := sonatypePublishTo.value
+ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeCentralHost
+ThisBuild / publishMavenStyle := true
+ThisBuild / publishTo := sonatypePublishToBundle.value
 ThisBuild / sonatypeProfileName := "com.outr"
 ThisBuild / publishMavenStyle := true
 ThisBuild / licenses := Seq("MIT" -> url("https://github.com/outr/reactify/blob/master/LICENSE"))
