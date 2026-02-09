@@ -1,12 +1,9 @@
 package reactify
 
-import java.util.{Timer, TimerTask}
-
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
 
 import scala.annotation.tailrec
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{Future, Promise, TimeoutException}
+import scala.concurrent.{Future, Promise}
 
 /**
   * Reactive is the core trait for Reactify. The basic premise is that a Reactive represents an instance that can attach
@@ -18,6 +15,11 @@ trait Reactive[T] {
   private lazy val _status = new ThreadLocal[Option[ReactionStatus]] {
     override def initialValue(): Option[ReactionStatus] = None
   }
+
+  /**
+   * If true, events that are fired are synchronized to avoid concurrent invocations. Defaults to false.
+   */
+  protected def synchronize: Boolean = false
 
   /**
     * If the current thread is reacting to a value currently, status represents the status of the reaction. This can be
@@ -105,10 +107,16 @@ trait Reactive[T] {
     promise.future
   }
 
+  private def doFire(f: => ReactionStatus): ReactionStatus = if (synchronize) {
+    synchronized(f)
+  } else {
+    f
+  }
+
   /**
     * Fires the value to the Reactions
     */
-  protected def fire(value: T, previous: Option[T], reactions: List[Reaction[T]] = this.reactions()): ReactionStatus = {
+  protected def fire(value: T, previous: Option[T], reactions: List[Reaction[T]] = this.reactions()): ReactionStatus = doFire {
     _status.set(Some(ReactionStatus.Continue))
     try {
       fireInternal(value, previous, reactions)

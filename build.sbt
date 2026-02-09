@@ -5,15 +5,15 @@ val scala213 = "2.13.18"
 
 val scala212 = "2.12.21"
 
-val scala3 = List("3.3.7")
+val scala3 = "3.3.7"
 
 val scala2 = List(scala213, scala212)
-val allScalaVersions = scala2 ::: scala3
+val allScalaVersions = scala3 :: scala2
 
 ThisBuild / name := "reactify"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "4.1.6-SNAPSHOT"
-ThisBuild / scalaVersion := scala213
+ThisBuild / version := "4.2.0-SNAPSHOT"
+ThisBuild / scalaVersion := scala3
 ThisBuild / crossScalaVersions := allScalaVersions
 
 ThisBuild / sonatypeCredentialHost := Sonatype.sonatypeCentralHost
