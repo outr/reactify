@@ -2,7 +2,6 @@ package reactify
 
 import reactify.reaction.{Reaction, ReactionStatus, Reactions}
 
-import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 
 /**
@@ -107,38 +106,48 @@ trait Reactive[T] {
     promise.future
   }
 
-  private def doFire(f: => ReactionStatus): ReactionStatus = if (synchronize) {
-    synchronized(f)
-  } else {
-    f
-  }
-
   /**
     * Fires the value to the Reactions
     */
-  protected def fire(value: T, previous: Option[T], reactions: List[Reaction[T]] = this.reactions()): ReactionStatus = doFire {
-    _status.set(Some(ReactionStatus.Continue))
-    try {
-      fireInternal(value, previous, reactions)
-    } finally {
-      _status.remove()
+  protected def fire(value: T, previous: Option[T], reactions: List[Reaction[T]] = this.reactions()): ReactionStatus = {
+    val sync = synchronize
+    if (reactions.isEmpty && !sync && _status.get().isEmpty) {
+      // No reactions and no propagation in progress on this thread: the full path would set, read and remove the
+      // status without effect. (A fire nested in an active one must still take it: its remove() ends the outer one.)
+      ReactionStatus.Continue
+    } else if (sync) {
+      synchronized(propagate(value, previous, reactions))
+    } else {
+      propagate(value, previous, reactions)   // a plain call: no by-name thunk per fire
     }
   }
 
-  @tailrec
-  private def fireInternal(value: T,
-                           previous: Option[T],
-                           reactions: List[Reaction[T]]): ReactionStatus = {
-    if (reactions.nonEmpty && status.contains(ReactionStatus.Continue)) {
-      val reaction = reactions.head
-      val status = reaction(value, previous)
-      if (status == ReactionStatus.Continue && this.status.contains(ReactionStatus.Continue)) {
-        fireInternal(value, previous, reactions.tail)
-      } else {
-        ReactionStatus.Stop
+  /** The propagation, in one function: the status is Continue while it runs and removed after it, even on an error; each
+    * reaction runs in order while the status stays Continue; one that returns Stop, or stops propagation, ends it with
+    * Stop. One function rather than a chain of them (and a loop rather than a closure per reaction), because a change
+    * that propagates through many values nests a fire per value, and a platform with a small stack (a Roku's is about
+    * 120 frames) runs out a few levels into a layout otherwise. */
+  private def propagate(value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
+    _status.set(Some(ReactionStatus.Continue))
+    try {
+      var result: ReactionStatus = null
+      var remaining = reactions
+      while (result == null && remaining.nonEmpty) {
+        val current = _status.get()
+        if (current.contains(ReactionStatus.Continue)) {
+          val reaction = remaining.head
+          val reactionStatus = reaction(value, previous)
+          if (!(reactionStatus == ReactionStatus.Continue && _status.get().contains(ReactionStatus.Continue))) {
+            result = ReactionStatus.Stop
+          }
+        } else {
+          result = current.getOrElse(throw new RuntimeException("Status not set"))
+        }
+        remaining = remaining.tail
       }
-    } else {
-      status.getOrElse(throw new RuntimeException("Status not set"))
+      if (result == null) _status.get().getOrElse(throw new RuntimeException("Status not set")) else result
+    } finally {
+      _status.remove()
     }
   }
 }

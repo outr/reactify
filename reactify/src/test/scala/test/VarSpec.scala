@@ -29,6 +29,41 @@ class VarSpec extends AnyWordSpec with Matchers {
       v() should be("Assignment")
       changed should be(2)
     }
+    "propagate an exception thrown by a reaction, keeping the value that was set" in {
+      val v = Var(1)
+      val doubled = Val(v() * 2)
+      doubled.attach(d => if (d == 6) throw new RuntimeException("reaction failed"))
+      val thrown = intercept[RuntimeException] {
+        v @= 3
+      }
+      thrown.getMessage should be("reaction failed")
+      v() should be(3)
+      doubled() should be(6)
+      v @= 4
+      doubled() should be(8)
+    }
+    "keep reactions of one priority in the order they were attached, and an attached one once" in {
+      val v = Var(0)
+      val order = ListBuffer.empty[String]
+      val first = v.attach(_ => order += "first")
+      v.attach(_ => order += "high", Priority.High)
+      v.attach(_ => order += "second")
+      v.attach(_ => order += "low", Priority.Low)
+      v.reactions += first
+      v.reactions().size should be(4)
+      v @= 1
+      order.toList should be(List("low", "first", "second", "high"))
+    }
+    "keep an exception thrown by its own function for the next read" in {
+      val v = Var(1)
+      val inverse = Val(10 / v())
+      v @= 0
+      intercept[ArithmeticException] {
+        inverse()
+      }
+      v @= 5
+      inverse() should be(2)
+    }
     "automatically fire a change when a dependency changes" in {
       var changed = 0
       val v1 = Var("Matt")

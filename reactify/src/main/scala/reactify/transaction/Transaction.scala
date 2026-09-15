@@ -122,9 +122,19 @@ object Transaction {
   }
 
   /**
+    * Number of threads with an open Transaction. While zero no thread can be in one, so `change` (called on every
+    * `Var` set) skips the thread-local lookup.
+    */
+  @volatile private var open: Int = 0
+
+  private def opened(delta: Int): Unit = synchronized {
+    open += delta
+  }
+
+  /**
     * True if a Transaction is currently active on the current thread
     */
-  def active: Boolean = threadLocal.get().nonEmpty
+  def active: Boolean = open != 0 && threadLocal.get().nonEmpty
 
   /**
     * Creates a new Transaction if one isn't already active or re-uses an existing one if a Transaction is already
@@ -138,11 +148,13 @@ object Transaction {
     val transaction = threadLocal.get().getOrElse {
       val t = new Transaction
       threadLocal.set(Some(t))
+      opened(1)
       t
     }
     f
     if (created) {
       threadLocal.remove()
+      opened(-1)
     }
     transaction
   }
@@ -150,12 +162,16 @@ object Transaction {
   /**
     * Called when the value of a Var changes
     */
-  def change[T](owner: Var[T], oldFunction: () => T, newFunction: () => T): Boolean = threadLocal.get() match {
-    case Some(t) => {
-      t.change(owner, oldFunction, newFunction)
-      true
+  def change[T](owner: Var[T], oldFunction: () => T, newFunction: () => T): Boolean = if (open == 0) {
+    false
+  } else {
+    threadLocal.get() match {
+      case Some(t) => {
+        t.change(owner, oldFunction, newFunction)
+        true
+      }
+      case None => false
     }
-    case None => false
   }
 }
 

@@ -28,13 +28,18 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 
   protected def set(value: => T): Unit = Val.set(this, value)
 
-  def option: Option[T] = Option(state).flatMap(_.toOption)
+  def option: Option[T] = state match {
+    case Success(t) => Some(t)
+    case _ => None
+  }
   def toTry: Try[T] = state
 
   def static(value: T): Unit = {
     function = () => value
     previous = option
     state = Success(value)
+    // A static value no longer depends on anything: stop listening
+    _references.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= reaction)
     _references = Set.empty
   }
 
@@ -64,12 +69,15 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 }
 
 object Val {
-  private val evaluating: ThreadLocal[Option[Evaluating]] = new ThreadLocal[Option[Evaluating]] {
-    override def initialValue(): Option[Evaluating] = None
+  // null when nothing is being evaluated on this thread (no Option per evaluation and per read)
+  private val evaluating: ThreadLocal[Evaluating] = new ThreadLocal[Evaluating] {
+    override def initialValue(): Evaluating = null
   }
 
-  def set[T](v: Val[T], value: => T): Unit = {
-    v.function = () => value
+  def set[T](v: Val[T], value: => T): Unit = setFunction(v, () => value)
+
+  private[reactify] def setFunction[T](v: Val[T], f: () => T): Unit = {
+    v.function = f
     evaluate(v, updating = false)
   }
 
@@ -79,57 +87,66 @@ object Val {
     v
   }
 
-  def evaluate[T](v: Val[T], updating: Boolean): Unit = try {
+  /** Evaluate `v`'s function, and on a new value fire its reactions. Only the function's own exception becomes the
+    * value's `Failure` (rethrown by the next read); an exception thrown by a reaction propagates to whoever set the
+    * value, rather than marking a value that was evaluated correctly as failed. */
+  def evaluate[T](v: Val[T], updating: Boolean): Unit = {
     val original = evaluating.get()
     val e = new Evaluating(v, updating)
-    evaluating.set(Some(e))
-    val evaluated = try {
-      v.function()
+    evaluating.set(e)
+    val result: Try[T] = try {
+      Success(v.function())
+    } catch {
+      case t: Throwable => Failure(t)
     } finally {
       evaluating.set(original)
     }
 
-    val previousReferences = v._references
-    val removed = previousReferences.diff(e.references)
-    val added = e.references.diff(previousReferences)
-    removed.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
-    added.foreach(_.reactions.asInstanceOf[Reactions[Any]] += v.reaction)
-    v.state match {
-      case Success(p) if evaluated == p => // Same value, ignore
-      case s => {
+    result match {
+      case Failure(t) => {
         v.previous = v.option
-        v.state = Success(evaluated)
-        Reactive.fire(v, evaluated, v.previous, v.reactions())
+        v.state = Failure(t)
       }
-    }
-  } catch {
-    case t: Throwable => {
-      v.previous = v.option
-      v.state = Failure(t)
-    }
-  }
-
-  def get[T](v: Val[T]): T = {
-    evaluating.get() match {
-      case Some(e) if e.v eq v => {
-        if (e.updating) {
-          v.previous.getOrElse(throw new RuntimeException("Attempting to get previous on None!"))
-        } else {
-          v.state match {
-            case Success(t) => t
-            case Failure(t) => throw t
+      case Success(evaluated) => {
+        val previousReferences = v._references
+        val references = e.references
+        // Only when the dependencies changed (never for a value without any, like every `@=`): detach from the
+        // dropped ones, attach to the new ones, and remember them.
+        if ((previousReferences.nonEmpty || references.nonEmpty) && !sameReferences(previousReferences, references)) {
+          val removed = previousReferences.diff(references)
+          val added = references.diff(previousReferences)
+          removed.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
+          added.foreach(_.reactions.asInstanceOf[Reactions[Any]] += v.reaction)
+          v._references = references
+        }
+        v.state match {
+          case Success(p) if evaluated == p => // Same value, ignore
+          case _ => {
+            v.previous = v.option
+            v.state = Success(evaluated)
+            Reactive.fire(v, evaluated, v.previous, v.reactions())
           }
         }
       }
-      case Some(e) => {
-        e.references += v
+    }
+  }
 
-        v.state match {
-          case Success(t) => t
-          case Failure(t) => throw t
-        }
+  /** The same dependencies as last time? Checks the common cases — the same set, or one dependency that is the same
+    * instance — before full set equality. */
+  private def sameReferences(previous: Set[Val[_]], current: Set[Val[_]]): Boolean =
+    (previous eq current) ||
+      (previous.size == 1 && current.size == 1 && (previous.head eq current.head)) ||
+      previous == current
+
+  def get[T](v: Val[T]): T = {
+    val e = evaluating.get()
+    if (e != null && (e.v eq v) && e.updating) {
+      v.previous.getOrElse(throw new RuntimeException("Attempting to get previous on None!"))
+    } else {
+      if (e != null && !(e.v eq v)) {
+        e.references += v
       }
-      case None => v.state match {
+      v.state match {
         case Success(t) => t
         case Failure(t) => throw t
       }
