@@ -116,7 +116,7 @@ object Val {
           val removed = previousReferences.diff(references)
           val added = references.diff(previousReferences)
           removed.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
-          added.foreach(_.reactions.asInstanceOf[Reactions[Any]] += v.reaction)
+          added.foreach(_.reactions.asInstanceOf[Reactions[Any]].append(v.reaction))
           v._references = references
         }
         v.state match {
