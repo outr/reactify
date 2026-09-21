@@ -118,7 +118,21 @@ trait Reactive[T] {
     } else if (sync) {
       synchronized(propagate(value, previous, reactions))
     } else {
-      propagate(value, previous, reactions)   // a plain call: no by-name thunk per fire
+      // A change that runs through a long chain of values nests a fire per link, and a small device stack (a Roku's is
+      // about 120 frames) overruns a dozen links into a layout. Below `maxDepth` the propagation is the plain nested
+      // call it always was — same order, same turn; past it a link is queued and run flat once the stack unwinds, by
+      // the outermost fire, so an arbitrarily deep chain costs a bounded stack and still finishes in the same turn.
+      val d = Reactive.deferral.get()
+      if (d.depth >= Reactive.maxDepth) {
+        d.queue = d.queue :+ (() => { propagate(value, previous, reactions); () })
+        ReactionStatus.Continue
+      } else {
+        d.depth += 1
+        val top = d.depth == 1
+        val status = try propagate(value, previous, reactions) finally d.depth -= 1
+        if (top) Reactive.drain(d)
+        status
+      }
     }
   }
 
@@ -153,6 +167,30 @@ trait Reactive[T] {
 }
 
 object Reactive {
+  /** How deep a chain of fires may nest before the rest runs flat rather than recursively: small enough that a device
+    * with a shallow stack does not overrun it, large enough that an ordinary layout never reaches it. */
+  private[reactify] val maxDepth: Int = 8
+
+  /** A thread's live propagation depth and the links deferred past the budget, drained by its outermost fire. */
+  private[reactify] final class Deferral {
+    var depth: Int = 0
+    var queue: List[() => Unit] = Nil
+  }
+
+  private[reactify] val deferral: ThreadLocal[Deferral] = new ThreadLocal[Deferral] {
+    override def initialValue(): Deferral = new Deferral
+  }
+
+  /** Run every link deferred past the depth budget, and any deferred while doing so, each with a fresh budget. */
+  private[reactify] def drain(d: Deferral): Unit = {
+    while (d.queue.nonEmpty) {
+      val task = d.queue.head
+      d.queue = d.queue.tail
+      d.depth += 1
+      try task() finally d.depth -= 1
+    }
+  }
+
   def fire[T](reactive: Reactive[T], value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
     reactive.fire(value, previous, reactions)
   }
