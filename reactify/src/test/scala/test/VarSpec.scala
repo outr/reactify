@@ -403,6 +403,39 @@ class VarSpec extends AnyWordSpec with Matchers {
       lazyDouble := 100.0
       v() should be(100.0)
     }
+    "finish a chain deeper than the depth budget in the same turn" in {
+      val source = Var(0)
+      var chain: Val[Int] = source
+      (1 to 50).foreach { _ =>
+        val before = chain
+        chain = Val(before() + 1)
+      }
+      val end = chain
+      var seen = -1
+      end.attach(v => seen = v)
+      source @= 1
+      seen should be(51)
+      end() should be(51)
+    }
+    "leave a value's reactions with its current value when its fire is deferred past the depth budget" in {
+      // at some length of chain the target is set just short of the budget, so its fire is deferred; the source's next
+      // reaction, near the top, sets it again and fires at once: the deferred fire must not then deliver the older value
+      (1 to 20).foreach { length =>
+        val source = Var(0)
+        val target = Var(0)
+        var chain: Val[Int] = source
+        (1 to length).foreach { _ =>
+          val before = chain
+          chain = Val(before() + 1)
+        }
+        chain.on(target @= 1)
+        source.on(target @= 2)
+        var seen = 0
+        target.attach(v => seen = v)
+        source @= 1
+        seen should be(target())
+      }
+    }
   }
 
   class Container[Child] {

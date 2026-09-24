@@ -20,6 +20,10 @@ trait Reactive[T] {
    */
   protected def synchronize: Boolean = false
 
+  /** Whether `value`, fired a while ago, is no longer this one's: a value that has moved on since. A channel's every
+    * event counts, so a channel never says so. */
+  protected def superseded(value: T): Boolean = false
+
   /**
     * If the current thread is reacting to a value currently, status represents the status of the reaction. This can be
     * set to ReactionStatus.Stop in order to stop propagation. This can also be achieved via stopPropagation().
@@ -124,7 +128,9 @@ trait Reactive[T] {
       // the outermost fire, so an arbitrarily deep chain costs a bounded stack and still finishes in the same turn.
       val d = Reactive.deferral.get()
       if (d.depth >= Reactive.maxDepth) {
-        d.queue = d.queue :+ (() => { propagate(value, previous, reactions); () })
+        // unless the value moves on before the link runs: its newer value, fired nearer the top, has reached the
+        // reactions already (or is queued behind this), and this, run after it, would put the older value back
+        d.queue = d.queue :+ (() => if (!superseded(value)) { propagate(value, previous, reactions); () })
         ReactionStatus.Continue
       } else {
         d.depth += 1

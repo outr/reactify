@@ -60,6 +60,12 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 
   def equality(t1: T, t2: T): Boolean = t1 == t2
 
+  // from the state rather than `get`, which inside an evaluation would make this a dependency of it
+  override protected def superseded(value: T): Boolean = option match {
+    case Some(current) => !equality(current, value)
+    case None => true
+  }
+
   /**
     * Maps this Val to another type.
     */

@@ -4,6 +4,8 @@ import reactify.group.StatefulGroup
 import reactify.reaction.Reaction
 
 trait Stateful[T] extends Reactive[T] {
+  override protected def superseded(value: T): Boolean = get != value
+
   /**
     * Gets the current value
     */
