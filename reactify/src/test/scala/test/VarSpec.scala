@@ -42,6 +42,22 @@ class VarSpec extends AnyWordSpec with Matchers {
       v @= 4
       doubled() should be(8)
     }
+    "set a plain value (@=): fire on a change, not for the same value, and stop following a source" in {
+      val source = Var(1)
+      val v = Var(source() + 10)
+      val seen = ListBuffer.empty[Int]
+      v.attach(seen += _)
+      source @= 2
+      v() should be(12)
+      v @= 12
+      seen.toList should be(List(12))
+      v @= 5
+      seen.toList should be(List(12, 5))
+      source @= 3
+      v() should be(5)
+      seen.toList should be(List(12, 5))
+      source.reactions().size should be(0)
+    }
     "keep reactions of one priority in the order they were attached, and an attached one once" in {
       val v = Var(0)
       val order = ListBuffer.empty[String]

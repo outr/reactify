@@ -87,6 +87,26 @@ object Val {
     evaluate(v, updating = false)
   }
 
+  /** `v` set to a value already in hand, as `@=` sets one: what `evaluate` would come to for a function that reads
+    * nothing and cannot throw, without its bookkeeping (no evaluation frame on the thread, no `Try`, no comparing of
+    * dependencies). A value that depended on others stops listening to them; an unchanged one fires nothing. Setting a
+    * plain value is most of what a UI does, and on a television the bookkeeping was a third of building a screen. */
+  private[reactify] def setValue[T](v: Val[T], f: () => T, value: T): Unit = {
+    v.function = f
+    if (v._references.nonEmpty) {
+      v._references.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
+      v._references = Set.empty
+    }
+    v.state match {
+      case Success(p) if value == p => // Same value, ignore
+      case _ => {
+        v.previous = v.option
+        v.state = Success(value)
+        Reactive.fire(v, value, v.previous, v.reactions())
+      }
+    }
+  }
+
   def apply[T](value: => T): Val[T] = {
     val v = new Val[T]
     v.set(value)

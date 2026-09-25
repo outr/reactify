@@ -36,7 +36,11 @@ class Var[T] protected() extends Val[T]() with Mutable[T] {
     *
     * @param value the value to assign
     */
-  override def static(value: T): Unit = set(value)   // what `super.static` (Mutable.static) did, one call shorter
+  override def static(value: T): Unit = {
+    val f = () => value
+    Transaction.change(this, this.function, f)
+    Val.setValue(this, f, value)
+  }
 
   /**
     * Group multiple Vars together
