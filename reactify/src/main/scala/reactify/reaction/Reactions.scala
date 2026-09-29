@@ -68,9 +68,12 @@ class Reactions[T] {
       used += 1
     }
     living += 1
+    // (the index made again includes this entry, which is in its place already)
     if (living > buckets.length * 2) rehash(buckets.length * 4)
-    val b = Reactions.slot(key, buckets.length)
-    buckets(b) = entry :: buckets(b)
+    else {
+      val b = Reactions.slot(key, buckets.length)
+      buckets(b) = entry :: buckets(b)
+    }
     stale = true
   }
 
@@ -138,13 +141,15 @@ class Reactions[T] {
     val here = buckets(b)
     if (!here.exists(_.reaction eq reaction)) false
     else {
-      here.foreach(e => if (e.reaction eq reaction) e.live = false)
       val kept = here.filterNot(_.reaction eq reaction)
+      here.foreach(e => if (e.reaction eq reaction) e.kill())
       val gone = here.size - kept.size
       buckets(b) = kept
       living -= gone
       dead += gone
       stale = true
+      // (and the list handed out let go: a fire under way has its own, and the next is made afresh)
+      listed = Nil
       if (dead > 8 && dead * 2 > used) sweep()
       true
     }
@@ -156,7 +161,7 @@ class Reactions[T] {
   def clear(): Unit = synchronized {
     var i = 0
     while (i < used) {
-      slots(i).live = false
+      slots(i).kill()
       slots(i) = null
       i += 1
     }
