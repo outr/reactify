@@ -103,6 +103,10 @@ object Val {
         v.previous = v.option
         v.state = Success(value)
         Reactive.fire(v, value, v.previous, v.reactions())
+        // heard: a value set plainly has no more use for the one before it (only a function that reads its own value does,
+        // and the evaluation that makes one sets it again), and kept, it held what it was (a screen left, a component taken
+        // apart) until the next change
+        v.previous = None
       }
     }
   }
@@ -166,8 +170,10 @@ object Val {
 
   def get[T](v: Val[T]): T = {
     val e = evaluating.get()
-    if (e != null && (e.v eq v) && e.updating) {
-      v.previous.getOrElse(throw new RuntimeException("Attempting to get previous on None!"))
+    // a function reading its own value, evaluated again for a change to what it reads, reads the value before its own last
+    // change; one with none kept (the value was last set plainly, or never changed) reads what it is
+    if (e != null && (e.v eq v) && e.updating && v.previous.nonEmpty) {
+      v.previous.get
     } else {
       if (e != null && !(e.v eq v)) {
         e.references += v
