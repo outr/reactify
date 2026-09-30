@@ -37,6 +37,24 @@ class ReactionsSpec extends AnyWordSpec with Matchers {
       c.reactions += reactify.reaction.Reaction[Int](f, Priority.High)
       c.reactions().size should be(2)
     }
+    "keep their order and distinctness as a list grows past its index and shrinks back" in {
+      val c = Channel[Int]
+      var order = List.empty[Int]
+      val f = (_: Int) => ()
+      val all = (0 until 100).map(i => c.attach(_ => order = order :+ i, if (i % 10 == 0) Priority.High else Priority.Normal))
+      c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions().size should be(101)
+      c @= 1
+      order should be((0 until 100).filter(_ % 10 != 0).toList ::: (0 until 100 by 10).toList)
+      all.drop(3).foreach(r => c.reactions -= r)
+      c.reactions().size should be(4)
+      c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions().size should be(4)
+      order = Nil
+      c @= 2
+      order should be(List(1, 2, 0))
+    }
     "hold a reaction once, however often it is added" in {
       val c = Channel[Int]
       var fired = 0
