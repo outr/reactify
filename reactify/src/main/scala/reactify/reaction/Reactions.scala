@@ -28,9 +28,11 @@ class Reactions[T] {
       case Some(i) => i += reaction
       case None =>
         // The list is kept sorted by priority and distinct, so the reaction goes where a stable sort of the list with it
-        // appended would put it (after every reaction that does not compare above it), unless an equal one is already
-        // there.
-        if (!list.contains(reaction)) place(reaction)
+        // appended would put it (after every reaction that does not compare above it), unless the same one is already
+        // there (`Reactions.same`).
+        var rest = list
+        while (rest.nonEmpty && !Reactions.same(rest.head, reaction)) rest = rest.tail
+        if (rest.isEmpty) place(reaction)
     }
     reaction
   }
@@ -103,6 +105,24 @@ object Reactions {
     case r: FunctionReaction[_] => System.identityHashCode(r.f)
     case r: ChangeFunctionReaction[_] => System.identityHashCode(r.f)
     case r => System.identityHashCode(r)
+  }
+
+  /** Whether two reactions are the same, as a list holds each once: the very same reaction, or two function reactions
+    * (what `attach` and `changes` make) of the same kind, the same function and the same priority, which is what their
+    * equality came to (a function is equal only to itself). Asked of each reaction already there whenever one is added,
+    * so it compares by identity and fields rather than by `==`, a case class's whole equality, which on a platform that
+    * emulates it (a Roku) was most of what adding a reaction cost. Any other reaction is the same only as itself, as the
+    * index (`keyOf`) already took it. */
+  private[reaction] def same(a: Reaction[_], b: Reaction[_]): Boolean = if (a eq b) true else a match {
+    case x: FunctionReaction[_] => b match {
+      case y: FunctionReaction[_] => (x.f eq y.f) && x.priority == y.priority
+      case _ => false
+    }
+    case x: ChangeFunctionReaction[_] => b match {
+      case y: ChangeFunctionReaction[_] => (x.f eq y.f) && x.priority == y.priority
+      case _ => false
+    }
+    case _ => false
   }
 
   private[reaction] def slot(key: Int, size: Int): Int = {

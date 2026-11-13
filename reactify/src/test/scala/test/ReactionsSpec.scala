@@ -55,6 +55,40 @@ class ReactionsSpec extends AnyWordSpec with Matchers {
       c @= 2
       order should be(List(1, 2, 0))
     }
+    "hold reactions of their own making by identity: two equal by their fields are both held, each once" in {
+      val c = Channel[Int]
+      var heard = List.empty[String]
+      val hear = (s: String) => heard = heard :+ s
+      val a = Tagged("x", hear)
+      val b = Tagged("x", hear)
+      a should be(b)
+      c.reactions += a
+      c.reactions += b
+      c.reactions += a
+      c.reactions() should have size 2
+      c @= 1
+      heard should be(List("x", "x"))
+      (c.reactions -= b) should be(true)
+      c.reactions().head should be theSameInstanceAs a
+      // and the same past the index
+      (0 until 40).foreach(i => c.attach(x => if (x == i) ()))
+      c.reactions += a
+      c.reactions += b
+      c.reactions += b
+      c.reactions() should have size 42
+    }
+    "hold a function reaction once for its function and priority past the index" in {
+      val c = Channel[Int]
+      (0 until 40).foreach(i => c.attach(x => if (x == i) ()))
+      val f = (_: Int) => ()
+      val g = (_: Int, _: Int) => ()
+      c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions += reactify.reaction.Reaction[Int](f, Priority.High)
+      c.reactions += reactify.reaction.Reaction.changes[Int](g)
+      c.reactions += reactify.reaction.Reaction.changes[Int](g)
+      c.reactions() should have size 43
+    }
     "hold a reaction once, however often it is added" in {
       val c = Channel[Int]
       var fired = 0

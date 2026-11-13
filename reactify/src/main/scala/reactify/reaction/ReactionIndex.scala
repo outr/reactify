@@ -29,13 +29,13 @@ final class ReactionIndex[T] {
     listed
   }
 
-  /** Add `reaction`, unless an equal one is here. */
+  /** Add `reaction`, unless the same one is here. */
   def +=(reaction: Reaction[T]): Reaction[T] = {
-    // The list is kept sorted by priority and distinct (by equality), so the reaction goes where a stable sort of the
-    // list with it appended would put it (after every reaction that does not compare above it), unless an equal one is
-    // already there. An equal one has the same key, so only those sharing its bucket are compared.
+    // The list is kept sorted by priority and distinct (`Reactions.same`), so the reaction goes where a stable sort of the
+    // list with it appended would put it (after every reaction that does not compare above it), unless the same one is
+    // already there. The same one has the same key, so only those sharing its bucket are compared.
     val key = Reactions.keyOf(reaction)
-    if (!bucket(key).exists(e => e.key == key && e.reaction == reaction)) place(reaction, key)
+    if (!bucket(key).exists(e => e.key == key && Reactions.same(e.reaction, reaction))) place(reaction, key)
     reaction
   }
 
