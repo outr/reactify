@@ -11,10 +11,6 @@ import scala.concurrent.{Future, Promise}
   * @tparam T the type of value this Reactive receives
   */
 trait Reactive[T] {
-  private lazy val _status = new ThreadLocal[Option[ReactionStatus]] {
-    override def initialValue(): Option[ReactionStatus] = None
-  }
-
   /**
    * If true, events that are fired are synchronized to avoid concurrent invocations. Defaults to false.
    */
@@ -28,10 +24,14 @@ trait Reactive[T] {
     * If the current thread is reacting to a value currently, status represents the status of the reaction. This can be
     * set to ReactionStatus.Stop in order to stop propagation. This can also be achieved via stopPropagation().
     */
-  def status: Option[ReactionStatus] = _status.get()
+  def status: Option[ReactionStatus] = {
+    val p = Reactive.propagationOf(this, Reactive.propagations.get())
+    if (p == null || p.status == null) None else Some(p.status)
+  }
   def status_=(status: ReactionStatus): Unit = {
-    assert(_status.get().nonEmpty, "Cannot set the status without an active reaction on this thread")
-    _status.set(Some(status))
+    val p = Reactive.propagationOf(this, Reactive.propagations.get())
+    assert(p != null && p.status != null, "Cannot set the status without an active reaction on this thread")
+    p.status = status
   }
 
   /**
@@ -115,59 +115,64 @@ trait Reactive[T] {
     */
   protected def fire(value: T, previous: Option[T], reactions: List[Reaction[T]] = this.reactions()): ReactionStatus = {
     val sync = synchronize
-    if (reactions.isEmpty && !sync && _status.get().isEmpty) {
-      // No reactions and no propagation in progress on this thread: the full path would set, read and remove the
-      // status without effect. (A fire nested in an active one must still take it: its remove() ends the outer one.)
+    val c = Reactive.propagations.get()
+    if (reactions.isEmpty && !sync && (c.innermost == null || Reactive.propagationOf(this, c) == null)) {
+      // No reactions and no propagation of this value in progress on this thread: the full path would begin and end a
+      // propagation without effect. (A fire nested in an active one must still take it: its end ends the outer one.)
       ReactionStatus.Continue
     } else if (sync) {
-      synchronized(propagate(value, previous, reactions))
+      synchronized(propagate(value, previous, reactions, c))
     } else {
       // A change that runs through a long chain of values nests a fire per link, and a small device stack (a Roku's is
       // about 120 frames) overruns a dozen links into a layout. Below `maxDepth` the propagation is the plain nested
       // call it always was — same order, same turn; past it a link is queued and run flat once the stack unwinds, by
       // the outermost fire, so an arbitrarily deep chain costs a bounded stack and still finishes in the same turn.
-      val d = Reactive.deferral.get()
-      if (d.depth >= Reactive.maxDepth) {
+      if (c.depth >= Reactive.maxDepth) {
         // unless the value moves on before the link runs: its newer value, fired nearer the top, has reached the
         // reactions already (or is queued behind this), and this, run after it, would put the older value back
-        d.queue = d.queue :+ (() => if (!superseded(value)) { propagate(value, previous, reactions); () })
+        c.queue = c.queue :+ (() => if (!superseded(value)) { propagate(value, previous, reactions, c); () })
         ReactionStatus.Continue
       } else {
-        d.depth += 1
-        val top = d.depth == 1
-        val status = try propagate(value, previous, reactions) finally d.depth -= 1
-        if (top) Reactive.drain(d)
+        c.depth += 1
+        val top = c.depth == 1
+        val status = try propagate(value, previous, reactions, c) finally c.depth -= 1
+        if (top) Reactive.drain(c)
         status
       }
     }
   }
 
-  /** The propagation, in one function: the status is Continue while it runs and removed after it, even on an error; each
+  /** The propagation, in one function: the status is Continue while it runs and gone after it, even on an error; each
     * reaction runs in order while the status stays Continue; one that returns Stop, or stops propagation, ends it with
     * Stop. One function rather than a chain of them (and a loop rather than a closure per reaction), because a change
     * that propagates through many values nests a fire per value, and a platform with a small stack (a Roku's is about
-    * 120 frames) runs out a few levels into a layout otherwise. */
-  private def propagate(value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
-    _status.set(Some(ReactionStatus.Continue))
+    * 120 frames) runs out a few levels into a layout otherwise.
+    *
+    * The status lives in the propagation, on the thread's list of those under way, put there here and taken off at
+    * the end, rather than in a thread-local of each value: one thread-local for the thread, and none made for each
+    * value. A value has one status on a thread, so a propagation of it nested in one under way (a reaction that sets the
+    * value again) ends the outer one with it: the outer stops, and its later reactions do not hear the older value
+    * after the newer. */
+  private def propagate(value: T, previous: Option[T], reactions: List[Reaction[T]],
+                        c: Reactive.Propagations): ReactionStatus = {
+    val p = new Reactive.Propagation(this, ReactionStatus.Continue, c.innermost)
+    c.innermost = p
     try {
-      var result: ReactionStatus = null
+      var stopped = false
       var remaining = reactions
-      while (result == null && remaining.nonEmpty) {
-        val current = _status.get()
-        if (current.contains(ReactionStatus.Continue)) {
-          val reaction = remaining.head
-          val reactionStatus = reaction(value, previous)
-          if (!(reactionStatus == ReactionStatus.Continue && _status.get().contains(ReactionStatus.Continue))) {
-            result = ReactionStatus.Stop
-          }
-        } else {
-          result = current.getOrElse(throw new RuntimeException("Status not set"))
-        }
+      while (!stopped && remaining.nonEmpty) {
+        val reaction = remaining.head
+        val reactionStatus = reaction(value, previous)
+        stopped = !(reactionStatus == ReactionStatus.Continue && p.status == ReactionStatus.Continue)
         remaining = remaining.tail
       }
-      if (result == null) _status.get().getOrElse(throw new RuntimeException("Status not set")) else result
+      if (stopped) ReactionStatus.Stop else ReactionStatus.Continue
     } finally {
-      _status.remove()
+      c.innermost = p.outer
+      if (c.innermost != null) {
+        val outer = Reactive.propagationOf(this, c)
+        if (outer != null) outer.status = null
+      }
     }
   }
 }
@@ -177,23 +182,36 @@ object Reactive {
     * with a shallow stack does not overrun it, large enough that an ordinary layout never reaches it. */
   private[reactify] val maxDepth: Int = 8
 
-  /** A thread's live propagation depth and the links deferred past the budget, drained by its outermost fire. */
-  private[reactify] final class Deferral {
+  /** A thread's propagations: its live depth and the links deferred past the budget, drained by its outermost fire, and
+    * the innermost propagation under way (each holding the one it is nested in). */
+  private[reactify] final class Propagations {
     var depth: Int = 0
     var queue: List[() => Unit] = Nil
+    var innermost: Propagation = null
   }
 
-  private[reactify] val deferral: ThreadLocal[Deferral] = new ThreadLocal[Deferral] {
-    override def initialValue(): Deferral = new Deferral
+  /** A propagation of `reactive`'s value under way: its status, null once a nested propagation of the same value has
+    * ended it. */
+  private[reactify] final class Propagation(val reactive: Reactive[_], var status: ReactionStatus, val outer: Propagation)
+
+  private[reactify] val propagations: ThreadLocal[Propagations] = new ThreadLocal[Propagations] {
+    override def initialValue(): Propagations = new Propagations
+  }
+
+  /** The innermost propagation of `reactive` under way on the thread whose propagations `c` are, or null. */
+  private[reactify] def propagationOf(reactive: Reactive[_], c: Propagations): Propagation = {
+    var p = c.innermost
+    while (p != null && !(p.reactive eq reactive)) p = p.outer
+    p
   }
 
   /** Run every link deferred past the depth budget, and any deferred while doing so, each with a fresh budget. */
-  private[reactify] def drain(d: Deferral): Unit = {
-    while (d.queue.nonEmpty) {
-      val task = d.queue.head
-      d.queue = d.queue.tail
-      d.depth += 1
-      try task() finally d.depth -= 1
+  private[reactify] def drain(c: Propagations): Unit = {
+    while (c.queue.nonEmpty) {
+      val task = c.queue.head
+      c.queue = c.queue.tail
+      c.depth += 1
+      try task() finally c.depth -= 1
     }
   }
 
