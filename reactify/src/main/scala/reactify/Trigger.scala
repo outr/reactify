@@ -8,7 +8,7 @@ class Trigger extends Channel[Unit] {
   /**
     * Fires an event on this trigger
     */
-  def trigger(): Unit = fire((), None)
+  def trigger(): Unit = fireHeard((), None)
 }
 
 object Trigger {

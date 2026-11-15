@@ -8,7 +8,7 @@ import reactify.group.ChannelGroup
   * @tparam T the type of value this Reactive receives
   */
 class Channel[T] extends Reactive[T] with Mutable[T] {
-  override def set(f: => T): Unit = fire(f, None, reactions())
+  override def set(f: => T): Unit = fireHeard(f, None)
 
   /**
     * Group multiple channels together

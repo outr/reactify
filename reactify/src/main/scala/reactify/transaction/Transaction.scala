@@ -127,6 +127,9 @@ object Transaction {
     */
   @volatile private var open: Int = 0
 
+  /** Whether any thread has a Transaction open: where none has, a change need not be told of (`change` would do nothing). */
+  private[reactify] def anyOpen: Boolean = open != 0
+
   private def opened(delta: Int): Unit = synchronized {
     open += delta
   }

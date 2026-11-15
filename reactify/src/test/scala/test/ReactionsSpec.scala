@@ -158,5 +158,146 @@ class ReactionsSpec extends AnyWordSpec with Matchers {
       // two apart on a machine busy with other work (Native took 1049 ms under load)
       ms should be < 10000L
     }
+    "hold one reaction, then many, then one and none again, in order throughout" in {
+      val c = Channel[Int]
+      var heard = List.empty[String]
+      def fired(i: Int): List[String] = {
+        heard = Nil
+        c @= i
+        heard
+      }
+      fired(0) should be(Nil)
+      c.reactions() should be(Nil)
+      val a = c.attach(_ => heard = heard :+ "a")
+      c.reactions() should be(List(a))
+      fired(1) should be(List("a"))
+      val low = c.attach(_ => heard = heard :+ "low", Priority.Low)
+      c.reactions() should be(List(low, a))
+      fired(2) should be(List("low", "a"))
+      val high = c.attach(_ => heard = heard :+ "high", Priority.High)
+      val b = c.attach(_ => heard = heard :+ "b")
+      fired(3) should be(List("low", "a", "b", "high"))
+      (c.reactions -= low) should be(true)
+      (c.reactions -= a) should be(true)
+      (c.reactions -= high) should be(true)
+      c.reactions() should be(List(b))
+      fired(4) should be(List("b"))
+      // one left: a reaction of higher priority goes after it, one of lower before
+      val low2 = c.attach(_ => heard = heard :+ "low2", Priority.Low)
+      fired(5) should be(List("low2", "b"))
+      (c.reactions -= b) should be(true)
+      (c.reactions -= b) should be(false)
+      (c.reactions -= low2) should be(true)
+      (c.reactions -= low2) should be(false)
+      c.reactions() should be(Nil)
+      fired(6) should be(Nil)
+      c.attach(_ => heard = heard :+ "again")
+      fired(7) should be(List("again"))
+    }
+    "add a reaction of lower priority before the one there" in {
+      val c = Channel[Int]
+      var heard = List.empty[String]
+      c.attach(_ => heard = heard :+ "normal")
+      c.attach(_ => heard = heard :+ "low", Priority.Low)
+      c @= 1
+      heard should be(List("low", "normal"))
+    }
+    "hold one reaction distinct, by identity and by function" in {
+      val c = Channel[Int]
+      val f = (_: Int) => ()
+      val r = c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions += reactify.reaction.Reaction[Int](f)
+      c.reactions += r
+      c.reactions() should be(List(r))
+      c.reactions += reactify.reaction.Reaction[Int](f, Priority.High)
+      c.reactions().size should be(2)
+      var heard = List.empty[String]
+      val hear = (s: String) => heard = heard :+ s
+      val v = Var(0)
+      v.reactions += Tagged("x", hear)
+      v.reactions += Tagged("x", hear)
+      v.reactions().size should be(2)
+      v @= 1
+      heard should be(List("x", "x"))
+    }
+    "take out a reaction that is not there, with one there, saying so" in {
+      val c = Channel[Int]
+      val a = c.attach(_ => ())
+      val other = Channel[Int].attach(_ => ())
+      (c.reactions -= other) should be(false)
+      c.reactions() should be(List(a))
+    }
+    "fire with none, and none after the last is taken out, on every kind of value" in {
+      val v = Var(0)
+      val c = Channel[Int]
+      val t = reactify.Trigger()
+      v @= 1
+      c @= 1
+      t.trigger()
+      val rv = v.attach(_ => ())
+      val rc = c.attach(_ => ())
+      val rt = t.attach(_ => ())
+      v.reactions -= rv
+      c.reactions -= rc
+      t.reactions -= rt
+      v @= 2
+      c @= 2
+      t.trigger()
+      v.reactions() should be(Nil)
+      c.reactions() should be(Nil)
+      t.reactions() should be(Nil)
+      v() should be(2)
+    }
+    "be heard where a value's reactions are its own kind (overridden)" in {
+      val inner = Var(0)
+      val own = new OwnReactionsProbe(inner)
+      var heard = List.empty[Int]
+      own.attach(i => heard = heard :+ i)
+      own.reactions().size should be(1)
+      own.reactions.isInstanceOf[CountingReactions[_]] should be(true)
+      inner @= 1
+      inner @= 2
+      heard should be(List(1, 2))
+      own.added should be(1)
+    }
+    "be heard by a group's items, and through a Var group's own set" in {
+      val a = Var(0)
+      val b = Var(0)
+      val group = a & b
+      var heard = List.empty[Int]
+      val r = group.attach(i => heard = heard :+ i)
+      a @= 1
+      b @= 2
+      heard should be(List(1, 2))
+      group.reactions -= r
+      a @= 3
+      heard should be(List(1, 2))
+    }
+    "be taken out by a reaction once, and stay out" in {
+      val v = Var(0)
+      var heard = List.empty[Int]
+      v.once(i => heard = heard :+ i)
+      v.reactions().size should be(1)
+      v @= 1
+      v @= 2
+      heard should be(List(1))
+      v.reactions() should be(Nil)
+    }
+    "keep its order as one taken out of many leaves one, while a fire is under way" in {
+      val c = Channel[Int]
+      var heard = List.empty[String]
+      var b: reactify.reaction.Reaction[Int] = null
+      val a = c.attach { _ =>
+        heard = heard :+ "a"
+        c.reactions -= b
+      }
+      b = c.attach(_ => heard = heard :+ "b")
+      c @= 1
+      heard should be(List("a", "b"))
+      c.reactions() should be(List(a))
+      heard = Nil
+      c @= 2
+      heard should be(List("a"))
+    }
   }
 }

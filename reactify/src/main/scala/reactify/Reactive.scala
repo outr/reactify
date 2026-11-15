@@ -39,10 +39,17 @@ trait Reactive[T] {
     */
   def stopPropagation(): Unit = status = ReactionStatus.Stop
 
+  /** This one's own reactions, kept here rather than in a `Reactions` of its own: null where none has been asked for or
+    * added yet, the reaction itself where it has one (most values have one or none), a `Reactions` where it has more,
+    * and `Reactive.Unheard` where it is known to have none of its own. A `Reactions` for each value, and a list cell for
+    * its one reaction, were most of what a value with a reaction cost, and one was made for every value fired with none.
+    * Written only by `Reactions` (through `Reactions.OwnReactions`, what `reactions` is where it is not overridden). */
+  @volatile private[reactify] var heldReactions: AnyRef = null
+
   /**
     * Reactions currently associated with this Reactive
     */
-  lazy val reactions: Reactions[T] = new Reactions[T]
+  def reactions: Reactions[T] = new Reactions.OwnReactions[T](this)
 
   /**
     * Convenience method to create a Reaction to attach to this Reactive
@@ -52,7 +59,7 @@ trait Reactive[T] {
     * @return created Reaction[T]
     */
   def attach(f: T => Unit, priority: Double = Priority.Normal): Reaction[T] = {
-    reactions += Reaction[T](f, priority)
+    Reactions.add(this, Reaction[T](f, priority))
   }
 
   /**
@@ -63,7 +70,7 @@ trait Reactive[T] {
     * @return created Reaction[T]
     */
   def changes(f: (T, T) => Unit, priority: Double = Priority.Normal): Reaction[T] = {
-    reactions += Reaction.changes[T](f, priority)
+    Reactions.add(this, Reaction.changes[T](f, priority))
   }
 
   /**
@@ -89,11 +96,11 @@ trait Reactive[T] {
   def once(f: T => Unit, condition: T => Boolean = _ => true, priority: Double = Priority.Normal): Reaction[T] = {
     var reaction: Reaction[T] = null
     val function = (t: T) => if (condition(t)) {
-      reactions -= reaction
+      Reactions.remove(this, reaction)
       f(t)
     }
     reaction = Reaction[T](function, priority)
-    reactions += reaction
+    Reactions.add(this, reaction)
     reaction
   }
 
@@ -121,7 +128,7 @@ trait Reactive[T] {
       // propagation without effect. (A fire nested in an active one must still take it: its end ends the outer one.)
       ReactionStatus.Continue
     } else if (sync) {
-      synchronized(propagate(value, previous, reactions, c))
+      synchronized(propagate(value, previous, null, reactions, c))
     } else {
       // A change that runs through a long chain of values nests a fire per link, and a small device stack (a Roku's is
       // about 120 frames) overruns a dozen links into a layout. Below `maxDepth` the propagation is the plain nested
@@ -130,15 +137,52 @@ trait Reactive[T] {
       if (c.depth >= Reactive.maxDepth) {
         // unless the value moves on before the link runs: its newer value, fired nearer the top, has reached the
         // reactions already (or is queued behind this), and this, run after it, would put the older value back
-        c.queue = c.queue :+ (() => if (!superseded(value)) { propagate(value, previous, reactions, c); () })
+        c.queue = c.queue :+ (() => if (!superseded(value)) { propagate(value, previous, null, reactions, c); () })
         ReactionStatus.Continue
       } else {
         c.depth += 1
         val top = c.depth == 1
-        val status = try propagate(value, previous, reactions, c) finally c.depth -= 1
+        val status = try propagate(value, previous, null, reactions, c) finally c.depth -= 1
         if (top) Reactive.drain(c)
         status
       }
+    }
+  }
+
+  /** `fire` to this one's own reactions as they are now: its one reaction as it is, without a list made for it, and,
+    * where it has none, nothing made at all. Where `reactions` is overridden (a group's, which hands each reaction to its
+    * items), to those it gives, as `fire` with them would; that is asked once of a value that has never had one of its
+    * own, which is known to have none after (`Reactive.Unheard`). What `fire` does, written out again rather than
+    * called, as a call more for each link of a chain of fires would be a frame more on a small device stack. */
+  private[reactify] final def fireHeard(value: T, previous: Option[T]): ReactionStatus = {
+    var one: Reaction[T] = null
+    var many: List[Reaction[T]] = Nil
+    heldReactions match {
+      case r: Reaction[T @unchecked] => one = r
+      case null => reactions match {
+        case own: Reactions.OwnReactions[_] if own.owner eq this => Reactions.unheard(this)
+        case other => many = other()
+      }
+      case held: Reactions[T @unchecked] => many = held()
+      case _ => // none
+    }
+    val sync = synchronize
+    val c = Reactive.propagations.get()
+    if (one == null && many.isEmpty && !sync && (c.innermost == null || Reactive.propagationOf(this, c) == null)) {
+      ReactionStatus.Continue
+    } else if (sync) {
+      synchronized(propagate(value, previous, one, many, c))
+    } else if (c.depth >= Reactive.maxDepth) {
+      val first = one
+      val rest = many
+      c.queue = c.queue :+ (() => if (!superseded(value)) { propagate(value, previous, first, rest, c); () })
+      ReactionStatus.Continue
+    } else {
+      c.depth += 1
+      val top = c.depth == 1
+      val status = try propagate(value, previous, one, many, c) finally c.depth -= 1
+      if (top) Reactive.drain(c)
+      status
     }
   }
 
@@ -153,12 +197,16 @@ trait Reactive[T] {
     * value. A value has one status on a thread, so a propagation of it nested in one under way (a reaction that sets the
     * value again) ends the outer one with it: the outer stops, and its later reactions do not hear the older value
     * after the newer. */
-  private def propagate(value: T, previous: Option[T], reactions: List[Reaction[T]],
+  private def propagate(value: T, previous: Option[T], one: Reaction[T], reactions: List[Reaction[T]],
                         c: Reactive.Propagations): ReactionStatus = {
     val p = new Reactive.Propagation(this, ReactionStatus.Continue, c.innermost)
     c.innermost = p
     try {
       var stopped = false
+      if (one != null) {
+        val reactionStatus = one(value, previous)
+        stopped = !(reactionStatus == ReactionStatus.Continue && p.status == ReactionStatus.Continue)
+      }
       var remaining = reactions
       while (!stopped && remaining.nonEmpty) {
         val reaction = remaining.head
@@ -181,6 +229,13 @@ object Reactive {
   /** How deep a chain of fires may nest before the rest runs flat rather than recursively: small enough that a device
     * with a shallow stack does not overrun it, large enough that an ordinary layout never reaches it. */
   private[reactify] val maxDepth: Int = 8
+
+  /** What a value known to have no reactions of its own holds (`heldReactions`): one never given any, fired, or one
+    * whose last was taken out. */
+  private[reactify] val Unheard: AnyRef = new Marker
+
+  /** A value a field holds to say what no value of the field's own could (`Unheard`, `Val.NullPrevious`). */
+  private[reactify] final class Marker
 
   /** A thread's propagations: its live depth and the links deferred past the budget, drained by its outermost fire, and
     * the innermost propagation under way (each holding the one it is nested in). */

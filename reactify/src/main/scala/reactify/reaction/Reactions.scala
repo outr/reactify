@@ -1,5 +1,7 @@
 package reactify.reaction
 
+import reactify.Reactive
+
 /**
   * Reactions represents a list of Reaction instances specifically associated with a Reactive
   */
@@ -91,9 +93,110 @@ class Reactions[T] {
     index = None
     list = Nil
   }
+
+  /** How many reactions are left, as far as 2: what a value holding these as its own (`Reactive.heldReactions`) asks
+    * as one is taken out, to hold the one left as it is, or none. (An index is never left with fewer than 8.) */
+  private[reaction] def fewLeft: Int = synchronized {
+    if (index.nonEmpty) 2 else if (list.isEmpty) 0 else if (list.tail.isEmpty) 1 else 2
+  }
 }
 
 object Reactions {
+  /** A value's own reactions (`Reactive.reactions`, where it is not overridden), kept on the value itself
+    * (`Reactive.heldReactions`) rather than here: what a value with one reaction or none keeps is the reaction or
+    * nothing, where it was a `Reactions` and a list cell for each, and this, made where something asks for them, is let
+    * go of as soon as it has been used. A value with more holds a `Reactions` of them, which this hands each change on to;
+    * one taken back to one or none holds that again. */
+  final class OwnReactions[T](val owner: Reactive[T]) extends Reactions[T] {
+    override def apply(): List[Reaction[T]] = owner.heldReactions match {
+      case one: Reaction[T @unchecked] => one :: Nil
+      case many: Reactions[T @unchecked] => many()
+      case _ => Nil
+    }
+
+    override def +=(reaction: Reaction[T]): Reaction[T] = {
+      hold(owner, reaction, known = false)
+      reaction
+    }
+
+    override private[reactify] def append(reaction: Reaction[T]): Unit = hold(owner, reaction, known = true)
+
+    override def -=(reaction: Reaction[T]): Boolean = release(owner, reaction)
+
+    override def clear(): Unit = Reactions.synchronized {
+      owner.heldReactions match {
+        case many: Reactions[_] => many.clear()
+        case _ => // nothing else to let go of
+      }
+      owner.heldReactions = Reactive.Unheard
+    }
+  }
+
+  /** `reaction` added to `owner`'s reactions (`reactions += reaction`), without a `Reactions` made for it where `owner`
+    * holds its own. */
+  private[reactify] def add[T](owner: Reactive[T], reaction: Reaction[T]): Reaction[T] = {
+    if (owner.heldReactions == null) owner.reactions += reaction
+    else {
+      hold(owner, reaction, known = false)
+      reaction
+    }
+  }
+
+  /** `reaction`, known not to be there already, added to `owner`'s reactions (`reactions.append`). */
+  private[reactify] def append[T](owner: Reactive[T], reaction: Reaction[T]): Unit = {
+    if (owner.heldReactions == null) owner.reactions.append(reaction)
+    else hold(owner, reaction, known = true)
+  }
+
+  /** `reaction` taken out of `owner`'s reactions (`reactions -= reaction`). */
+  private[reactify] def remove[T](owner: Reactive[T], reaction: Reaction[T]): Boolean = {
+    if (owner.heldReactions == null) owner.reactions -= reaction
+    else release(owner, reaction)
+  }
+
+  /** `owner`, found to keep its own reactions and to have none, known to have none. */
+  private[reactify] def unheard(owner: Reactive[_]): Unit = synchronized {
+    if (owner.heldReactions == null) owner.heldReactions = Reactive.Unheard
+  }
+
+  // Adding and taking out are as a `Reactions` of the value's own did: the same reaction (`same`) is not added twice
+  // (unless it is known not to be there), the reactions are kept in priority order, first come first within one, and a
+  // reaction is taken out by identity. The value's hold changes under this one lock; a fire reads it as it is.
+  private def hold[T](owner: Reactive[T], reaction: Reaction[T], known: Boolean): Unit = synchronized {
+    owner.heldReactions match {
+      case one: Reaction[T @unchecked] =>
+        if (known || !same(one, reaction)) {
+          val many = new Reactions[T]
+          many.append(one)
+          if (known) many.append(reaction) else many += reaction
+          owner.heldReactions = many
+        }
+      case many: Reactions[T @unchecked] => if (known) many.append(reaction) else many += reaction
+      case _ => owner.heldReactions = reaction
+    }
+  }
+
+  private def release[T](owner: Reactive[T], reaction: Reaction[T]): Boolean = synchronized {
+    owner.heldReactions match {
+      case one: Reaction[_] =>
+        if (one eq reaction) {
+          owner.heldReactions = Reactive.Unheard
+          true
+        } else {
+          false
+        }
+      case many: Reactions[T @unchecked] =>
+        val removed = many -= reaction
+        if (removed) {
+          val left = many.fewLeft
+          if (left == 0) owner.heldReactions = Reactive.Unheard
+          else if (left == 1) owner.heldReactions = many().head
+        }
+        removed
+      case _ => false
+    }
+  }
+
   /** How many reactions a value keeps as a plain list before it indexes them, and how few it goes back to one at. */
   private[reaction] val indexFrom: Int = 32
   private[reaction] val indexTo: Int = 8

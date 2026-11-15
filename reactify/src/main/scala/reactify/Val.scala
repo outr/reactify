@@ -12,10 +12,48 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
     set(f)
   }
 
+  /** What the value is worked out by: null for a value set as it is (`static`, `@=`), which has nothing to work out
+    * (`evaluate` and a `Transaction` take the value itself), rather than a function giving it back kept for each. */
   protected var function: () => T = _
-  protected var state: Try[T] = _
-  protected var previous: Option[T] = None
+
+  // The state, kept as its parts rather than a `Try` made of them for each value: the value, where `heldFailure` is
+  // null; what its function threw, otherwise (its value let go of); `Val.Unset` before it has either.
+  private[reactify] var heldValue: T = _
+  private[reactify] var heldFailure: Throwable = Val.Unset
+
+  // The value before its last change, where one is kept (a function reading its own value, evaluated again, reads it):
+  // null where none is, as for most values, and `Val.NullPrevious` where it was null, rather than an `Option` of it.
+  private[reactify] var heldPrevious: Any = _
+
   protected var _references: Set[Val[_]] = Set.empty
+
+  /** The value's state: its value, what its function threw, or null before it has either. */
+  protected def state: Try[T] = heldFailure match {
+    case null => Success(heldValue)
+    case f if f eq Val.Unset => null
+    case f => Failure(f)
+  }
+  protected def state_=(state: Try[T]): Unit = state match {
+    case Success(t) =>
+      heldValue = t
+      heldFailure = null
+    case Failure(t) =>
+      heldValue = null.asInstanceOf[T]
+      heldFailure = t
+    case null =>
+      heldValue = null.asInstanceOf[T]
+      heldFailure = Val.Unset
+  }
+
+  /** The value before its last change, where one is kept. */
+  protected def previous: Option[T] = heldPrevious match {
+    case null => None
+    case p => Some(Val.previousValue(p))
+  }
+  protected def previous_=(previous: Option[T]): Unit = heldPrevious = previous match {
+    case Some(p) => Val.asPrevious(p)
+    case _ => null
+  }
 
   def references: Set[Val[_]] = _references
 
@@ -28,18 +66,19 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
 
   protected def set(value: => T): Unit = Val.set(this, value)
 
-  def option: Option[T] = state match {
-    case Success(t) => Some(t)
+  def option: Option[T] = heldFailure match {
+    case null => Some(heldValue)
     case _ => None
   }
   def toTry: Try[T] = state
 
   def static(value: T): Unit = {
-    function = () => value
-    previous = option
-    state = Success(value)
+    function = null
+    heldPrevious = Val.currentAsPrevious(this)
+    heldValue = value
+    heldFailure = null
     // A static value no longer depends on anything: stop listening
-    _references.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= reaction)
+    _references.foreach(r => Reactions.remove(r.asInstanceOf[Val[Any]], reaction))
     _references = Set.empty
   }
 
@@ -61,9 +100,9 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
   def equality(t1: T, t2: T): Boolean = t1 == t2
 
   // from the state rather than `get`, which inside an evaluation would make this a dependency of it
-  override protected def superseded(value: T): Boolean = option match {
-    case Some(current) => !equality(current, value)
-    case None => true
+  override protected def superseded(value: T): Boolean = heldFailure match {
+    case null => !equality(heldValue, value)
+    case _ => true
   }
 
   /**
@@ -80,6 +119,39 @@ object Val {
     override def initialValue(): Evaluating = null
   }
 
+  /** What a value with no state yet holds as its failure (`heldFailure`), its state being null. */
+  private[reactify] val Unset: Throwable = new MatchError(null)
+
+  /** What a value whose value before its last change was null holds as that (`heldPrevious`), null being none. */
+  private[reactify] val NullPrevious: AnyRef = new Reactive.Marker
+
+  /** `p`, as `heldPrevious` holds it. */
+  private[reactify] def asPrevious(p: Any): Any = if (p == null) NullPrevious else p
+
+  /** What `heldPrevious` holds, as the value it was. */
+  private[reactify] def previousValue[T](held: Any): T = {
+    if (held.asInstanceOf[AnyRef] eq NullPrevious) null.asInstanceOf[T] else held.asInstanceOf[T]
+  }
+
+  /** `v`'s value as its previous one, as `heldPrevious` holds it, or null where it has none (`v.option` was None). */
+  private[reactify] def currentAsPrevious(v: Val[_]): Any = v.heldFailure match {
+    case null => asPrevious(v.heldValue)
+    case _ => null
+  }
+
+  /** What `v` is worked out by, for a `Transaction` to put back: its function, or for a value set as it is, one giving
+    * that value. */
+  private[reactify] def functionOf[T](v: Val[T]): () => T = {
+    val f = v.function
+    if (f != null) f
+    else v.heldFailure match {
+      case null =>
+        val value = v.heldValue
+        () => value
+      case _ => null
+    }
+  }
+
   def set[T](v: Val[T], value: => T): Unit = setFunction(v, () => value)
 
   private[reactify] def setFunction[T](v: Val[T], f: () => T): Unit = {
@@ -89,24 +161,27 @@ object Val {
 
   /** `v` set to a value already in hand, as `@=` sets one: what `evaluate` would come to for a function that reads
     * nothing and cannot throw, without its bookkeeping (no evaluation frame on the thread, no `Try`, no comparing of
-    * dependencies). A value that depended on others stops listening to them; an unchanged one fires nothing. Setting a
-    * plain value is most of what a UI does, and on a television the bookkeeping was a third of building a screen. */
-  private[reactify] def setValue[T](v: Val[T], f: () => T, value: T): Unit = {
-    v.function = f
+    * dependencies), and with no function kept for it. A value that depended on others stops listening to them; an
+    * unchanged one fires nothing. Setting a plain value is most of what a UI does, and on a television the bookkeeping
+    * was a third of building a screen. */
+  private[reactify] def setValue[T](v: Val[T], value: T): Unit = {
+    v.function = null
     if (v._references.nonEmpty) {
-      v._references.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
+      v._references.foreach(r => Reactions.remove(r.asInstanceOf[Val[Any]], v.reaction))
       v._references = Set.empty
     }
-    v.state match {
-      case Success(p) if value == p => // Same value, ignore
+    v.heldFailure match {
+      case null if value == v.heldValue => // Same value, ignore
       case _ => {
-        v.previous = v.option
-        v.state = Success(value)
-        Reactive.fire(v, value, v.previous, v.reactions())
+        val previous = v.option
+        v.heldPrevious = currentAsPrevious(v)
+        v.heldValue = value
+        v.heldFailure = null
+        v.fireHeard(value, previous)
         // heard: a value set plainly has no more use for the one before it (only a function that reads its own value does,
         // and the evaluation that makes one sets it again), and kept, it held what it was (a screen left, a component taken
         // apart) until the next change
-        v.previous = None
+        v.heldPrevious = null
       }
     }
   }
@@ -119,44 +194,56 @@ object Val {
 
   /** Evaluate `v`'s function, and on a new value fire its reactions. Only the function's own exception becomes the
     * value's `Failure` (rethrown by the next read); an exception thrown by a reaction propagates to whoever set the
-    * value, rather than marking a value that was evaluated correctly as failed. */
+    * value, rather than marking a value that was evaluated correctly as failed. A value set as it is (no function) is
+    * evaluated as its function was, reading nothing: to the value it has. */
   def evaluate[T](v: Val[T], updating: Boolean): Unit = {
-    val original = evaluating.get()
-    val e = new Evaluating(v, updating)
-    evaluating.set(e)
-    val result: Try[T] = try {
-      Success(v.function())
-    } catch {
-      case t: Throwable => Failure(t)
-    } finally {
-      evaluating.set(original)
+    val f = v.function
+    var evaluated: T = null.asInstanceOf[T]
+    var failed: Throwable = null
+    var references: Set[Val[_]] = Set.empty
+    if (f == null && (v.heldFailure match { case null => true; case _ => false })) {
+      evaluated = v.heldValue
+    } else {
+      val original = evaluating.get()
+      val e = new Evaluating(v, updating)
+      evaluating.set(e)
+      try {
+        evaluated = f()
+      } catch {
+        case t: Throwable => failed = t
+      } finally {
+        evaluating.set(original)
+      }
+      references = e.references
     }
 
-    result match {
-      case Failure(t) => {
-        v.previous = v.option
-        v.state = Failure(t)
-      }
-      case Success(evaluated) => {
+    failed match {
+      case null => {
         val previousReferences = v._references
-        val references = e.references
         // Only when the dependencies changed (never for a value without any, like every `@=`): detach from the
         // dropped ones, attach to the new ones, and remember them.
         if ((previousReferences.nonEmpty || references.nonEmpty) && !sameReferences(previousReferences, references)) {
           val removed = previousReferences.diff(references)
           val added = references.diff(previousReferences)
-          removed.foreach(_.reactions.asInstanceOf[Reactions[Any]] -= v.reaction)
-          added.foreach(_.reactions.asInstanceOf[Reactions[Any]].append(v.reaction))
+          removed.foreach(r => Reactions.remove(r.asInstanceOf[Val[Any]], v.reaction))
+          added.foreach(r => Reactions.append(r.asInstanceOf[Val[Any]], v.reaction))
           v._references = references
         }
-        v.state match {
-          case Success(p) if evaluated == p => // Same value, ignore
+        v.heldFailure match {
+          case null if evaluated == v.heldValue => // Same value, ignore
           case _ => {
-            v.previous = v.option
-            v.state = Success(evaluated)
-            Reactive.fire(v, evaluated, v.previous, v.reactions())
+            val previous = v.option
+            v.heldPrevious = currentAsPrevious(v)
+            v.heldValue = evaluated
+            v.heldFailure = null
+            v.fireHeard(evaluated, previous)
           }
         }
+      }
+      case t => {
+        v.heldPrevious = currentAsPrevious(v)
+        v.heldValue = null.asInstanceOf[T]
+        v.heldFailure = t
       }
     }
   }
@@ -172,15 +259,15 @@ object Val {
     val e = evaluating.get()
     // a function reading its own value, evaluated again for a change to what it reads, reads the value before its own last
     // change; one with none kept (the value was last set plainly, or never changed) reads what it is
-    if (e != null && (e.v eq v) && e.updating && v.previous.nonEmpty) {
-      v.previous.get
+    if (e != null && (e.v eq v) && e.updating && v.heldPrevious != null) {
+      previousValue[T](v.heldPrevious)
     } else {
       if (e != null && !(e.v eq v)) {
         e.references += v
       }
-      v.state match {
-        case Success(t) => t
-        case Failure(t) => throw t
+      v.heldFailure match {
+        case null => v.heldValue
+        case t => throw t
       }
     }
   }

@@ -27,7 +27,7 @@ class Var[T] protected() extends Val[T]() with Mutable[T] {
     */
   override def set(value: => T): Unit = {
     val f = () => value
-    Transaction.change(this, this.function, f)
+    if (Transaction.anyOpen) Transaction.change(this, Val.functionOf(this), f)
     Val.setFunction(this, f)
   }
 
@@ -37,9 +37,9 @@ class Var[T] protected() extends Val[T]() with Mutable[T] {
     * @param value the value to assign
     */
   override def static(value: T): Unit = {
-    val f = () => value
-    Transaction.change(this, this.function, f)
-    Val.setValue(this, f, value)
+    // (a function for the value only for a transaction to put back: the value keeps none)
+    if (Transaction.anyOpen) Transaction.change(this, Val.functionOf(this), () => value)
+    Val.setValue(this, value)
   }
 
   /**

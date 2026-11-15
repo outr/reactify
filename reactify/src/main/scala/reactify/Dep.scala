@@ -1,6 +1,6 @@
 package reactify
 
-import reactify.reaction.{Reaction, ReactionStatus}
+import reactify.reaction.{Reaction, ReactionStatus, Reactions}
 import scala.language.implicitConversions
 
 /**
@@ -25,12 +25,12 @@ import scala.language.implicitConversions
 class Dep[T, R] protected(val owner: Var[R], t2R: T => R, r2T: R => T) extends Reactive[T] with Stateful[T] with Mutable[T] {
   private val v: Val[T] = Val(r2T(owner))
 
-  v.reactions += new Reaction[T] {
+  Reactions.add(v, new Reaction[T] {
     override def apply(value: T, previous: Option[T]): ReactionStatus = {
-      fire(value, previous, reactions())
+      fireHeard(value, previous)
       ReactionStatus.Continue
     }
-  }
+  })
 
   override def get: T = v.get
 
