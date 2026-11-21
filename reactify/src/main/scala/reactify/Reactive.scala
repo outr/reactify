@@ -137,12 +137,19 @@ trait Reactive[T] {
       if (c.depth >= Reactive.maxDepth) {
         // unless the value moves on before the link runs: its newer value, fired nearer the top, has reached the
         // reactions already (or is queued behind this), and this, run after it, would put the older value back
-        c.queue = c.queue :+ (() => if (!superseded(value)) { propagate(value, previous, null, reactions, c); () })
+        c.back = (() => if (!superseded(value)) { propagate(value, previous, null, reactions, c); () }) :: c.back
         ReactionStatus.Continue
       } else {
         c.depth += 1
         val top = c.depth == 1
-        val status = try propagate(value, previous, null, reactions, c) finally c.depth -= 1
+        val status = try propagate(value, previous, null, reactions, c) catch {
+          // the outermost fire ends in a throw: what its chain deferred goes with it, as it would have nested, and is not
+          // left for the next fire on this thread to run
+          case t: Throwable => {
+            if (top) Reactive.discard(c)
+            throw t
+          }
+        } finally c.depth -= 1
         if (top) Reactive.drain(c)
         status
       }
@@ -175,12 +182,19 @@ trait Reactive[T] {
     } else if (c.depth >= Reactive.maxDepth) {
       val first = one
       val rest = many
-      c.queue = c.queue :+ (() => if (!superseded(value)) { propagate(value, previous, first, rest, c); () })
+      c.back = (() => if (!superseded(value)) { propagate(value, previous, first, rest, c); () }) :: c.back
       ReactionStatus.Continue
     } else {
       c.depth += 1
       val top = c.depth == 1
-      val status = try propagate(value, previous, one, many, c) finally c.depth -= 1
+      val status = try propagate(value, previous, one, many, c) catch {
+        // the outermost fire ends in a throw: what its chain deferred goes with it, as it would have nested, and is not
+        // left for the next fire on this thread to run
+        case t: Throwable => {
+          if (top) Reactive.discard(c)
+          throw t
+        }
+      } finally c.depth -= 1
       if (top) Reactive.drain(c)
       status
     }
@@ -238,10 +252,13 @@ object Reactive {
   private[reactify] final class Marker
 
   /** A thread's propagations: its live depth and the links deferred past the budget, drained by its outermost fire, and
-    * the innermost propagation under way (each holding the one it is nested in). */
+    * the innermost propagation under way (each holding the one it is nested in). The deferred links are a queue of two
+    * lists, so that deferring one and running one each cost the same however many wait: `front`, next to run, in order,
+    * and `back`, deferred since, newest first, turned over into `front` when it runs out. */
   private[reactify] final class Propagations {
     var depth: Int = 0
-    var queue: List[() => Unit] = Nil
+    var front: List[() => Unit] = Nil
+    var back: List[() => Unit] = Nil
     var innermost: Propagation = null
   }
 
@@ -260,14 +277,33 @@ object Reactive {
     p
   }
 
-  /** Run every link deferred past the depth budget, and any deferred while doing so, each with a fresh budget. */
+  /** Run every link deferred past the depth budget, and any deferred while doing so, each with a fresh budget, in the
+    * order they were deferred. One that throws ends the drain, and those still waiting go with it (`discard`), as they
+    * would have, nested, before the budget: none is left for the next fire on this thread to run. */
   private[reactify] def drain(c: Propagations): Unit = {
-    while (c.queue.nonEmpty) {
-      val task = c.queue.head
-      c.queue = c.queue.tail
-      c.depth += 1
-      try task() finally c.depth -= 1
+    try {
+      while (c.front.nonEmpty || c.back.nonEmpty) {
+        if (c.front.isEmpty) {
+          c.front = c.back.reverse
+          c.back = Nil
+        }
+        val task = c.front.head
+        c.front = c.front.tail
+        c.depth += 1
+        try task() finally c.depth -= 1
+      }
+    } catch {
+      case t: Throwable => {
+        discard(c)
+        throw t
+      }
     }
+  }
+
+  /** Drop every deferred link waiting on the thread whose propagations `c` are. */
+  private[reactify] def discard(c: Propagations): Unit = {
+    c.front = Nil
+    c.back = Nil
   }
 
   def fire[T](reactive: Reactive[T], value: T, previous: Option[T], reactions: List[Reaction[T]]): ReactionStatus = {
