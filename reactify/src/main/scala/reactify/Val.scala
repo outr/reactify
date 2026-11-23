@@ -19,7 +19,7 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
   // The state, kept as its parts rather than a `Try` made of them for each value: the value, where `heldFailure` is
   // null; what its function threw, otherwise (its value let go of); `Val.Unset` before it has either.
   private[reactify] var heldValue: T = _
-  private[reactify] var heldFailure: Throwable = Val.Unset
+  private[reactify] var heldFailure: AnyRef = Val.Unset
 
   // The value before its last change, where one is kept (a function reading its own value, evaluated again, reads it):
   // null where none is, as for most values, and `Val.NullPrevious` where it was null, rather than an `Option` of it.
@@ -31,7 +31,7 @@ class Val[T] protected() extends Reactive[T] with Stateful[T] {
   protected def state: Try[T] = heldFailure match {
     case null => Success(heldValue)
     case f if f eq Val.Unset => null
-    case f => Failure(f)
+    case f => Failure(f.asInstanceOf[Throwable])
   }
   protected def state_=(state: Try[T]): Unit = state match {
     case Success(t) =>
@@ -119,8 +119,11 @@ object Val {
     override def initialValue(): Evaluating = null
   }
 
-  /** What a value with no state yet holds as its failure (`heldFailure`), its state being null. */
-  private[reactify] val Unset: Throwable = new MatchError(null)
+  /** What a value with no state yet holds as its failure (`heldFailure`), its state being null: a read of it throws a
+    * `MatchError`, made then. Not a `Throwable` itself: one made as the first value is (an app's start) is a stack
+    * trace taken there, which on the web, with DevTools open (or Lighthouse, or any client of the DevTools protocol),
+    * had the browser work out source positions for the whole script, about 0.3 s on a phone before the page showed. */
+  private[reactify] val Unset: AnyRef = new Reactive.Marker
 
   /** What a value whose value before its last change was null holds as that (`heldPrevious`), null being none. */
   private[reactify] val NullPrevious: AnyRef = new Reactive.Marker
@@ -267,7 +270,8 @@ object Val {
       }
       v.heldFailure match {
         case null => v.heldValue
-        case t => throw t
+        case u if u eq Unset => throw new MatchError(null)
+        case t => throw t.asInstanceOf[Throwable]
       }
     }
   }
